@@ -133,17 +133,23 @@
 
 @layer components {
   .status-badge-pending {
-    @apply bg-pending/12 border border-pending/25;
+    @apply border;
+    background-color: hsl(var(--pending) / 0.12);
+    border-color: hsl(var(--pending) / 0.25);
     color: hsl(var(--pending));
   }
 
   .status-badge-overdue {
-    @apply bg-overdue/12 border border-overdue/25;
+    @apply border;
+    background-color: hsl(var(--overdue) / 0.12);
+    border-color: hsl(var(--overdue) / 0.25);
     color: hsl(var(--overdue));
   }
 
   .status-badge-paid {
-    @apply bg-paid/12 border border-paid/25;
+    @apply border;
+    background-color: hsl(var(--paid) / 0.12);
+    border-color: hsl(var(--paid) / 0.25);
     color: hsl(var(--paid));
   }
 
