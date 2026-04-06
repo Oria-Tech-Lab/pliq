@@ -1,10 +1,8 @@
 import { useState, useMemo } from 'react';
-import { usePayments } from '@/hooks/usePayments';
+import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { PaymentForm } from '@/components/payments/PaymentForm';
 import { PaymentCard } from '@/components/payments/PaymentCard';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Payment } from '@/types/payment';
 import { toast } from 'sonner';
@@ -16,16 +14,15 @@ import {
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 const CalendarPage = () => {
-  const { payments, isLoading, addPayment, updatePayment, updatePaymentPayeeId, deletePayment, markAsPaid, markAsPending } = usePayments();
-  const { payees, addPayee } = usePayees(payments, updatePaymentPayeeId);
+  const { flattenedPayments: payments, isLoading, markPaidByInstanceId, markPendingByInstanceId } = usePaymentPlans();
+  const { payees } = usePayees([], () => {});
+  const navigate = useNavigate();
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
-  const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
 
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
@@ -59,34 +56,13 @@ const CalendarPage = () => {
 
   const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
-  const handleAddPayment = () => { setEditingPayment(null); setFormOpen(true); };
-
-  const handleFormSubmit = (data: Omit<Payment, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
-    if (editingPayment) {
-      updatePayment(editingPayment.id, data);
-      toast.success('Pago actualizado', { description: data.name });
-    } else {
-      addPayment(data);
-      toast.success('Pago creado', { description: data.name });
-    }
-  };
-
   const handleMarkAsPaid = (id: string) => {
-    markAsPaid(id);
+    markPaidByInstanceId(id);
     const payment = payments.find(p => p.id === id);
     toast.success('Marcado como pagado', {
       description: payment?.name,
-      action: { label: 'Deshacer', onClick: () => markAsPending(id) },
+      action: { label: 'Deshacer', onClick: () => markPendingByInstanceId(id) },
     });
-  };
-
-  const handleDeletePayment = () => {
-    if (deletingPaymentId) {
-      const payment = payments.find(p => p.id === deletingPaymentId);
-      deletePayment(deletingPaymentId);
-      toast.success('Pago eliminado', { description: payment?.name });
-      setDeletingPaymentId(null);
-    }
   };
 
   if (isLoading) {
@@ -100,7 +76,7 @@ const CalendarPage = () => {
   }
 
   return (
-    <AppLayout onAddPayment={handleAddPayment} title="Calendario">
+    <AppLayout onAddPayment={() => navigate('/planes')} title="Calendario">
       <div className="container py-6 space-y-6">
         <div className="flex items-center justify-between animate-slide-up">
           <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(prev => subMonths(prev, 1))}>
@@ -187,9 +163,9 @@ const CalendarPage = () => {
                     payment={payment}
                     payees={payees}
                     onMarkAsPaid={handleMarkAsPaid}
-                    onMarkAsPending={markAsPending}
-                    onEdit={(p) => { setEditingPayment(p); setFormOpen(true); }}
-                    onDelete={(id) => setDeletingPaymentId(id)}
+                    onMarkAsPending={markPendingByInstanceId}
+                    onEdit={() => navigate('/planes')}
+                    onDelete={() => {}}
                   />
                 ))}
               </div>
@@ -197,21 +173,6 @@ const CalendarPage = () => {
           </div>
         )}
       </div>
-
-      <PaymentForm open={formOpen} onOpenChange={setFormOpen} payment={editingPayment} payees={payees} onAddPayee={addPayee} onSubmit={handleFormSubmit} />
-
-      <AlertDialog open={!!deletingPaymentId} onOpenChange={(open) => !open && setDeletingPaymentId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar este pago?</AlertDialogTitle>
-            <AlertDialogDescription>Esta acción no se puede deshacer. El pago será eliminado permanentemente.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePayment} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Eliminar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Toaster position="bottom-right" />
     </AppLayout>

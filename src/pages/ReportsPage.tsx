@@ -1,5 +1,5 @@
 import { AppLayout } from '@/components/layout/AppLayout';
-import { usePayments } from '@/hooks/usePayments';
+import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { CATEGORY_LABELS, PaymentCategory } from '@/types/payment';
 import { isThisMonth, format, subMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { TrendingUp, TrendingDown, BarChart3 } from 'lucide-react';
 
 const ReportsPage = () => {
-  const { payments } = usePayments();
+  const { flattenedPayments: payments } = usePaymentPlans();
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
