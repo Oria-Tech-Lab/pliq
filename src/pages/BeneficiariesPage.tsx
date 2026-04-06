@@ -1,4 +1,4 @@
-import { Header } from '@/components/layout/Header';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { usePayments } from '@/hooks/usePayments';
 import { usePayees } from '@/hooks/usePayees';
 import { useMemo } from 'react';
@@ -22,12 +22,9 @@ const BeneficiariesPage = () => {
   }, [payees, payments]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      <main className="container py-6 space-y-6">
+    <AppLayout title="Beneficiarios">
+      <div className="container py-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-display font-semibold text-xl text-foreground">Beneficiarios</h2>
           <span className="text-sm text-muted-foreground">
             {payees.length} {payees.length === 1 ? 'beneficiario' : 'beneficiarios'}
           </span>
@@ -38,9 +35,7 @@ const BeneficiariesPage = () => {
             <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-4">
               <Users className="w-6 h-6 text-muted-foreground" />
             </div>
-            <p className="text-sm text-muted-foreground">
-              Los beneficiarios aparecerán aquí cuando crees pagos
-            </p>
+            <p className="text-sm text-muted-foreground">Los beneficiarios aparecerán aquí cuando crees pagos</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -52,9 +47,7 @@ const BeneficiariesPage = () => {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <span className="text-sm font-bold text-primary">
-                      {payee.name.charAt(0).toUpperCase()}
-                    </span>
+                    <span className="text-sm font-bold text-primary">{payee.name.charAt(0).toUpperCase()}</span>
                   </div>
                   {payee.pending > 0 && (
                     <span className="text-[11px] font-medium text-pending bg-pending/10 px-2 py-0.5 rounded-full">
@@ -73,8 +66,8 @@ const BeneficiariesPage = () => {
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 };
 
