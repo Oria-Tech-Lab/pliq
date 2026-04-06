@@ -3,20 +3,21 @@ import { cn } from '@/lib/utils';
 import { Zap, CreditCard, RefreshCw, User, MoreHorizontal } from 'lucide-react';
 
 interface CategoryBadgeProps {
-  category: PaymentCategory;
+  category: PaymentCategory | string;
   className?: string;
 }
 
-export function CategoryBadge({ category, className }: CategoryBadgeProps) {
-  const icons = {
-    services: Zap,
-    debts: CreditCard,
-    subscriptions: RefreshCw,
-    personal: User,
-    other: MoreHorizontal,
-  };
+const icons: Record<string, typeof Zap> = {
+  services: Zap,
+  debts: CreditCard,
+  subscriptions: RefreshCw,
+  personal: User,
+  other: MoreHorizontal,
+};
 
-  const Icon = icons[category];
+export function CategoryBadge({ category, className }: CategoryBadgeProps) {
+  const Icon = icons[category] || MoreHorizontal;
+  const label = (CATEGORY_LABELS as Record<string, string>)[category] || category;
 
   return (
     <span
@@ -26,7 +27,7 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
       )}
     >
       <Icon className="w-3 h-3" />
-      {CATEGORY_LABELS[category]}
+      {label}
     </span>
   );
 }

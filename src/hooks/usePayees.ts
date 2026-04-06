@@ -38,7 +38,7 @@ export function usePayees(payments: Payment[], updatePaymentPayeeId?: (paymentId
       if (existing) {
         nameToId[name] = existing.id;
       } else {
-        const newPayee: Payee = { id: generateId(), name, createdAt: new Date().toISOString() };
+        const newPayee: Payee = { id: generateId(), name, type: 'otro', bankAccounts: [], createdAt: new Date().toISOString() };
         currentPayees.push(newPayee);
         nameToId[name] = newPayee.id;
       }
@@ -69,6 +69,8 @@ export function usePayees(payments: Payment[], updatePaymentPayeeId?: (paymentId
     const newPayee: Payee = {
       id: generateId(),
       name: name.trim(),
+      type: 'otro',
+      bankAccounts: [],
       createdAt: new Date().toISOString(),
     };
     setPayees(prev => [...prev, newPayee]);
