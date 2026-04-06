@@ -166,6 +166,16 @@ export function usePaymentPlans() {
     }));
   }, []);
 
+  const updateInstance = useCallback((planId: string, instanceId: string, data: { amount?: number; paymentMethod?: string }) => {
+    setPlans(prev => prev.map(p => {
+      if (p.id !== planId) return p;
+      const instances = p.instances.map(i =>
+        i.id === instanceId ? { ...i, ...data } : i
+      );
+      return { ...p, instances, updatedAt: new Date().toISOString() };
+    }));
+  }, []);
+
   // Flatten all instances into Payment-compatible objects for backward compatibility
   const flattenedPayments: Payment[] = useMemo(() => {
     return plans.flatMap(plan =>
@@ -210,7 +220,7 @@ export function usePaymentPlans() {
 
   return {
     plans, isLoading, addPlan, deletePlan,
-    markInstancePaid, markInstancePending,
+    markInstancePaid, markInstancePending, updateInstance,
     flattenedPayments, findPlanByInstanceId,
     markPaidByInstanceId, markPendingByInstanceId,
   };
