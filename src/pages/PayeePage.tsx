@@ -1,29 +1,26 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { usePayments } from '@/hooks/usePayments';
+import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
 import { PaymentCard } from '@/components/payments/PaymentCard';
 import { StatusBadge } from '@/components/payments/StatusBadge';
-import { PaymentForm } from '@/components/payments/PaymentForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PaymentStatus } from '@/types/payment';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
+import { useNavigate } from 'react-router-dom';
 
 const PayeePage = () => {
   const { id } = useParams<{ id: string }>();
-  const { payments, addPayment, updatePayment, updatePaymentPayeeId, deletePayment, markAsPaid, markAsPending } = usePayments();
-  const { payees, addPayee, getPayeeById } = usePayees(payments, updatePaymentPayeeId);
+  const { flattenedPayments: payments, markPaidByInstanceId, markPendingByInstanceId } = usePaymentPlans();
+  const { payees, getPayeeById } = usePayees([], () => {});
+  const navigate = useNavigate();
 
   const payee = id ? getPayeeById(id) : undefined;
 
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<any>(null);
-  const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
 
   const payeePayments = useMemo(() => {
     return payments
@@ -54,26 +51,8 @@ const PayeePage = () => {
     new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
 
   const handleMarkAsPaid = (paymentId: string) => {
-    markAsPaid(paymentId);
+    markPaidByInstanceId(paymentId);
     toast.success('Marcado como pagado');
-  };
-
-  const handleDeletePayment = () => {
-    if (deletingPaymentId) {
-      deletePayment(deletingPaymentId);
-      toast.success('Pago eliminado');
-      setDeletingPaymentId(null);
-    }
-  };
-
-  const handleFormSubmit = (data: any) => {
-    if (editingPayment) {
-      updatePayment(editingPayment.id, data);
-      toast.success('Pago actualizado');
-    } else {
-      addPayment(data);
-      toast.success('Pago creado');
-    }
   };
 
   if (!payee) {
@@ -92,7 +71,6 @@ const PayeePage = () => {
   return (
     <AppLayout title={payee.name}>
       <div className="container py-6 space-y-6">
-        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-slide-up">
           <div className="rounded-2xl bg-card p-5 space-y-2" style={{ boxShadow: '0 1px 3px 0 hsl(220 25% 14% / 0.04)' }}>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -126,7 +104,6 @@ const PayeePage = () => {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="flex gap-2 flex-wrap animate-slide-up" style={{ animationDelay: '0.1s' }}>
           {(['all', 'pending', 'paid', 'overdue'] as const).map((status) => (
             <Button
@@ -141,7 +118,6 @@ const PayeePage = () => {
           ))}
         </div>
 
-        {/* Payment list */}
         <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.2s' }}>
           {payeePayments.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground text-sm">
@@ -154,29 +130,14 @@ const PayeePage = () => {
                 payment={payment}
                 payees={payees}
                 onMarkAsPaid={handleMarkAsPaid}
-                onMarkAsPending={markAsPending}
-                onEdit={(p) => { setEditingPayment(p); setFormOpen(true); }}
-                onDelete={(id) => setDeletingPaymentId(id)}
+                onMarkAsPending={markPendingByInstanceId}
+                onEdit={() => navigate('/planes')}
+                onDelete={() => {}}
               />
             ))
           )}
         </div>
       </div>
-
-      <PaymentForm open={formOpen} onOpenChange={setFormOpen} payment={editingPayment} payees={payees} onAddPayee={addPayee} onSubmit={handleFormSubmit} />
-
-      <AlertDialog open={!!deletingPaymentId} onOpenChange={(open) => !open && setDeletingPaymentId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar este pago?</AlertDialogTitle>
-            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePayment} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Eliminar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <Toaster position="bottom-right" />
     </AppLayout>

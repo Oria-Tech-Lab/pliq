@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PaymentPlan, PaymentInstance } from '@/types/paymentPlan';
 import { addWeeks, addMonths, addYears, format, startOfDay, isBefore } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { PaymentFrequency } from '@/types/payment';
+import { Payment, PaymentFrequency } from '@/types/payment';
 
 const STORAGE_KEY = 'payment-plans-data';
 const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -166,5 +166,52 @@ export function usePaymentPlans() {
     }));
   }, []);
 
-  return { plans, isLoading, addPlan, deletePlan, markInstancePaid, markInstancePending };
+  // Flatten all instances into Payment-compatible objects for backward compatibility
+  const flattenedPayments: Payment[] = useMemo(() => {
+    return plans.flatMap(plan =>
+      plan.instances.map(inst => ({
+        id: inst.id,
+        name: plan.name,
+        category: plan.category,
+        amount: inst.amount,
+        frequency: plan.type === 'recurring' ? (plan.frequency || 'monthly' as PaymentFrequency) : 'once' as PaymentFrequency,
+        dueDate: inst.dueDate,
+        payTo: plan.payTo,
+        payeeId: plan.payeeId,
+        paymentMethod: plan.paymentMethod,
+        reminderDays: 3,
+        notes: inst.notes || plan.notes,
+        status: inst.status,
+        paidDate: inst.paidDate,
+        createdAt: plan.createdAt,
+        updatedAt: plan.updatedAt,
+      }))
+    );
+  }, [plans]);
+
+  // Find the planId for a given instanceId
+  const findPlanByInstanceId = useCallback((instanceId: string): string | undefined => {
+    for (const plan of plans) {
+      if (plan.instances.some(i => i.id === instanceId)) return plan.id;
+    }
+    return undefined;
+  }, [plans]);
+
+  // Convenience: mark paid/pending by instance ID only
+  const markPaidByInstanceId = useCallback((instanceId: string) => {
+    const planId = plans.find(p => p.instances.some(i => i.id === instanceId))?.id;
+    if (planId) markInstancePaid(planId, instanceId);
+  }, [plans, markInstancePaid]);
+
+  const markPendingByInstanceId = useCallback((instanceId: string) => {
+    const planId = plans.find(p => p.instances.some(i => i.id === instanceId))?.id;
+    if (planId) markInstancePending(planId, instanceId);
+  }, [plans, markInstancePending]);
+
+  return {
+    plans, isLoading, addPlan, deletePlan,
+    markInstancePaid, markInstancePending,
+    flattenedPayments, findPlanByInstanceId,
+    markPaidByInstanceId, markPendingByInstanceId,
+  };
 }

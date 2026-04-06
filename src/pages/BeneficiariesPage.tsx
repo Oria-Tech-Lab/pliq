@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { usePayments } from '@/hooks/usePayments';
+import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
 import { BeneficiaryType, BENEFICIARY_TYPE_LABELS, BankAccount, Payee } from '@/types/payment';
 import { Users, CreditCard, ChevronRight, Plus, X, Building2 } from 'lucide-react';
@@ -14,8 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
 const BeneficiariesPage = () => {
-  const { payments, updatePaymentPayeeId } = usePayments();
-  const { payees, addPayee: addPayeeBase, deletePayee } = usePayees(payments, updatePaymentPayeeId);
+  const { flattenedPayments: payments } = usePaymentPlans();
+  const { payees, addPayee: addPayeeBase, deletePayee } = usePayees([], () => {});
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState('');
