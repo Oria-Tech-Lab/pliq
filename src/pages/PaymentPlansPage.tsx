@@ -225,6 +225,7 @@ export default function PaymentPlansPage() {
         open={formOpen}
         onOpenChange={setFormOpen}
         payees={payees}
+        onAddPayee={addPayee}
         onSubmit={(data) => {
           addPlan(data);
           toast.success('Plan creado', { description: data.name });
