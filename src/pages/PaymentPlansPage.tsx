@@ -17,7 +17,7 @@ import { CategoryBadge } from '@/components/payments/CategoryBadge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -64,12 +64,26 @@ export default function PaymentPlansPage() {
   const getTotalAmount = (plan: PaymentPlan) => plan.instances.reduce((s, i) => s + i.amount, 0);
   const getPaidAmount = (plan: PaymentPlan) => plan.instances.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
 
+  const getPlanStatusInfo = (plan: PaymentPlan) => {
+    const hasOverdue = plan.instances.some(i => i.status === 'overdue');
+    const allPaid = plan.instances.length > 0 && plan.instances.every(i => i.status === 'paid');
+    if (allPaid) return { label: 'Completado', className: 'bg-paid/12 text-paid border-paid/25' };
+    if (hasOverdue) return { label: 'Vencido', className: 'bg-overdue/12 text-overdue border-overdue/25' };
+    return { label: 'Al día', className: 'bg-primary/10 text-primary border-primary/20' };
+  };
+
+  const getPayeeName = (plan: PaymentPlan) => {
+    const payee = payees.find(p => p.id === plan.payeeId);
+    return payee?.name || plan.payTo;
+  };
+
   const renderPlanCard = (plan: PaymentPlan) => {
     const isExpanded = expandedPlans.has(plan.id);
     const paidCount = getPaidCount(plan);
     const totalInstances = plan.instances.length;
     const progress = totalInstances > 0 ? (paidCount / totalInstances) * 100 : 0;
-    const categoryLabel = allCategoryLabels[plan.category] || plan.category;
+    const statusInfo = getPlanStatusInfo(plan);
+    const beneficiaryName = getPayeeName(plan);
 
     return (
       <div key={plan.id} className="payment-row animate-fade-in">
@@ -86,14 +100,15 @@ export default function PaymentPlansPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-semibold text-foreground truncate">{plan.name}</h3>
                     <CategoryBadge category={plan.category} />
-                    {plan.type === 'recurring' && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-primary/10 text-primary px-2 py-0.5 rounded-lg">
-                        <Repeat className="w-3 h-3" />
-                        {FREQUENCY_LABELS[plan.frequency!]}
-                      </span>
-                    )}
+                    <span className={cn('inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-lg border', statusInfo.className)}>
+                      {statusInfo.label}
+                    </span>
                   </div>
                   <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5" />
+                      {beneficiaryName}
+                    </span>
                     {plan.type === 'unique' && plan.dueDate && (
                       <span className="inline-flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" />
