@@ -11,6 +11,7 @@ export interface PaymentInstance {
   status: 'pending' | 'paid' | 'overdue';
   paidDate?: string;
   notes?: string;
+  paymentMethod?: string; // Override del método de pago del plan
 }
 
 export interface PaymentPlan {
