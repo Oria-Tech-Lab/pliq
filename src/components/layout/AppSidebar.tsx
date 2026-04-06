@@ -1,4 +1,4 @@
-import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard } from 'lucide-react';
+import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard, ClipboardList } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -20,6 +20,7 @@ const NAV_ITEMS = [
   { label: 'Beneficiarios', path: '/beneficiarios', icon: Users },
   { label: 'Categorías', path: '/categorias', icon: Receipt },
   { label: 'Métodos de pago', path: '/metodos', icon: CreditCard },
+  { label: 'Lista de pagos', path: '/planes', icon: ClipboardList },
   { label: 'Calendario', path: '/calendario', icon: CalendarDays },
 ];
 
