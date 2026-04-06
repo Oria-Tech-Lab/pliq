@@ -40,7 +40,7 @@ const Index = () => {
       case 'overdue': return payments.filter(p => p.status === 'overdue');
       case 'today': return payments.filter(p => p.status !== 'paid' && isToday(new Date(p.dueDate)));
       case 'week': return payments.filter(p => p.status !== 'paid' && isThisWeek(new Date(p.dueDate), { weekStartsOn: 1 }));
-      case 'month': return payments.filter(p => p.status !== 'paid' && isThisMonth(new Date(p.dueDate)));
+      case 'month': return payments.filter(p => isThisMonth(new Date(p.dueDate)));
       case 'pending': return payments.filter(p => p.status !== 'paid' && isThisMonth(new Date(p.dueDate)));
       case 'paid_month': return payments.filter(p => p.status === 'paid' && p.paidDate && isThisMonth(new Date(p.paidDate)));
       default: return payments;
