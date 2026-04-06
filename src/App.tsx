@@ -10,6 +10,7 @@ import CategoriesPage from "./pages/CategoriesPage";
 import PaymentMethodsPage from "./pages/PaymentMethodsPage";
 import CalendarPage from "./pages/CalendarPage";
 import PayeePage from "./pages/PayeePage";
+import PaymentPlansPage from "./pages/PaymentPlansPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/categorias" element={<CategoriesPage />} />
           <Route path="/metodos" element={<PaymentMethodsPage />} />
           <Route path="/calendario" element={<CalendarPage />} />
+          <Route path="/planes" element={<PaymentPlansPage />} />
           <Route path="/payee/:id" element={<PayeePage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
