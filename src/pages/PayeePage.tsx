@@ -5,6 +5,7 @@ import { usePayees } from '@/hooks/usePayees';
 import { PaymentCard } from '@/components/payments/PaymentCard';
 import { StatusBadge } from '@/components/payments/StatusBadge';
 import { PaymentForm } from '@/components/payments/PaymentForm';
+import { Button } from '@/components/ui/button';
 import { ArrowLeft, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PaymentStatus } from '@/types/payment';
