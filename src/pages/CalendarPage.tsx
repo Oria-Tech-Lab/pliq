@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { usePayments } from '@/hooks/usePayments';
 import { usePayees } from '@/hooks/usePayees';
-import { Header } from '@/components/layout/Header';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { PaymentForm } from '@/components/payments/PaymentForm';
 import { PaymentCard } from '@/components/payments/PaymentCard';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -91,18 +91,17 @@ const CalendarPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-muted-foreground">Cargando...</div>
-      </div>
+      <AppLayout title="Calendario">
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-pulse text-muted-foreground">Cargando...</div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header onAddPayment={handleAddPayment} />
-
-      <main className="container py-6 space-y-6">
-        {/* Month navigation */}
+    <AppLayout onAddPayment={handleAddPayment} title="Calendario">
+      <div className="container py-6 space-y-6">
         <div className="flex items-center justify-between animate-slide-up">
           <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(prev => subMonths(prev, 1))}>
             <ChevronLeft className="w-5 h-5" />
@@ -115,13 +114,10 @@ const CalendarPage = () => {
           </Button>
         </div>
 
-        {/* Calendar grid */}
         <div className="animate-slide-up rounded-2xl bg-card p-4" style={{ animationDelay: '0.1s', boxShadow: '0 1px 3px 0 hsl(220 25% 14% / 0.04)' }}>
           <div className="grid grid-cols-7 mb-2">
             {weekDays.map(day => (
-              <div key={day} className="text-center text-xs font-semibold text-muted-foreground py-2">
-                {day}
-              </div>
+              <div key={day} className="text-center text-xs font-semibold text-muted-foreground py-2">{day}</div>
             ))}
           </div>
 
@@ -149,13 +145,9 @@ const CalendarPage = () => {
                     !selected && inMonth && 'hover:bg-muted/50',
                   )}
                 >
-                  <span className={cn(
-                    'font-medium text-xs sm:text-sm',
-                    today && 'text-primary font-bold',
-                  )}>
+                  <span className={cn('font-medium text-xs sm:text-sm', today && 'text-primary font-bold')}>
                     {format(day, 'd')}
                   </span>
-
                   {dayPayments.length > 0 && inMonth && (
                     <div className="flex flex-col items-center gap-0.5 mt-1">
                       <div className="flex gap-0.5">
@@ -174,7 +166,6 @@ const CalendarPage = () => {
           </div>
         </div>
 
-        {/* Selected day detail */}
         {selectedDay && (
           <div className="space-y-3 animate-fade-in">
             <div className="flex items-center justify-between">
@@ -187,9 +178,7 @@ const CalendarPage = () => {
             </div>
 
             {selectedDayPayments.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground text-sm">
-                No hay pagos para este día
-              </div>
+              <div className="text-center py-8 text-muted-foreground text-sm">No hay pagos para este día</div>
             ) : (
               <div className="space-y-3">
                 {selectedDayPayments.map(payment => (
@@ -207,7 +196,7 @@ const CalendarPage = () => {
             )}
           </div>
         )}
-      </main>
+      </div>
 
       <PaymentForm open={formOpen} onOpenChange={setFormOpen} payment={editingPayment} payees={payees} onAddPayee={addPayee} onSubmit={handleFormSubmit} />
 
@@ -225,7 +214,7 @@ const CalendarPage = () => {
       </AlertDialog>
 
       <Toaster position="bottom-right" />
-    </div>
+    </AppLayout>
   );
 };
 

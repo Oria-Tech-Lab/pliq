@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/payments/StatusBadge';
 import { PaymentForm } from '@/components/payments/PaymentForm';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { PaymentStatus } from '@/types/payment';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
@@ -89,20 +90,8 @@ const PayeePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/60 bg-card/80 backdrop-blur-xl sticky top-0 z-40">
-        <div className="container flex items-center gap-4 py-4">
-          <Link to="/">
-            <Button variant="ghost" size="icon" className="rounded-xl"><ArrowLeft className="w-5 h-5" /></Button>
-          </Link>
-          <div>
-            <h1 className="font-display font-bold text-2xl text-foreground">{payee.name}</h1>
-            <p className="text-sm text-muted-foreground">{stats.total} {stats.total === 1 ? 'pago' : 'pagos'} registrados</p>
-          </div>
-        </div>
-      </header>
-
-      <main className="container py-6 space-y-6">
+    <AppLayout title={payee.name}>
+      <div className="container py-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-slide-up">
           <div className="rounded-2xl bg-card p-5 space-y-2" style={{ boxShadow: '0 1px 3px 0 hsl(220 25% 14% / 0.04)' }}>
@@ -172,7 +161,7 @@ const PayeePage = () => {
             ))
           )}
         </div>
-      </main>
+      </div>
 
       <PaymentForm open={formOpen} onOpenChange={setFormOpen} payment={editingPayment} payees={payees} onAddPayee={addPayee} onSubmit={handleFormSubmit} />
 
@@ -190,7 +179,7 @@ const PayeePage = () => {
       </AlertDialog>
 
       <Toaster position="bottom-right" />
-    </div>
+    </AppLayout>
   );
 };
 
