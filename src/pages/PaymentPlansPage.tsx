@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 
 export default function PaymentPlansPage() {
   const { plans, isLoading, addPlan, deletePlan, markInstancePaid, markInstancePending } = usePaymentPlans();
-  const { payees } = usePayees([], () => {});
+  const { payees, addPayee } = usePayees([], () => {});
   const { categories } = useCustomCategories();
   const [formOpen, setFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
