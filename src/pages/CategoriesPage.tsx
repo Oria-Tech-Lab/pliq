@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { usePayments } from '@/hooks/usePayments';
+import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
 import { PaymentCategory, CATEGORY_LABELS } from '@/types/payment';
 import { Zap, CreditCard, RefreshCw, User, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
@@ -18,7 +18,7 @@ const CATEGORY_ICONS: Record<string, typeof Zap> = {
 };
 
 const CategoriesPage = () => {
-  const { payments } = usePayments();
+  const { flattenedPayments: payments } = usePaymentPlans();
   const { categories: customCategories, addCategory, deleteCategory } = useCustomCategories();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState('');
