@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { usePayments } from '@/hooks/usePayments';
+import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
 import { BeneficiaryType, BENEFICIARY_TYPE_LABELS, BankAccount, Payee } from '@/types/payment';
 import { Users, CreditCard, ChevronRight, Plus, X, Building2 } from 'lucide-react';
