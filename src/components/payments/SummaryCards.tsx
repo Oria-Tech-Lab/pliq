@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Payment, QuickFilter } from '@/types/payment';
 import { isToday, isThisWeek, isThisMonth } from 'date-fns';
-import { AlertTriangle, CalendarCheck, CalendarDays, Calendar, TrendingUp, CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertTriangle, CalendarCheck, CalendarDays, Calendar, TrendingUp, CheckCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SummaryCardsProps {
@@ -81,10 +81,7 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
       value: formatCurrency(totalDueThisMonth),
       subtitle: `${monthPayments.length} pagos pendientes`,
       icon: TrendingUp,
-      variant: 'week' as const,
       iconColor: 'text-pending',
-      gradientFrom: 'from-pending/10',
-      gradientTo: 'to-transparent',
     },
     {
       filterKey: 'paid_month' as QuickFilter,
@@ -92,52 +89,14 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
       value: formatCurrency(paidThisMonth),
       subtitle: 'Total pagado',
       icon: CheckCircle,
-      variant: 'today' as const,
       iconColor: 'text-paid',
-      gradientFrom: 'from-paid/10',
-      gradientTo: 'to-transparent',
     },
   ];
-
-  const renderCard = (card: typeof sliderCards[0], compact = false) => {
-    const isActive = activeFilter === card.filterKey;
-    return (
-      <div
-        key={card.title}
-        onClick={() => onCardClick?.(isActive ? null : card.filterKey)}
-        className={`summary-card summary-card-${card.variant} cursor-pointer transition-all duration-200 select-none
-          ${compact ? 'min-w-[140px] flex-shrink-0' : ''}
-          ${isActive ? 'ring-2 ring-primary shadow-md scale-[1.02]' : ''}
-          ${card.highlight && !isActive ? 'ring-1 ring-overdue/30' : ''}
-          hover:shadow-md hover:scale-[1.01]
-        `}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-xl bg-muted/60 flex items-center justify-center">
-            <card.icon className={`w-4 h-4 ${card.iconColor}`} />
-          </div>
-        </div>
-        <p className={`text-2xl font-bold font-display tracking-tight ${
-          card.variant === 'overdue' && card.highlight ? 'text-overdue' : 'text-foreground'
-        }`}>
-          {card.value}
-        </p>
-        <p className="text-xs font-medium text-muted-foreground mt-0.5">{card.title}</p>
-        <p className="text-[11px] text-muted-foreground/70 mt-1 truncate">{card.subtitle}</p>
-      </div>
-    );
-  };
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: direction === 'left' ? -160 : 160, behavior: 'smooth' });
-    }
-  };
 
   if (isMobile) {
     return (
       <div className="space-y-3">
-        {/* Full-width summary cards */}
+        {/* Hero amount cards — clean, minimal */}
         <div className="grid grid-cols-2 gap-3">
           {fullWidthCards.map((card) => {
             const isActive = activeFilter === card.filterKey;
@@ -145,42 +104,64 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
               <div
                 key={card.title}
                 onClick={() => onCardClick?.(isActive ? null : card.filterKey)}
-                className={`summary-card summary-card-${card.variant} cursor-pointer transition-all duration-200 select-none
-                  ${isActive ? 'ring-2 ring-primary shadow-md scale-[1.02]' : ''}
-                  hover:shadow-md hover:scale-[1.01]
+                className={`rounded-2xl bg-card p-4 cursor-pointer transition-all duration-200 select-none border border-border/50
+                  ${isActive ? 'ring-2 ring-primary border-primary/30 shadow-md' : 'shadow-soft'}
+                  active:scale-[0.98]
                 `}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-muted/60 flex items-center justify-center">
-                    <card.icon className={`w-4 h-4 ${card.iconColor}`} />
-                  </div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+                  <card.icon className={`w-4 h-4 ${card.iconColor}`} />
                 </div>
-                <p className="text-xl font-bold font-display tracking-tight text-foreground leading-tight">
+                <p className="text-lg font-bold font-display tracking-tight text-foreground leading-tight">
                   {card.value}
                 </p>
-                <p className="text-xs font-medium text-muted-foreground mt-0.5">{card.title}</p>
-                <p className="text-[11px] text-muted-foreground/70 mt-1">{card.subtitle}</p>
+                <p className="text-[11px] text-muted-foreground/60 mt-1">{card.subtitle}</p>
               </div>
             );
           })}
         </div>
 
         {/* Horizontal slider for quick filter cards */}
-        <div className="relative">
-          <div
-            ref={scrollRef}
-            className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory"
-            style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {sliderCards.map((card) => renderCard(card, true))}
-          </div>
+        <div
+          ref={scrollRef}
+          className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory -mx-1 px-1"
+        >
+          {sliderCards.map((card) => {
+            const isActive = activeFilter === card.filterKey;
+            return (
+              <div
+                key={card.title}
+                onClick={() => onCardClick?.(isActive ? null : card.filterKey)}
+                className={`min-w-[120px] flex-shrink-0 snap-start rounded-xl bg-card px-3 py-2.5 cursor-pointer transition-all duration-200 select-none border border-border/50
+                  ${isActive ? 'ring-2 ring-primary border-primary/30 shadow-md' : 'shadow-soft'}
+                  ${card.highlight && !isActive ? 'border-overdue/30' : ''}
+                  active:scale-[0.97]
+                `}
+              >
+                <div className="flex items-center gap-1.5 mb-1">
+                  <card.icon className={`w-3.5 h-3.5 ${card.iconColor}`} />
+                  <span className="text-[11px] font-medium text-muted-foreground">{card.title}</span>
+                </div>
+                <p className={`text-xl font-bold font-display tracking-tight ${
+                  card.variant === 'overdue' && card.highlight ? 'text-overdue' : 'text-foreground'
+                }`}>
+                  {card.value}
+                </p>
+                <p className="text-[10px] text-muted-foreground/60 mt-0.5 truncate">{card.subtitle}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   }
 
-  // Desktop: grid layout as before
-  const allCards = [...sliderCards, ...fullWidthCards.map(c => ({ ...c, highlight: false }))];
+  // Desktop layout
+  const allCards = [
+    ...sliderCards.map(c => ({ ...c, isAmount: false })),
+    ...fullWidthCards.map(c => ({ ...c, variant: 'month' as const, highlight: false, isAmount: true })),
+  ];
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -190,24 +171,22 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
           <div
             key={card.title}
             onClick={() => onCardClick?.(isActive ? null : card.filterKey)}
-            className={`summary-card summary-card-${card.variant} cursor-pointer transition-all duration-200 select-none
-              ${isActive ? 'ring-2 ring-primary shadow-md scale-[1.02]' : ''}
-              ${'highlight' in card && card.highlight && !isActive ? 'ring-1 ring-overdue/30' : ''}
-              hover:shadow-md hover:scale-[1.01]
+            className={`rounded-2xl bg-card p-5 cursor-pointer transition-all duration-200 select-none border border-border/50
+              ${isActive ? 'ring-2 ring-primary border-primary/30 shadow-md scale-[1.02]' : 'shadow-soft'}
+              ${card.highlight && !isActive ? 'border-overdue/30' : ''}
+              hover:shadow-card hover:scale-[1.01]
             `}
           >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-xl bg-muted/60 flex items-center justify-center">
-                <card.icon className={`w-4 h-4 ${card.iconColor}`} />
-              </div>
+              <card.icon className={`w-4 h-4 ${card.iconColor}`} />
+              <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
             </div>
             <p className={`text-2xl font-bold font-display tracking-tight ${
-              card.variant === 'overdue' && 'highlight' in card && card.highlight ? 'text-overdue' : 'text-foreground'
+              card.variant === 'overdue' && card.highlight ? 'text-overdue' : 'text-foreground'
             }`}>
               {card.value}
             </p>
-            <p className="text-xs font-medium text-muted-foreground mt-0.5">{card.title}</p>
-            <p className="text-[11px] text-muted-foreground/70 mt-1 truncate">{card.subtitle}</p>
+            <p className="text-[11px] text-muted-foreground/60 mt-1 truncate">{card.subtitle}</p>
           </div>
         );
       })}

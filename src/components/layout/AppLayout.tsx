@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { Button } from '@/components/ui/button';
-import { Plus, Menu } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -17,10 +17,9 @@ export function AppLayout({ children, onAddPayment, title }: AppLayoutProps) {
         <AppSidebar />
 
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Top bar */}
           <header className="sticky top-0 z-40 h-14 flex items-center justify-between px-4 bg-card/80 backdrop-blur-xl border-b border-border/40">
             <div className="flex items-center gap-3">
-              <SidebarTrigger className="rounded-xl text-muted-foreground hover:text-foreground" />
+              <SidebarTrigger className="h-9 w-9 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors [&_svg]:w-5 [&_svg]:h-5" />
               {title && (
                 <h1 className="font-display font-bold text-lg text-foreground">{title}</h1>
               )}
