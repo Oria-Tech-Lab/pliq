@@ -84,6 +84,13 @@ export function usePayments() {
     }));
   }, []);
 
+  const updatePaymentPayeeId = useCallback((id: string, payeeId: string) => {
+    setPayments(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      return { ...p, payeeId };
+    }));
+  }, []);
+
   const deletePayment = useCallback((id: string) => {
     setPayments(prev => prev.filter(p => p.id !== id));
   }, []);
@@ -143,6 +150,7 @@ export function usePayments() {
     isLoading,
     addPayment,
     updatePayment,
+    updatePaymentPayeeId,
     deletePayment,
     markAsPaid,
     markAsPending,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Payment, PaymentCategory, PaymentFrequency, PaymentMethod, CATEGORY_LABELS, FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
+import { Payment, PaymentCategory, PaymentFrequency, PaymentMethod, Payee, CATEGORY_LABELS, FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,13 +10,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PaymentFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   payment?: Payment | null;
+  payees: Payee[];
+  onAddPayee: (name: string) => Payee;
   onSubmit: (data: Omit<Payment, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => void;
 }
 
@@ -27,14 +29,17 @@ const defaultFormData = {
   frequency: 'monthly' as PaymentFrequency,
   dueDate: new Date().toISOString(),
   payTo: '',
+  payeeId: '',
   paymentMethod: 'bank' as PaymentMethod,
   reminderDays: 3,
   notes: '',
 };
 
-export function PaymentForm({ open, onOpenChange, payment, onSubmit }: PaymentFormProps) {
+export function PaymentForm({ open, onOpenChange, payment, payees, onAddPayee, onSubmit }: PaymentFormProps) {
   const [formData, setFormData] = useState(defaultFormData);
   const [dateOpen, setDateOpen] = useState(false);
+  const [showNewPayee, setShowNewPayee] = useState(false);
+  const [newPayeeName, setNewPayeeName] = useState('');
 
   useEffect(() => {
     if (payment) {
@@ -45,6 +50,7 @@ export function PaymentForm({ open, onOpenChange, payment, onSubmit }: PaymentFo
         frequency: payment.frequency,
         dueDate: payment.dueDate,
         payTo: payment.payTo,
+        payeeId: payment.payeeId || '',
         paymentMethod: payment.paymentMethod,
         reminderDays: payment.reminderDays,
         notes: payment.notes || '',
@@ -52,12 +58,26 @@ export function PaymentForm({ open, onOpenChange, payment, onSubmit }: PaymentFo
     } else {
       setFormData(defaultFormData);
     }
+    setShowNewPayee(false);
+    setNewPayeeName('');
   }, [payment, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const payee = payees.find(p => p.id === formData.payeeId);
+    onSubmit({
+      ...formData,
+      payTo: payee?.name || formData.payTo,
+    });
     onOpenChange(false);
+  };
+
+  const handleAddNewPayee = () => {
+    if (!newPayeeName.trim()) return;
+    const payee = onAddPayee(newPayeeName);
+    setFormData({ ...formData, payeeId: payee.id, payTo: payee.name });
+    setShowNewPayee(false);
+    setNewPayeeName('');
   };
 
   const isEditing = !!payment;
@@ -171,16 +191,62 @@ export function PaymentForm({ open, onOpenChange, payment, onSubmit }: PaymentFo
             </div>
           </div>
 
-          {/* Pay To */}
+          {/* Pay To - Payee Selector */}
           <div className="space-y-2">
-            <Label htmlFor="payTo">A quién se paga</Label>
-            <Input
-              id="payTo"
-              placeholder="Ej: Movistar, Banco BCP, Netflix"
-              value={formData.payTo}
-              onChange={(e) => setFormData({ ...formData, payTo: e.target.value })}
-              required
-            />
+            <Label>A quién se paga</Label>
+            {!showNewPayee ? (
+              <div className="flex gap-2">
+                <Select
+                  value={formData.payeeId}
+                  onValueChange={(value: string) => {
+                    const payee = payees.find(p => p.id === value);
+                    setFormData({ ...formData, payeeId: value, payTo: payee?.name || '' });
+                  }}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Seleccionar receptor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {payees
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((payee) => (
+                        <SelectItem key={payee.id} value={payee.id}>{payee.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowNewPayee(true)}
+                  title="Agregar nuevo receptor"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  autoFocus
+                  placeholder="Nombre del receptor"
+                  value={newPayeeName}
+                  onChange={(e) => setNewPayeeName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddNewPayee();
+                    }
+                    if (e.key === 'Escape') setShowNewPayee(false);
+                  }}
+                />
+                <Button type="button" variant="default" size="sm" onClick={handleAddNewPayee} disabled={!newPayeeName.trim()}>
+                  Agregar
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewPayee(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Payment Method & Reminder */}

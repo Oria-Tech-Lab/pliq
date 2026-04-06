@@ -1,4 +1,4 @@
-import { Payment, FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
+import { Payment, Payee, FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
 import { StatusBadge } from './StatusBadge';
 import { CategoryBadge } from './CategoryBadge';
 import { Button } from '@/components/ui/button';
@@ -6,21 +6,26 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Check, RotateCcw, Pencil, Trash2, Calendar, User, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 interface PaymentCardProps {
   payment: Payment;
+  payees?: Payee[];
   onMarkAsPaid: (id: string) => void;
   onMarkAsPending: (id: string) => void;
   onEdit: (payment: Payment) => void;
   onDelete: (id: string) => void;
 }
 
-export function PaymentCard({ payment, onMarkAsPaid, onMarkAsPending, onEdit, onDelete }: PaymentCardProps) {
+export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPending, onEdit, onDelete }: PaymentCardProps) {
   const formattedDate = format(new Date(payment.dueDate), "d 'de' MMMM", { locale: es });
   const formattedAmount = new Intl.NumberFormat('es-PE', {
     style: 'currency',
     currency: 'PEN',
   }).format(payment.amount);
+
+  const payee = payees.find(p => p.id === payment.payeeId);
+  const payeeName = payee?.name || payment.payTo;
 
   return (
     <div className={cn(
@@ -48,10 +53,20 @@ export function PaymentCard({ payment, onMarkAsPaid, onMarkAsPending, onEdit, on
                   <Calendar className="w-3.5 h-3.5" />
                   {formattedDate}
                 </span>
-                <span className="inline-flex items-center gap-1">
-                  <User className="w-3.5 h-3.5" />
-                  {payment.payTo}
-                </span>
+                {payee ? (
+                  <Link
+                    to={`/payee/${payee.id}`}
+                    className="inline-flex items-center gap-1 hover:text-primary transition-colors underline-offset-2 hover:underline"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    {payeeName}
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center gap-1">
+                    <User className="w-3.5 h-3.5" />
+                    {payeeName}
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-1">
                   <Wallet className="w-3.5 h-3.5" />
                   {METHOD_LABELS[payment.paymentMethod]}
