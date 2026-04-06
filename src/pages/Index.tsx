@@ -30,7 +30,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<PaymentCategory | 'all'>('all');
-  const [quickFilter, setQuickFilter] = useState<QuickFilter>(null);
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('month');
 
   const payments = flattenedPayments;
 

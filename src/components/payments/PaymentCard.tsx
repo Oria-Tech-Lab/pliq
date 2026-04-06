@@ -4,7 +4,7 @@ import { CategoryBadge } from './CategoryBadge';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Check, RotateCcw, Pencil, Trash2, Calendar, User, Wallet } from 'lucide-react';
+import { Check, RotateCcw, Pencil, Trash2, Calendar, User, Wallet, Repeat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
@@ -26,74 +26,83 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
 
   const payee = payees.find(p => p.id === payment.payeeId);
   const payeeName = payee?.name || payment.payTo;
+  const isPaid = payment.status === 'paid';
+  const isOverdue = payment.status === 'overdue';
 
   return (
     <div className={cn(
-      'payment-row group animate-fade-in',
-      payment.status === 'overdue' && 'border-l-[3px] border-l-overdue',
-      payment.status === 'paid' && 'border-l-[3px] border-l-paid opacity-70',
+      'payment-row group animate-fade-in relative overflow-hidden',
+      isOverdue && 'border-l-[3px] border-l-overdue',
+      isPaid && 'border-l-[3px] border-l-paid',
     )}>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className={cn(
-                  "font-semibold text-foreground truncate",
-                  payment.status === 'paid' && 'line-through text-muted-foreground'
-                )}>
-                  {payment.name}
-                </h3>
-                <CategoryBadge category={payment.category} />
-              </div>
-              
-              <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground flex-wrap">
-                <span className="inline-flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {formattedDate}
-                </span>
-                {payee ? (
-                  <Link
-                    to={`/payee/${payee.id}`}
-                    className="inline-flex items-center gap-1.5 hover:text-primary transition-colors underline-offset-2 hover:underline"
-                  >
-                    <User className="w-3.5 h-3.5" />
-                    {payeeName}
-                  </Link>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5" />
-                    {payeeName}
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1.5">
-                  <Wallet className="w-3.5 h-3.5" />
-                  {METHOD_LABELS[payment.paymentMethod]}
-                </span>
-              </div>
+      {/* Status indicator stripe at top */}
+      <div className={cn(
+        'absolute top-0 left-0 right-0 h-[2px]',
+        isPaid && 'bg-paid/30',
+        isOverdue && 'bg-overdue/30',
+        !isPaid && !isOverdue && 'bg-primary/10',
+      )} />
 
-              {payment.frequency !== 'once' && (
-                <span className="inline-block mt-2 text-[11px] text-muted-foreground bg-muted/70 px-2 py-0.5 rounded-md font-medium">
-                  {FREQUENCY_LABELS[payment.frequency]}
-                </span>
-              )}
-            </div>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        {/* Left: Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h3 className={cn(
+              "font-semibold text-[15px] text-foreground",
+              isPaid && 'line-through text-muted-foreground'
+            )}>
+              {payment.name}
+            </h3>
+            <CategoryBadge category={payment.category} />
+            <StatusBadge status={payment.status} />
           </div>
+
+          <div className="flex items-center gap-4 mt-2.5 text-[13px] text-muted-foreground flex-wrap">
+            <span className="inline-flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-muted-foreground/70" />
+              {formattedDate}
+            </span>
+            {payee ? (
+              <Link
+                to={`/payee/${payee.id}`}
+                className="inline-flex items-center gap-1.5 hover:text-primary transition-colors underline-offset-2 hover:underline"
+              >
+                <User className="w-3.5 h-3.5 text-muted-foreground/70" />
+                {payeeName}
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-muted-foreground/70" />
+                {payeeName}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5">
+              <Wallet className="w-3.5 h-3.5 text-muted-foreground/70" />
+              {METHOD_LABELS[payment.paymentMethod]}
+            </span>
+          </div>
+
+          {payment.frequency !== 'once' && (
+            <span className="inline-flex items-center gap-1 mt-2.5 text-[11px] text-primary bg-primary/8 px-2.5 py-1 rounded-lg font-medium">
+              <Repeat className="w-3 h-3" />
+              {FREQUENCY_LABELS[payment.frequency]}
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-4 sm:gap-6">
+        {/* Right: Amount + Actions */}
+        <div className="flex items-center gap-4 sm:gap-5">
           <div className="text-right">
             <p className={cn(
-              "font-bold text-lg tracking-tight",
-              payment.status === 'paid' ? 'text-muted-foreground' : 'text-foreground'
+              "font-bold text-lg tracking-tight tabular-nums",
+              isPaid ? 'text-muted-foreground' : isOverdue ? 'text-overdue' : 'text-foreground'
             )}>
               {formattedAmount}
             </p>
-            <StatusBadge status={payment.status} className="mt-1" />
           </div>
 
-          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            {payment.status !== 'paid' ? (
+          <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            {!isPaid ? (
               <Button
                 size="icon"
                 variant="ghost"
@@ -137,7 +146,7 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
       </div>
 
       {payment.notes && (
-        <p className="mt-3 text-sm text-muted-foreground border-t border-border/60 pt-3">
+        <p className="mt-3 text-[13px] text-muted-foreground border-t border-border/40 pt-3 italic">
           {payment.notes}
         </p>
       )}
