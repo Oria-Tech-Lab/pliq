@@ -1,0 +1,259 @@
+import { useState, useMemo } from 'react';
+import { usePayments } from '@/hooks/usePayments';
+import { usePayees } from '@/hooks/usePayees';
+import { Header } from '@/components/layout/Header';
+import { PaymentForm } from '@/components/payments/PaymentForm';
+import { PaymentCard } from '@/components/payments/PaymentCard';
+import { StatusBadge } from '@/components/payments/StatusBadge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Payment } from '@/types/payment';
+import { toast } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  isToday,
+  addMonths,
+  subMonths,
+} from 'date-fns';
+import { es } from 'date-fns/locale';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const CalendarPage = () => {
+  const { payments, isLoading, addPayment, updatePayment, updatePaymentPayeeId, deletePayment, markAsPaid, markAsPending } = usePayments();
+  const { payees, addPayee } = usePayees(payments, updatePaymentPayeeId);
+
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
+
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+    return eachDayOfInterval({ start: calStart, end: calEnd });
+  }, [currentMonth]);
+
+  const paymentsByDay = useMemo(() => {
+    const map = new Map<string, Payment[]>();
+    payments.forEach(p => {
+      const key = format(new Date(p.dueDate), 'yyyy-MM-dd');
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(p);
+    });
+    return map;
+  }, [payments]);
+
+  const selectedDayPayments = useMemo(() => {
+    if (!selectedDay) return [];
+    const key = format(selectedDay, 'yyyy-MM-dd');
+    return (paymentsByDay.get(key) || []).sort((a, b) => {
+      if (a.status === 'overdue' && b.status !== 'overdue') return -1;
+      if (b.status === 'overdue' && a.status !== 'overdue') return 1;
+      if (a.status === 'paid' && b.status !== 'paid') return 1;
+      if (b.status === 'paid' && a.status !== 'paid') return -1;
+      return 0;
+    });
+  }, [selectedDay, paymentsByDay]);
+
+  const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+  const handleAddPayment = () => {
+    setEditingPayment(null);
+    setFormOpen(true);
+  };
+
+  const handleFormSubmit = (data: Omit<Payment, 'id' | 'status' | 'createdAt' | 'updatedAt'>) => {
+    if (editingPayment) {
+      updatePayment(editingPayment.id, data);
+      toast.success('Pago actualizado', { description: data.name });
+    } else {
+      addPayment(data);
+      toast.success('Pago creado', { description: data.name });
+    }
+  };
+
+  const handleMarkAsPaid = (id: string) => {
+    markAsPaid(id);
+    const payment = payments.find(p => p.id === id);
+    toast.success('Marcado como pagado', {
+      description: payment?.name,
+      action: { label: 'Deshacer', onClick: () => markAsPending(id) },
+    });
+  };
+
+  const handleDeletePayment = () => {
+    if (deletingPaymentId) {
+      const payment = payments.find(p => p.id === deletingPaymentId);
+      deletePayment(deletingPaymentId);
+      toast.success('Pago eliminado', { description: payment?.name });
+      setDeletingPaymentId(null);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-muted-foreground">Cargando...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header onAddPayment={handleAddPayment} />
+
+      <main className="container py-6 space-y-6">
+        {/* Month navigation */}
+        <div className="flex items-center justify-between animate-slide-up">
+          <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(prev => subMonths(prev, 1))}>
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <h2 className="font-display font-semibold text-xl text-foreground capitalize">
+            {format(currentMonth, 'MMMM yyyy', { locale: es })}
+          </h2>
+          <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(prev => addMonths(prev, 1))}>
+            <ChevronRight className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Calendar grid */}
+        <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          {/* Week header */}
+          <div className="grid grid-cols-7 mb-2">
+            {weekDays.map(day => (
+              <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
+                {day}
+              </div>
+            ))}
+          </div>
+
+          {/* Days grid */}
+          <div className="grid grid-cols-7 gap-1">
+            {calendarDays.map(day => {
+              const key = format(day, 'yyyy-MM-dd');
+              const dayPayments = paymentsByDay.get(key) || [];
+              const inMonth = isSameMonth(day, currentMonth);
+              const today = isToday(day);
+              const selected = selectedDay && isSameDay(day, selectedDay);
+
+              const hasOverdue = dayPayments.some(p => p.status === 'overdue');
+              const hasPending = dayPayments.some(p => p.status === 'pending');
+              const allPaid = dayPayments.length > 0 && dayPayments.every(p => p.status === 'paid');
+
+              return (
+                <button
+                  key={key}
+                  onClick={() => setSelectedDay(day)}
+                  className={cn(
+                    'relative flex flex-col items-center rounded-lg p-1.5 min-h-[60px] sm:min-h-[80px] transition-colors text-sm',
+                    inMonth ? 'text-foreground' : 'text-muted-foreground/40',
+                    today && 'ring-2 ring-primary ring-offset-1 ring-offset-background',
+                    selected && 'bg-primary/10',
+                    !selected && inMonth && 'hover:bg-muted',
+                  )}
+                >
+                  <span className={cn(
+                    'font-medium text-xs sm:text-sm',
+                    today && 'text-primary font-bold',
+                  )}>
+                    {format(day, 'd')}
+                  </span>
+
+                  {dayPayments.length > 0 && inMonth && (
+                    <div className="flex flex-col items-center gap-0.5 mt-1">
+                      {/* Status dots */}
+                      <div className="flex gap-0.5">
+                        {hasOverdue && <span className="w-2 h-2 rounded-full bg-overdue" />}
+                        {hasPending && <span className="w-2 h-2 rounded-full bg-pending" />}
+                        {allPaid && <span className="w-2 h-2 rounded-full bg-paid" />}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground hidden sm:block">
+                        {dayPayments.length} {dayPayments.length === 1 ? 'pago' : 'pagos'}
+                      </span>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selected day detail */}
+        {selectedDay && (
+          <div className="space-y-3 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display font-semibold text-lg text-foreground capitalize">
+                {format(selectedDay, "EEEE d 'de' MMMM", { locale: es })}
+              </h3>
+              <span className="text-sm text-muted-foreground">
+                {selectedDayPayments.length} {selectedDayPayments.length === 1 ? 'pago' : 'pagos'}
+              </span>
+            </div>
+
+            {selectedDayPayments.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No hay pagos para este día
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {selectedDayPayments.map(payment => (
+                  <PaymentCard
+                    key={payment.id}
+                    payment={payment}
+                    payees={payees}
+                    onMarkAsPaid={handleMarkAsPaid}
+                    onMarkAsPending={markAsPending}
+                    onEdit={(p) => { setEditingPayment(p); setFormOpen(true); }}
+                    onDelete={(id) => setDeletingPaymentId(id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </main>
+
+      <PaymentForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        payment={editingPayment}
+        payees={payees}
+        onAddPayee={addPayee}
+        onSubmit={handleFormSubmit}
+      />
+
+      <AlertDialog open={!!deletingPaymentId} onOpenChange={(open) => !open && setDeletingPaymentId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar este pago?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El pago será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePayment} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Toaster position="bottom-right" />
+    </div>
+  );
+};
+
+export default CalendarPage;
