@@ -30,7 +30,7 @@ const CategoriesPage = () => {
     // Built-in categories
     const builtIn = (Object.keys(CATEGORY_LABELS) as PaymentCategory[]).map(cat => {
       const catPayments = payments.filter(p => p.category === cat);
-      const total = catPayments.reduce((s, p) => s + p.amount, 0);
+      const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
       const pending = catPayments.filter(p => p.status !== 'paid').length;
       return { key: cat, label: CATEGORY_LABELS[cat], count: catPayments.length, total, pending, isCustom: false };
     });
@@ -38,7 +38,7 @@ const CategoriesPage = () => {
     // Custom categories
     const custom = customCategories.map(cc => {
       const catPayments = payments.filter(p => p.category === cc.id);
-      const total = catPayments.reduce((s, p) => s + p.amount, 0);
+      const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
       const pending = catPayments.filter(p => p.status !== 'paid').length;
       return { key: cc.id, label: cc.name, count: catPayments.length, total, pending, isCustom: true };
     });
