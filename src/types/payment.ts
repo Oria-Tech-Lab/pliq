@@ -1,5 +1,7 @@
 export type PaymentStatus = 'pending' | 'paid' | 'overdue';
 
+export type QuickFilter = 'overdue' | 'today' | 'week' | 'month' | 'pending' | 'paid_month' | null;
+
 export type PaymentFrequency = 'once' | 'weekly' | 'monthly' | 'yearly';
 
 export type PaymentCategory = 'services' | 'debts' | 'subscriptions' | 'personal' | 'other';

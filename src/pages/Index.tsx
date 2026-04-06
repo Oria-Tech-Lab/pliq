@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Payment, PaymentStatus, PaymentCategory } from '@/types/payment';
+import { useState, useMemo } from 'react';
+import { Payment, PaymentStatus, PaymentCategory, QuickFilter } from '@/types/payment';
 import { usePayments } from '@/hooks/usePayments';
 import { usePayees } from '@/hooks/usePayees';
 import { Header } from '@/components/layout/Header';
@@ -10,6 +10,18 @@ import { PaymentForm } from '@/components/payments/PaymentForm';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
+import { isToday, isThisWeek, isThisMonth } from 'date-fns';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+const QUICK_FILTER_TITLES: Record<NonNullable<QuickFilter>, string> = {
+  overdue: 'Pagos vencidos',
+  today: 'Pagos de hoy',
+  week: 'Pagos de esta semana',
+  month: 'Pagos de este mes',
+  pending: 'Por pagar este mes',
+  paid_month: 'Pagados este mes',
+};
 
 const Index = () => {
   const { payments, isLoading, addPayment, updatePayment, updatePaymentPayeeId, deletePayment, markAsPaid, markAsPending } = usePayments();
@@ -23,6 +35,30 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<PaymentCategory | 'all'>('all');
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>(null);
+
+  const quickFilteredPayments = useMemo(() => {
+    if (!quickFilter) return payments;
+    switch (quickFilter) {
+      case 'overdue':
+        return payments.filter(p => p.status === 'overdue');
+      case 'today':
+        return payments.filter(p => p.status !== 'paid' && isToday(new Date(p.dueDate)));
+      case 'week':
+        return payments.filter(p => p.status !== 'paid' && isThisWeek(new Date(p.dueDate), { weekStartsOn: 1 }));
+      case 'month':
+        return payments.filter(p => p.status !== 'paid' && isThisMonth(new Date(p.dueDate)));
+      case 'pending':
+        return payments.filter(p => p.status !== 'paid' && isThisMonth(new Date(p.dueDate)));
+      case 'paid_month':
+        return payments.filter(p => p.status === 'paid' && p.paidDate && isThisMonth(new Date(p.paidDate)));
+      default:
+        return payments;
+    }
+  }, [payments, quickFilter]);
+
+  const sectionTitle = quickFilter ? QUICK_FILTER_TITLES[quickFilter] : 'Todos los pagos';
+  const displayCount = quickFilter ? quickFilteredPayments.length : payments.length;
 
   const handleAddPayment = () => {
     setEditingPayment(null);
@@ -65,6 +101,16 @@ const Index = () => {
     }
   };
 
+  const handleQuickFilter = (filter: QuickFilter) => {
+    setQuickFilter(filter);
+    // Reset other filters when using quick filter
+    if (filter) {
+      setSearchQuery('');
+      setStatusFilter('all');
+      setCategoryFilter('all');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -79,16 +125,29 @@ const Index = () => {
       
       <main className="container py-6 space-y-6">
         <section className="animate-slide-up">
-          <SummaryCards payments={payments} />
+          <SummaryCards payments={payments} activeFilter={quickFilter} onCardClick={handleQuickFilter} />
         </section>
 
         <section className="space-y-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <div className="flex items-center justify-between">
-            <h2 className="font-display font-semibold text-xl text-foreground">
-              Todos los pagos
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-display font-semibold text-xl text-foreground">
+                {sectionTitle}
+              </h2>
+              {quickFilter && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setQuickFilter(null)}
+                  className="h-7 px-2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-3.5 h-3.5 mr-1" />
+                  Limpiar
+                </Button>
+              )}
+            </div>
             <span className="text-sm text-muted-foreground">
-              {payments.length} {payments.length === 1 ? 'pago' : 'pagos'}
+              {displayCount} {displayCount === 1 ? 'pago' : 'pagos'}
             </span>
           </div>
 
@@ -102,7 +161,7 @@ const Index = () => {
           />
 
           <PaymentList
-            payments={payments}
+            payments={quickFilteredPayments}
             payees={payees}
             searchQuery={searchQuery}
             statusFilter={statusFilter}
