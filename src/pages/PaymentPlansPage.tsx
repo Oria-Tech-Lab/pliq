@@ -161,8 +161,11 @@ export default function PaymentPlansPage() {
                   key={instance.id}
                   instance={instance}
                   planId={plan.id}
+                  planPaymentMethod={plan.paymentMethod}
+                  paymentMethods={paymentMethods}
                   onMarkPaid={markInstancePaid}
                   onMarkPending={markInstancePending}
+                  onUpdateInstance={updateInstance}
                 />
               ))}
             </div>
