@@ -24,7 +24,7 @@ interface PaymentFormProps {
 
 const defaultFormData = {
   name: '',
-  category: 'services' as PaymentCategory,
+  category: 'services' as string,
   amount: 0,
   frequency: 'monthly' as PaymentFrequency,
   dueDate: new Date().toISOString(),
