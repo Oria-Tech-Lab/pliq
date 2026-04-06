@@ -14,8 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
 const BeneficiariesPage = () => {
-  const { payments, updatePaymentPayeeId } = usePayments();
-  const { payees, addPayee: addPayeeBase, deletePayee } = usePayees(payments, updatePaymentPayeeId);
+  const { flattenedPayments: payments } = usePaymentPlans();
+  const { payees, addPayee: addPayeeBase, deletePayee } = usePayees([], () => {});
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState('');
