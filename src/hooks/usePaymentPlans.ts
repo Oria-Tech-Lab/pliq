@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PaymentPlan, PaymentInstance } from '@/types/paymentPlan';
 import { addWeeks, addMonths, addYears, format, startOfDay, isBefore } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { PaymentFrequency } from '@/types/payment';
+import { Payment, PaymentFrequency } from '@/types/payment';
 
 const STORAGE_KEY = 'payment-plans-data';
 const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
