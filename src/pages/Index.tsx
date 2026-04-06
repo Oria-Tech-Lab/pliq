@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Payment, PaymentStatus, PaymentCategory } from '@/types/payment';
 import { usePayments } from '@/hooks/usePayments';
+import { usePayees } from '@/hooks/usePayees';
 import { Header } from '@/components/layout/Header';
 import { SummaryCards } from '@/components/payments/SummaryCards';
 import { PaymentFilters } from '@/components/payments/PaymentFilters';
@@ -11,7 +12,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 
 const Index = () => {
-  const { payments, isLoading, addPayment, updatePayment, deletePayment, markAsPaid, markAsPending } = usePayments();
+  const { payments, isLoading, addPayment, updatePayment, updatePaymentPayeeId, deletePayment, markAsPaid, markAsPending } = usePayments();
+  const { payees, addPayee } = usePayees(payments, updatePaymentPayeeId);
   
   const [formOpen, setFormOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
@@ -76,12 +78,10 @@ const Index = () => {
       <Header onAddPayment={handleAddPayment} />
       
       <main className="container py-6 space-y-6">
-        {/* Summary Cards */}
         <section className="animate-slide-up">
           <SummaryCards payments={payments} />
         </section>
 
-        {/* Filters & List */}
         <section className="space-y-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <div className="flex items-center justify-between">
             <h2 className="font-display font-semibold text-xl text-foreground">
@@ -103,6 +103,7 @@ const Index = () => {
 
           <PaymentList
             payments={payments}
+            payees={payees}
             searchQuery={searchQuery}
             statusFilter={statusFilter}
             categoryFilter={categoryFilter}
@@ -115,15 +116,15 @@ const Index = () => {
         </section>
       </main>
 
-      {/* Payment Form Dialog */}
       <PaymentForm
         open={formOpen}
         onOpenChange={setFormOpen}
         payment={editingPayment}
+        payees={payees}
+        onAddPayee={addPayee}
         onSubmit={handleFormSubmit}
       />
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deletingPaymentId} onOpenChange={(open) => !open && setDeletingPaymentId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
