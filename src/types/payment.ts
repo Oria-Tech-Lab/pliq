@@ -6,19 +6,26 @@ export type PaymentCategory = 'services' | 'debts' | 'subscriptions' | 'personal
 
 export type PaymentMethod = 'bank' | 'credit' | 'debit' | 'cash';
 
+export interface Payee {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface Payment {
   id: string;
   name: string;
   category: PaymentCategory;
   amount: number;
   frequency: PaymentFrequency;
-  dueDate: string; // ISO date string
-  payTo: string;
+  dueDate: string;
+  payTo: string; // kept for backward compatibility
+  payeeId?: string;
   paymentMethod: PaymentMethod;
   reminderDays: number;
   notes?: string;
   status: PaymentStatus;
-  paidDate?: string; // ISO date string when marked as paid
+  paidDate?: string;
   createdAt: string;
   updatedAt: string;
 }
