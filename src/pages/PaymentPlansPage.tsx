@@ -24,8 +24,9 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function PaymentPlansPage() {
-  const { plans, isLoading, addPlan, deletePlan, markInstancePaid, markInstancePending } = usePaymentPlans();
+  const { plans, isLoading, addPlan, deletePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
   const { payees, addPayee } = usePayees([], () => {});
+  const { methods: paymentMethods } = usePaymentMethods();
   const { categories } = useCustomCategories();
   const [formOpen, setFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
