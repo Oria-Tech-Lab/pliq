@@ -1,53 +1,77 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { usePayments } from '@/hooks/usePayments';
 import { usePayees } from '@/hooks/usePayees';
-import { PaymentFilters } from '@/components/payments/PaymentFilters';
-import { useMemo } from 'react';
-import { Users, CreditCard, ChevronRight } from 'lucide-react';
+import { BeneficiaryType, BENEFICIARY_TYPE_LABELS, BankAccount, Payee } from '@/types/payment';
+import { Users, CreditCard, ChevronRight, Plus, X, Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { PaymentStatus, PaymentCategory } from '@/types/payment';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+
+const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
 const BeneficiariesPage = () => {
   const { payments, updatePaymentPayeeId } = usePayments();
-  const { payees } = usePayees(payments, updatePaymentPayeeId);
+  const { payees, addPayee: addPayeeBase, deletePayee } = usePayees(payments, updatePaymentPayeeId);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<PaymentCategory | 'all'>('all');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [type, setType] = useState<BeneficiaryType>('persona');
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
 
   const payeeStats = useMemo(() => {
     return payees.map(payee => {
-      let payeePayments = payments.filter(p => p.payeeId === payee.id);
-      
-      if (statusFilter !== 'all') {
-        payeePayments = payeePayments.filter(p => p.status === statusFilter);
-      }
-      if (categoryFilter !== 'all') {
-        payeePayments = payeePayments.filter(p => p.category === categoryFilter);
-      }
-
+      const payeePayments = payments.filter(p => p.payeeId === payee.id);
       const total = payeePayments.reduce((s, p) => s + p.amount, 0);
       const pending = payeePayments.filter(p => p.status !== 'paid').length;
       return { ...payee, total, count: payeePayments.length, pending };
-    })
-    .filter(payee => {
-      if (searchQuery) {
-        return payee.name.toLowerCase().includes(searchQuery.toLowerCase());
-      }
-      return true;
-    })
-    .filter(payee => {
-      if (statusFilter !== 'all' || categoryFilter !== 'all') {
-        return payee.count > 0;
-      }
-      return true;
-    })
-    .sort((a, b) => b.total - a.total);
-  }, [payees, payments, searchQuery, statusFilter, categoryFilter]);
+    }).sort((a, b) => b.total - a.total);
+  }, [payees, payments]);
+
+  const addBankAccount = () => {
+    setBankAccounts(prev => [...prev, { id: generateId(), bank: '', accountNumber: '', interbankCode: '' }]);
+  };
+
+  const updateBankAccount = (id: string, field: keyof Omit<BankAccount, 'id'>, value: string) => {
+    setBankAccounts(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a));
+  };
+
+  const removeBankAccount = (id: string) => {
+    setBankAccounts(prev => prev.filter(a => a.id !== id));
+  };
+
+  const resetForm = () => {
+    setName('');
+    setType('persona');
+    setBankAccounts([]);
+  };
+
+  const handleSubmit = () => {
+    if (!name.trim()) return;
+    // addPayeeBase only takes name, so we need to extend usePayees or handle locally
+    // For now we use the hook's addPayee and patch the extra fields via localStorage
+    const newPayee = addPayeeBase(name);
+    // Patch with extra data
+    const stored = localStorage.getItem('payees-app-data');
+    if (stored) {
+      try {
+        const all = JSON.parse(stored) as Payee[];
+        const idx = all.findIndex(p => p.id === newPayee.id);
+        if (idx >= 0) {
+          all[idx] = { ...all[idx], type, bankAccounts };
+          localStorage.setItem('payees-app-data', JSON.stringify(all));
+        }
+      } catch {}
+    }
+    resetForm();
+    setDialogOpen(false);
+  };
 
   return (
     <AppLayout title="Beneficiarios">
@@ -56,23 +80,18 @@ const BeneficiariesPage = () => {
           <span className="text-sm text-muted-foreground">
             {payeeStats.length} {payeeStats.length === 1 ? 'beneficiario' : 'beneficiarios'}
           </span>
+          <Button size="sm" onClick={() => setDialogOpen(true)} className="gap-1.5">
+            <Plus className="w-4 h-4" />
+            Nuevo
+          </Button>
         </div>
-
-        <PaymentFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
-          categoryFilter={categoryFilter}
-          onCategoryChange={setCategoryFilter}
-        />
 
         {payeeStats.length === 0 ? (
           <div className="bg-card rounded-2xl border border-border/60 p-12 text-center shadow-sm">
             <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-4">
               <Users className="w-6 h-6 text-muted-foreground" />
             </div>
-            <p className="text-sm text-muted-foreground">Los beneficiarios aparecerán aquí cuando crees pagos</p>
+            <p className="text-sm text-muted-foreground">Los beneficiarios aparecerán aquí cuando los crees</p>
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -86,7 +105,14 @@ const BeneficiariesPage = () => {
                   <span className="text-sm font-bold text-primary">{payee.name.charAt(0).toUpperCase()}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm text-foreground truncate">{payee.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-sm text-foreground truncate">{payee.name}</h3>
+                    {payee.type && payee.type !== 'otro' && (
+                      <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-md text-muted-foreground">
+                        {BENEFICIARY_TYPE_LABELS[payee.type]}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-1 mt-0.5">
                     <CreditCard className="w-3 h-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
@@ -106,6 +132,80 @@ const BeneficiariesPage = () => {
             ))}
           </div>
         )}
+
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Nuevo beneficiario</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label>Nombre</Label>
+                <Input value={name} onChange={e => setName(e.target.value)} placeholder="Nombre del beneficiario" />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tipo de beneficiario</Label>
+                <Select value={type} onValueChange={v => setType(v as BeneficiaryType)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(BENEFICIARY_TYPE_LABELS).map(([val, label]) => (
+                      <SelectItem key={val} value={val}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Cuentas bancarias</Label>
+                  <Button variant="ghost" size="sm" onClick={addBankAccount} className="gap-1 text-xs h-7">
+                    <Plus className="w-3 h-3" /> Agregar
+                  </Button>
+                </div>
+
+                {bankAccounts.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-3 bg-muted/30 rounded-lg">
+                    Sin cuentas bancarias
+                  </p>
+                )}
+
+                {bankAccounts.map((account, idx) => (
+                  <div key={account.id} className="space-y-2 p-3 bg-muted/30 rounded-lg relative">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium text-muted-foreground">Cuenta {idx + 1}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeBankAccount(account.id)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                    <Input
+                      placeholder="Banco"
+                      value={account.bank}
+                      onChange={e => updateBankAccount(account.id, 'bank', e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <Input
+                      placeholder="Número de cuenta"
+                      value={account.accountNumber}
+                      onChange={e => updateBankAccount(account.id, 'accountNumber', e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <Input
+                      placeholder="Código de cuenta interbancario (CCI)"
+                      value={account.interbankCode}
+                      onChange={e => updateBankAccount(account.id, 'interbankCode', e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => { resetForm(); setDialogOpen(false); }}>Cancelar</Button>
+              <Button onClick={handleSubmit} disabled={!name.trim()}>Guardar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
