@@ -155,39 +155,61 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
     );
   }
 
-  // Desktop
-  const allCards = [
-    ...sliderCards.map(c => ({ ...c, isAmount: false })),
-    ...fullWidthCards.map(c => ({ ...c, variant: 'month' as const, highlight: false, isAmount: true })),
-  ];
-
+  // Desktop: hero cards on top, quick filters below
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-      {allCards.map((card) => {
-        const isActive = activeFilter === card.filterKey;
-        return (
-          <div
-            key={card.title}
-            onClick={() => onCardClick?.(isActive ? null : card.filterKey)}
-            className={`rounded-2xl bg-card p-5 cursor-pointer select-none border transition-colors duration-150
-              ${isActive ? 'border-primary/40 bg-primary/[0.03]' : 'border-border/50 hover:border-border/80'}
-              ${card.highlight && !isActive ? 'border-overdue/25' : ''}
-            `}
-            style={{ boxShadow: isActive ? 'none' : '0 1px 2px 0 hsl(220 25% 14% / 0.03)' }}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <card.icon className={`w-4 h-4 ${card.iconColor}`} />
-              <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        {fullWidthCards.map((card) => {
+          const isActive = activeFilter === card.filterKey;
+          return (
+            <div
+              key={card.title}
+              onClick={() => onCardClick?.(isActive ? null : card.filterKey)}
+              className={`rounded-2xl bg-card p-5 cursor-pointer select-none border transition-colors duration-150
+                ${isActive ? 'border-primary/40 bg-primary/[0.03]' : 'border-border/50 hover:border-border/80'}
+              `}
+              style={{ boxShadow: isActive ? 'none' : '0 1px 2px 0 hsl(220 25% 14% / 0.03)' }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <card.icon className={`w-4 h-4 ${card.iconColor}`} />
+                <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+              </div>
+              <p className="text-2xl font-bold font-display tracking-tight text-foreground">
+                {card.value}
+              </p>
+              <p className="text-[11px] text-muted-foreground/60 mt-1">{card.subtitle}</p>
             </div>
-            <p className={`text-2xl font-bold font-display tracking-tight ${
-              card.variant === 'overdue' && card.highlight ? 'text-overdue' : 'text-foreground'
-            }`}>
-              {card.value}
-            </p>
-            <p className="text-[11px] text-muted-foreground/60 mt-1 truncate">{card.subtitle}</p>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-4 gap-3">
+        {sliderCards.map((card) => {
+          const isActive = activeFilter === card.filterKey;
+          return (
+            <div
+              key={card.title}
+              onClick={() => onCardClick?.(isActive ? null : card.filterKey)}
+              className={`rounded-2xl bg-card p-4 cursor-pointer select-none border transition-colors duration-150
+                ${isActive ? 'border-primary/40 bg-primary/[0.03]' : 'border-border/50 hover:border-border/80'}
+                ${card.highlight && !isActive ? 'border-overdue/25' : ''}
+              `}
+              style={{ boxShadow: isActive ? 'none' : '0 1px 2px 0 hsl(220 25% 14% / 0.03)' }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <card.icon className={`w-4 h-4 ${card.iconColor}`} />
+                <span className="text-xs font-medium text-muted-foreground">{card.title}</span>
+              </div>
+              <p className={`text-xl font-bold font-display tracking-tight ${
+                card.variant === 'overdue' && card.highlight ? 'text-overdue' : 'text-foreground'
+              }`}>
+                {card.value}
+              </p>
+              <p className="text-[11px] text-muted-foreground/60 mt-1 truncate">{card.subtitle}</p>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
