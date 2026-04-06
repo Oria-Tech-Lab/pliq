@@ -81,7 +81,7 @@ const PayeePage = () => {
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">Receptor no encontrado</p>
           <Link to="/">
-            <Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2" /> Volver</Button>
+            <Button variant="outline" className="rounded-xl"><ArrowLeft className="w-4 h-4 mr-2" /> Volver</Button>
           </Link>
         </div>
       </div>
@@ -90,11 +90,10 @@ const PayeePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+      <header className="border-b border-border/60 bg-card/80 backdrop-blur-xl sticky top-0 z-40">
         <div className="container flex items-center gap-4 py-4">
           <Link to="/">
-            <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
+            <Button variant="ghost" size="icon" className="rounded-xl"><ArrowLeft className="w-5 h-5" /></Button>
           </Link>
           <div>
             <h1 className="font-display font-bold text-2xl text-foreground">{payee.name}</h1>
@@ -105,29 +104,35 @@ const PayeePage = () => {
 
       <main className="container py-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-slide-up">
-          <div className="rounded-xl border bg-card p-4 space-y-1">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-slide-up">
+          <div className="rounded-2xl bg-card p-5 space-y-2" style={{ boxShadow: '0 1px 3px 0 hsl(220 25% 14% / 0.04)' }}>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TrendingUp className="w-4 h-4 text-paid" />
+              <div className="w-8 h-8 rounded-xl bg-paid/10 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-paid" />
+              </div>
               Total pagado
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.totalPaid)}</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight">{formatCurrency(stats.totalPaid)}</p>
             <p className="text-xs text-muted-foreground">{stats.paidCount} pagos</p>
           </div>
-          <div className="rounded-xl border bg-card p-4 space-y-1">
+          <div className="rounded-2xl bg-card p-5 space-y-2" style={{ boxShadow: '0 1px 3px 0 hsl(220 25% 14% / 0.04)' }}>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="w-4 h-4 text-pending" />
+              <div className="w-8 h-8 rounded-xl bg-pending/10 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-pending" />
+              </div>
               Por pagar
             </div>
-            <p className="text-2xl font-bold text-foreground">{formatCurrency(stats.totalPending)}</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight">{formatCurrency(stats.totalPending)}</p>
             <p className="text-xs text-muted-foreground">{stats.pendingCount} pendientes</p>
           </div>
-          <div className="rounded-xl border bg-card p-4 space-y-1">
+          <div className="rounded-2xl bg-card p-5 space-y-2" style={{ boxShadow: '0 1px 3px 0 hsl(220 25% 14% / 0.04)' }}>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <AlertTriangle className="w-4 h-4 text-overdue" />
+              <div className="w-8 h-8 rounded-xl bg-overdue/10 flex items-center justify-center">
+                <AlertTriangle className="w-4 h-4 text-overdue" />
+              </div>
               Vencidos
             </div>
-            <p className="text-2xl font-bold text-foreground">{stats.overdueCount}</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight">{stats.overdueCount}</p>
             <p className="text-xs text-muted-foreground">pagos vencidos</p>
           </div>
         </div>
@@ -139,6 +144,7 @@ const PayeePage = () => {
               key={status}
               variant={statusFilter === status ? 'default' : 'outline'}
               size="sm"
+              className="rounded-xl"
               onClick={() => setStatusFilter(status)}
             >
               {status === 'all' ? 'Todos' : <StatusBadge status={status} />}
@@ -149,7 +155,7 @@ const PayeePage = () => {
         {/* Payment list */}
         <div className="space-y-3 animate-slide-up" style={{ animationDelay: '0.2s' }}>
           {payeePayments.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-12 text-muted-foreground text-sm">
               No hay pagos {statusFilter !== 'all' ? 'con este filtro' : 'registrados'}
             </div>
           ) : (
@@ -168,14 +174,7 @@ const PayeePage = () => {
         </div>
       </main>
 
-      <PaymentForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        payment={editingPayment}
-        payees={payees}
-        onAddPayee={addPayee}
-        onSubmit={handleFormSubmit}
-      />
+      <PaymentForm open={formOpen} onOpenChange={setFormOpen} payment={editingPayment} payees={payees} onAddPayee={addPayee} onSubmit={handleFormSubmit} />
 
       <AlertDialog open={!!deletingPaymentId} onOpenChange={(open) => !open && setDeletingPaymentId(null)}>
         <AlertDialogContent>
@@ -185,9 +184,7 @@ const PayeePage = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeletePayment} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Eliminar
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDeletePayment} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Eliminar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

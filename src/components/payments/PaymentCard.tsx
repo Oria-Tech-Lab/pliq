@@ -30,11 +30,10 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
   return (
     <div className={cn(
       'payment-row group animate-fade-in',
-      payment.status === 'overdue' && 'border-l-4 border-l-overdue',
-      payment.status === 'paid' && 'border-l-4 border-l-paid opacity-75',
+      payment.status === 'overdue' && 'border-l-[3px] border-l-overdue',
+      payment.status === 'paid' && 'border-l-[3px] border-l-paid opacity-70',
     )}>
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* Main info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start gap-3">
             <div className="flex-1 min-w-0">
@@ -49,32 +48,32 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
               </div>
               
               <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground flex-wrap">
-                <span className="inline-flex items-center gap-1">
+                <span className="inline-flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5" />
                   {formattedDate}
                 </span>
                 {payee ? (
                   <Link
                     to={`/payee/${payee.id}`}
-                    className="inline-flex items-center gap-1 hover:text-primary transition-colors underline-offset-2 hover:underline"
+                    className="inline-flex items-center gap-1.5 hover:text-primary transition-colors underline-offset-2 hover:underline"
                   >
                     <User className="w-3.5 h-3.5" />
                     {payeeName}
                   </Link>
                 ) : (
-                  <span className="inline-flex items-center gap-1">
+                  <span className="inline-flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5" />
                     {payeeName}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-1">
+                <span className="inline-flex items-center gap-1.5">
                   <Wallet className="w-3.5 h-3.5" />
                   {METHOD_LABELS[payment.paymentMethod]}
                 </span>
               </div>
 
               {payment.frequency !== 'once' && (
-                <span className="inline-block mt-2 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                <span className="inline-block mt-2 text-[11px] text-muted-foreground bg-muted/70 px-2 py-0.5 rounded-md font-medium">
                   {FREQUENCY_LABELS[payment.frequency]}
                 </span>
               )}
@@ -82,11 +81,10 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
           </div>
         </div>
 
-        {/* Amount and status */}
         <div className="flex items-center gap-4 sm:gap-6">
           <div className="text-right">
             <p className={cn(
-              "font-bold text-lg",
+              "font-bold text-lg tracking-tight",
               payment.status === 'paid' ? 'text-muted-foreground' : 'text-foreground'
             )}>
               {formattedAmount}
@@ -94,13 +92,12 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
             <StatusBadge status={payment.status} className="mt-1" />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
             {payment.status !== 'paid' ? (
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-paid hover:text-paid hover:bg-paid/10"
+                className="h-8 w-8 rounded-lg text-paid hover:text-paid hover:bg-paid/10"
                 onClick={() => onMarkAsPaid(payment.id)}
                 title="Marcar como pagado"
               >
@@ -110,7 +107,7 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
                 onClick={() => onMarkAsPending(payment.id)}
                 title="Marcar como pendiente"
               >
@@ -120,7 +117,7 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
               onClick={() => onEdit(payment)}
               title="Editar"
             >
@@ -129,7 +126,7 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive"
               onClick={() => onDelete(payment.id)}
               title="Eliminar"
             >
@@ -140,7 +137,7 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
       </div>
 
       {payment.notes && (
-        <p className="mt-3 text-sm text-muted-foreground border-t pt-3">
+        <p className="mt-3 text-sm text-muted-foreground border-t border-border/60 pt-3">
           {payment.notes}
         </p>
       )}

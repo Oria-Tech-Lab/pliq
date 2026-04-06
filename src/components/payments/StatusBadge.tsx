@@ -19,7 +19,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium',
         status === 'pending' && 'status-badge-pending',
         status === 'paid' && 'status-badge-paid',
         status === 'overdue' && 'status-badge-overdue',
