@@ -2,35 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 
 @layer base {
   :root {
-    --background: 40 20% 98%;
-    --foreground: 230 25% 18%;
+    --background: 210 20% 98%;
+    --foreground: 220 25% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 230 25% 18%;
+    --card-foreground: 220 25% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 230 25% 18%;
+    --popover-foreground: 220 25% 14%;
 
-    --primary: 234 89% 58%;
+    --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 230 20% 94%;
-    --secondary-foreground: 230 25% 25%;
+    --secondary: 214 20% 94%;
+    --secondary-foreground: 220 20% 30%;
 
-    --muted: 230 15% 92%;
-    --muted-foreground: 230 15% 46%;
+    --muted: 214 18% 93%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 234 89% 96%;
-    --accent-foreground: 234 89% 45%;
+    --accent: 217 91% 95%;
+    --accent-foreground: 217 91% 45%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 69% 42%;
+    --success: 160 68% 44%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
@@ -42,61 +42,51 @@
     --overdue: 0 84% 60%;
     --overdue-foreground: 0 0% 100%;
 
-    --paid: 152 69% 42%;
+    --paid: 160 68% 44%;
     --paid-foreground: 0 0% 100%;
 
-    --border: 230 20% 90%;
-    --input: 230 20% 90%;
-    --ring: 234 89% 58%;
+    --border: 214 20% 92%;
+    --input: 214 20% 92%;
+    --ring: 217 91% 60%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 230 25% 18%;
-    --sidebar-primary: 234 89% 58%;
+    --sidebar-foreground: 220 25% 14%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 234 89% 96%;
-    --sidebar-accent-foreground: 234 89% 45%;
-    --sidebar-border: 230 20% 92%;
-    --sidebar-ring: 234 89% 58%;
-
-    --gradient-primary: linear-gradient(135deg, hsl(234 89% 58%) 0%, hsl(252 89% 65%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(152 69% 42%) 0%, hsl(152 69% 52%) 100%);
-    --gradient-warning: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(43 96% 56%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(230 20% 99%) 100%);
-
-    --shadow-sm: 0 1px 2px 0 hsl(230 25% 18% / 0.03);
-    --shadow-md: 0 4px 6px -1px hsl(230 25% 18% / 0.05), 0 2px 4px -2px hsl(230 25% 18% / 0.05);
-    --shadow-lg: 0 10px 15px -3px hsl(230 25% 18% / 0.08), 0 4px 6px -4px hsl(230 25% 18% / 0.05);
-    --shadow-card: 0 1px 3px 0 hsl(230 25% 18% / 0.04), 0 1px 2px -1px hsl(230 25% 18% / 0.04);
+    --sidebar-accent: 217 91% 95%;
+    --sidebar-accent-foreground: 217 91% 45%;
+    --sidebar-border: 214 20% 94%;
+    --sidebar-ring: 217 91% 60%;
   }
 
   .dark {
-    --background: 230 25% 8%;
-    --foreground: 40 20% 98%;
+    --background: 220 25% 7%;
+    --foreground: 210 20% 96%;
 
-    --card: 230 25% 12%;
-    --card-foreground: 40 20% 98%;
+    --card: 220 22% 11%;
+    --card-foreground: 210 20% 96%;
 
-    --popover: 230 25% 12%;
-    --popover-foreground: 40 20% 98%;
+    --popover: 220 22% 11%;
+    --popover-foreground: 210 20% 96%;
 
-    --primary: 234 89% 65%;
+    --primary: 217 91% 65%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 230 20% 18%;
-    --secondary-foreground: 40 20% 90%;
+    --secondary: 220 18% 16%;
+    --secondary-foreground: 210 16% 85%;
 
-    --muted: 230 15% 20%;
-    --muted-foreground: 230 15% 60%;
+    --muted: 220 14% 18%;
+    --muted-foreground: 215 14% 55%;
 
-    --accent: 234 40% 20%;
-    --accent-foreground: 234 89% 75%;
+    --accent: 217 35% 18%;
+    --accent-foreground: 217 91% 75%;
 
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 60% 40%;
+    --success: 160 58% 40%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 85% 45%;
@@ -108,21 +98,21 @@
     --overdue: 0 70% 55%;
     --overdue-foreground: 0 0% 100%;
 
-    --paid: 152 60% 45%;
+    --paid: 160 58% 45%;
     --paid-foreground: 0 0% 100%;
 
-    --border: 230 20% 20%;
-    --input: 230 20% 20%;
-    --ring: 234 89% 65%;
+    --border: 220 18% 18%;
+    --input: 220 18% 18%;
+    --ring: 217 91% 65%;
 
-    --sidebar-background: 230 25% 10%;
-    --sidebar-foreground: 40 20% 98%;
-    --sidebar-primary: 234 89% 65%;
+    --sidebar-background: 220 22% 9%;
+    --sidebar-foreground: 210 20% 96%;
+    --sidebar-primary: 217 91% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 234 40% 18%;
-    --sidebar-accent-foreground: 234 89% 75%;
-    --sidebar-border: 230 20% 18%;
-    --sidebar-ring: 234 89% 65%;
+    --sidebar-accent: 217 35% 16%;
+    --sidebar-accent-foreground: 217 91% 75%;
+    --sidebar-border: 220 18% 16%;
+    --sidebar-ring: 217 91% 65%;
   }
 }
 
@@ -143,48 +133,59 @@
 
 @layer components {
   .status-badge-pending {
-    @apply bg-pending/15 text-pending-foreground border border-pending/30;
+    @apply bg-pending/12 border border-pending/25;
     color: hsl(var(--pending));
   }
 
   .status-badge-overdue {
-    @apply bg-overdue/15 text-overdue-foreground border border-overdue/30;
+    @apply bg-overdue/12 border border-overdue/25;
     color: hsl(var(--overdue));
   }
 
   .status-badge-paid {
-    @apply bg-paid/15 text-paid-foreground border border-paid/30;
+    @apply bg-paid/12 border border-paid/25;
     color: hsl(var(--paid));
   }
 
   .summary-card {
-    @apply rounded-xl border bg-card p-5 transition-all duration-200 hover:shadow-md;
-    box-shadow: var(--shadow-card);
+    @apply rounded-2xl bg-card p-5 transition-all duration-200;
+    box-shadow: 0 1px 3px 0 hsl(220 25% 14% / 0.04), 0 1px 2px -1px hsl(220 25% 14% / 0.03);
+  }
+
+  .summary-card:hover {
+    box-shadow: 0 4px 12px -2px hsl(220 25% 14% / 0.08), 0 2px 4px -2px hsl(220 25% 14% / 0.04);
+    transform: translateY(-1px);
   }
 
   .summary-card-overdue {
-    @apply border-l-4 border-l-overdue;
+    @apply border-l-[3px] border-l-overdue border-t-0 border-r-0 border-b-0;
   }
 
   .summary-card-today {
-    @apply border-l-4 border-l-primary;
+    @apply border-l-[3px] border-l-primary border-t-0 border-r-0 border-b-0;
   }
 
   .summary-card-week {
-    @apply border-l-4 border-l-pending;
+    @apply border-l-[3px] border-l-pending border-t-0 border-r-0 border-b-0;
   }
 
   .summary-card-month {
-    @apply border-l-4 border-l-muted-foreground;
+    @apply border-l-[3px] border-l-muted-foreground/40 border-t-0 border-r-0 border-b-0;
   }
 
   .payment-row {
-    @apply rounded-lg border bg-card p-4 transition-all duration-200 hover:shadow-sm hover:border-primary/20;
+    @apply rounded-2xl bg-card p-4 transition-all duration-200;
+    box-shadow: 0 1px 2px 0 hsl(220 25% 14% / 0.03);
+  }
+
+  .payment-row:hover {
+    box-shadow: 0 4px 12px -2px hsl(220 25% 14% / 0.08);
+    transform: translateY(-1px);
   }
 
   .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border rounded-xl;
-    box-shadow: var(--shadow-md);
+    @apply bg-card/80 backdrop-blur-sm rounded-2xl;
+    box-shadow: 0 4px 12px -2px hsl(220 25% 14% / 0.06);
   }
 }
 
@@ -202,33 +203,17 @@
   }
 
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
   }
 }

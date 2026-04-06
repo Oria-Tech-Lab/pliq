@@ -1,5 +1,5 @@
 import { Payment } from '@/types/payment';
-import { isToday, isThisWeek, isThisMonth, startOfDay, isBefore } from 'date-fns';
+import { isToday, isThisWeek, isThisMonth, startOfDay } from 'date-fns';
 import { AlertTriangle, CalendarCheck, CalendarDays, Calendar, TrendingUp, CheckCircle } from 'lucide-react';
 
 interface SummaryCardsProps {
@@ -7,8 +7,6 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ payments }: SummaryCardsProps) {
-  const today = startOfDay(new Date());
-
   const overduePayments = payments.filter(p => p.status === 'overdue');
   const todayPayments = payments.filter(p => p.status !== 'paid' && isToday(new Date(p.dueDate)));
   const weekPayments = payments.filter(p => p.status !== 'paid' && isThisWeek(new Date(p.dueDate), { weekStartsOn: 1 }));
@@ -32,6 +30,7 @@ export function SummaryCards({ payments }: SummaryCardsProps) {
       icon: AlertTriangle,
       variant: 'overdue' as const,
       highlight: overduePayments.length > 0,
+      iconColor: 'text-overdue',
     },
     {
       title: 'Hoy',
@@ -42,6 +41,7 @@ export function SummaryCards({ payments }: SummaryCardsProps) {
       icon: CalendarCheck,
       variant: 'today' as const,
       highlight: todayPayments.length > 0,
+      iconColor: 'text-primary',
     },
     {
       title: 'Esta semana',
@@ -50,6 +50,7 @@ export function SummaryCards({ payments }: SummaryCardsProps) {
       icon: CalendarDays,
       variant: 'week' as const,
       highlight: false,
+      iconColor: 'text-pending',
     },
     {
       title: 'Este mes',
@@ -58,6 +59,7 @@ export function SummaryCards({ payments }: SummaryCardsProps) {
       icon: Calendar,
       variant: 'month' as const,
       highlight: false,
+      iconColor: 'text-muted-foreground',
     },
     {
       title: 'Por pagar',
@@ -67,6 +69,7 @@ export function SummaryCards({ payments }: SummaryCardsProps) {
       variant: 'month' as const,
       highlight: false,
       isAmount: true,
+      iconColor: 'text-muted-foreground',
     },
     {
       title: 'Pagado este mes',
@@ -76,31 +79,29 @@ export function SummaryCards({ payments }: SummaryCardsProps) {
       variant: 'month' as const,
       highlight: false,
       isAmount: true,
+      iconColor: 'text-paid',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       {cards.map((card) => (
         <div
           key={card.title}
-          className={`summary-card summary-card-${card.variant} ${card.highlight ? 'ring-2 ring-' + card.variant + '/50' : ''}`}
+          className={`summary-card summary-card-${card.variant} ${card.highlight ? 'ring-1 ring-' + card.variant + '/30' : ''}`}
         >
           <div className="flex items-center gap-2 mb-3">
-            <card.icon className={`w-4 h-4 ${
-              card.variant === 'overdue' ? 'text-overdue' : 
-              card.variant === 'today' ? 'text-primary' : 
-              card.variant === 'week' ? 'text-pending' : 
-              'text-muted-foreground'
-            }`} />
-            <span className="text-sm font-medium text-muted-foreground">{card.title}</span>
+            <div className="w-8 h-8 rounded-xl bg-muted/60 flex items-center justify-center">
+              <card.icon className={`w-4 h-4 ${card.iconColor}`} />
+            </div>
           </div>
-          <p className={`text-2xl font-bold font-display ${
+          <p className={`text-2xl font-bold font-display tracking-tight ${
             card.variant === 'overdue' && card.highlight ? 'text-overdue' : 'text-foreground'
           }`}>
-            {card.isAmount ? card.value : card.value}
+            {card.value}
           </p>
-          <p className="text-xs text-muted-foreground mt-1 truncate">
+          <p className="text-xs font-medium text-muted-foreground mt-0.5">{card.title}</p>
+          <p className="text-[11px] text-muted-foreground/70 mt-1 truncate">
             {card.subtitle}
           </p>
         </div>
