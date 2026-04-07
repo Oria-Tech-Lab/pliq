@@ -50,6 +50,8 @@ export function AppSidebar() {
 
   const openSettings = () => {
     setEditName(userName);
+    setEditNotifTime(notifSettings.defaultTime);
+    setEditNotifDays(notifSettings.defaultDaysBefore);
     setSettingsOpen(true);
   };
 
@@ -57,6 +59,7 @@ export function AppSidebar() {
     const trimmed = editName.trim();
     setUserName(trimmed);
     localStorage.setItem(USER_NAME_KEY, trimmed);
+    updateNotifSettings({ defaultTime: editNotifTime, defaultDaysBefore: editNotifDays });
     setSettingsOpen(false);
   };
 
