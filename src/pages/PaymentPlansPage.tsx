@@ -24,13 +24,24 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function PaymentPlansPage() {
-  const { plans, isLoading, addPlan, deletePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
+  const { plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
   const { payees, addPayee } = usePayees([], () => {});
   const { methods: paymentMethods } = usePaymentMethods();
   const { categories } = useCustomCategories();
   const [formOpen, setFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
+  const [editingPlan, setEditingPlan] = useState<PaymentPlan | null>(null);
+  const [finalizingId, setFinalizingId] = useState<string | null>(null);
+
+  // Edit plan form state
+  const [editName, setEditName] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editPayeeId, setEditPayeeId] = useState('');
+  const [editAmount, setEditAmount] = useState(0);
+  const [editFrequency, setEditFrequency] = useState<string>('monthly');
+  const [editTotalPayments, setEditTotalPayments] = useState<number | null>(null);
+  const [editDueDate, setEditDueDate] = useState('');
 
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
