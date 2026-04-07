@@ -10,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { PaymentPlan, PaymentInstance, PLAN_TYPE_LABELS } from '@/types/paymentPlan';
 import { PaymentFrequency, FREQUENCY_LABELS, METHOD_LABELS, METHOD_TYPE_LABELS } from '@/types/payment';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
+import { Switch } from '@/components/ui/switch';
 import { SwipeableRow } from '@/components/payments/SwipeableRow';
 import { PaymentPlanForm } from '@/components/payments/PaymentPlanForm';
 import { Button } from '@/components/ui/button';
