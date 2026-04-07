@@ -61,6 +61,9 @@ export default function PaymentPlansPage() {
   const [editNewPayeeName, setEditNewPayeeName] = useState('');
   const [editShowNewMethod, setEditShowNewMethod] = useState(false);
   const [editNewMethodName, setEditNewMethodName] = useState('');
+  const [editNotificationsEnabled, setEditNotificationsEnabled] = useState(true);
+  const [editNotificationDaysBefore, setEditNotificationDaysBefore] = useState(1);
+  const [editNotificationTime, setEditNotificationTime] = useState('09:00');
 
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
