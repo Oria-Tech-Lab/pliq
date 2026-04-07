@@ -48,6 +48,7 @@ export default function PaymentPlansPage() {
   const [editFrequency, setEditFrequency] = useState<string>('monthly');
   const [editTotalPayments, setEditTotalPayments] = useState<number | null>(null);
   const [editDueDate, setEditDueDate] = useState('');
+  const [editPaymentMethodId, setEditPaymentMethodId] = useState('');
 
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
