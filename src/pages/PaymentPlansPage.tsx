@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
