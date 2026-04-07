@@ -103,7 +103,8 @@ const CategoriesPage = () => {
       const catPayments = payments.filter(p => p.category === cat);
       const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
       const pending = catPayments.filter(p => p.status !== 'paid').length;
-      return { key: cat, label: CATEGORY_LABELS[cat], count: catPayments.length, total, pending, isCustom: false, customData: null as CustomCategory | null };
+      const override = builtInOverrides[cat];
+      return { key: cat, label: override?.name || CATEGORY_LABELS[cat], count: catPayments.length, total, pending, isCustom: false, customData: override || null, isBuiltIn: true };
     });
 
     const custom = customCategories.map(cc => {
