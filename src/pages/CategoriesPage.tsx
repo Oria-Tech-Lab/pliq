@@ -64,7 +64,7 @@ const CategoriesPage = () => {
           </span>
           <Button size="sm" onClick={() => setDialogOpen(true)} className="gap-1.5">
             <Plus className="w-4 h-4" />
-            Nueva
+            Nueva categoría
           </Button>
         </div>
 
