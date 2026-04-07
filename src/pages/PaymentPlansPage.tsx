@@ -459,9 +459,24 @@ export default function PaymentPlansPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Monto (S/)</Label>
-              <Input type="number" step="0.01" min="0" value={editAmount || ''} onChange={e => setEditAmount(parseFloat(e.target.value) || 0)} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Monto (S/)</Label>
+                <Input type="number" step="0.01" min="0" value={editAmount || ''} onChange={e => setEditAmount(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Método de pago</Label>
+                <Select value={editPaymentMethodId} onValueChange={setEditPaymentMethodId}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
+                  <SelectContent>
+                    {paymentMethods.map(m => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name} <span className="text-muted-foreground ml-1">({METHOD_TYPE_LABELS[m.type]})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             {editingPlan?.type === 'recurring' && (
               <>
