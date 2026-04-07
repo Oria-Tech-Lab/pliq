@@ -1,16 +1,19 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Payment } from '@/types/payment';
 import { differenceInDays, isToday, startOfDay } from 'date-fns';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { AlertTriangle, Clock, Bell } from 'lucide-react';
+import { AlertTriangle, Clock, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   payments: Payment[];
 }
 
 export function NotificationBar({ payments }: Props) {
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+
   const alerts = useMemo(() => {
     const today = startOfDay(new Date());
     const upcoming = payments.filter(p => {
@@ -26,13 +29,22 @@ export function NotificationBar({ payments }: Props) {
     return { dueToday, dueSoon, total: upcoming.length };
   }, [payments]);
 
-  if (alerts.total === 0) return null;
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
+
+  const totalTodayAmount = alerts.dueToday.reduce((s, p) => s + p.amount, 0);
+  const totalSoonAmount = alerts.dueSoon.reduce((s, p) => s + p.amount, 0);
+
+  const showToday = alerts.dueToday.length > 0 && !dismissed.has('today');
+  const showSoon = alerts.dueSoon.length > 0 && !dismissed.has('soon');
+
+  if (!showToday && !showSoon) return null;
 
   return (
     <div className="space-y-2">
-      {alerts.dueToday.length > 0 && (
-        <div className="flex items-center gap-3 bg-overdue/10 border border-overdue/20 rounded-xl px-4 py-3">
-          <div className="w-8 h-8 rounded-lg bg-overdue/15 flex items-center justify-center shrink-0">
+      {showToday && (
+        <div className="flex items-start gap-3 bg-overdue/10 border border-overdue/20 rounded-xl px-4 py-3 relative">
+          <div className="w-8 h-8 rounded-lg bg-overdue/15 flex items-center justify-center shrink-0 mt-0.5">
             <AlertTriangle className="w-4 h-4 text-overdue" />
           </div>
           <div className="flex-1 min-w-0">
@@ -41,18 +53,33 @@ export function NotificationBar({ payments }: Props) {
                 ? `"${alerts.dueToday[0].name}" vence hoy`
                 : `${alerts.dueToday.length} pagos vencen hoy`}
             </p>
-            {alerts.dueToday.length === 1 && (
-              <p className="text-[10px] text-overdue/70 mt-0.5">
-                {new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(alerts.dueToday[0].amount)}
-              </p>
+            <p className="text-[11px] text-overdue/80 mt-0.5">
+              Total: {formatCurrency(totalTodayAmount)}
+            </p>
+            {alerts.dueToday.length <= 3 && alerts.dueToday.length > 1 && (
+              <div className="mt-1.5 space-y-0.5">
+                {alerts.dueToday.map(p => (
+                  <p key={p.id} className="text-[10px] text-overdue/70">
+                    • {p.name} — {formatCurrency(p.amount)}
+                  </p>
+                ))}
+              </div>
             )}
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0 text-overdue/50 hover:text-overdue hover:bg-overdue/10"
+            onClick={() => setDismissed(prev => new Set(prev).add('today'))}
+          >
+            <X className="w-3.5 h-3.5" />
+          </Button>
         </div>
       )}
 
-      {alerts.dueSoon.length > 0 && (
-        <div className="flex items-center gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
-          <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center shrink-0">
+      {showSoon && (
+        <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3 relative">
+          <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center shrink-0 mt-0.5">
             <Clock className="w-4 h-4 text-warning" />
           </div>
           <div className="flex-1 min-w-0">
@@ -61,12 +88,30 @@ export function NotificationBar({ payments }: Props) {
                 ? `"${alerts.dueSoon[0].name}" vence ${format(new Date(alerts.dueSoon[0].dueDate), "EEEE d", { locale: es })}`
                 : `${alerts.dueSoon.length} pagos vencen en los próximos 5 días`}
             </p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              Total: {new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(
-                alerts.dueSoon.reduce((s, p) => s + p.amount, 0)
-              )}
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Total: {formatCurrency(totalSoonAmount)}
             </p>
+            {alerts.dueSoon.length <= 3 && (
+              <div className="mt-1.5 space-y-0.5">
+                {alerts.dueSoon.map(p => {
+                  const diff = differenceInDays(startOfDay(new Date(p.dueDate)), startOfDay(new Date()));
+                  return (
+                    <p key={p.id} className="text-[10px] text-muted-foreground">
+                      • {p.name} — {formatCurrency(p.amount)} · en {diff} día{diff > 1 ? 's' : ''}
+                    </p>
+                  );
+                })}
+              </div>
+            )}
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0 text-warning/50 hover:text-warning hover:bg-warning/10"
+            onClick={() => setDismissed(prev => new Set(prev).add('soon'))}
+          >
+            <X className="w-3.5 h-3.5" />
+          </Button>
         </div>
       )}
     </div>
