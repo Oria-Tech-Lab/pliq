@@ -16,6 +16,7 @@ import { addWeeks, addMonths, addYears, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, Plus, Repeat, FileText, CalendarCheck, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 
 interface PaymentPlanFormProps {
   open: boolean;

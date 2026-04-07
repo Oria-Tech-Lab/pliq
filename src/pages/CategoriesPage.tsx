@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 
 const CATEGORY_ICONS: Record<string, typeof Zap> = {
   services: Zap,
@@ -207,24 +208,26 @@ const CategoriesPage = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-semibold text-foreground mr-1">{formatCurrency(total)}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-                            onClick={() => openEdit(key, label, customData)}
-                            title="Editar categoría"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
+                          <IconTooltip label="Editar categoría">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                              onClick={() => openEdit(key, label, customData)}
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                          </IconTooltip>
                           </Button>
                           {canDelete && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                                onClick={() => setDeletingId(key)}
-                                title="Eliminar categoría"
-                              >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <IconTooltip label="Eliminar categoría">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                  onClick={() => setDeletingId(key)}
+                                >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </IconTooltip>
                             </Button>
                           )}
                         </div>

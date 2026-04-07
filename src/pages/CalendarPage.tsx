@@ -15,6 +15,7 @@ import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 
 const CalendarPage = () => {
   const { flattenedPayments: payments, isLoading, markPaidByInstanceId, markPendingByInstanceId } = usePaymentPlans();
