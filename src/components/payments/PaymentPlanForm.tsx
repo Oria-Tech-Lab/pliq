@@ -217,9 +217,11 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)} title="Nueva categoría">
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <IconTooltip label="Nueva categoría">
+                    <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
                 </div>
               ) : (
                 <div className="flex gap-2 items-center">
@@ -229,9 +231,11 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                       <Check className="h-4 w-4" />
                     </Button>
                   </IconTooltip>
-                  <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewCategory(false)} title="Cancelar" className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <IconTooltip label="Cancelar">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewCategory(false)} className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
                 </div>
               )}
             </div>
@@ -263,9 +267,11 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                       </Button>
                     )}
                     {methods.length > 0 && (
-                      <Button type="button" variant="outline" size="icon" onClick={() => setShowNewMethod(true)} title="Nuevo método">
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      <IconTooltip label="Nuevo método">
+                        <Button type="button" variant="outline" size="icon" onClick={() => setShowNewMethod(true)}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </IconTooltip>
                     )}
                   </div>
                 ) : (
@@ -276,9 +282,11 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                         <Check className="h-4 w-4" />
                       </Button>
                     </IconTooltip>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewMethod(false)} title="Cancelar" className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <IconTooltip label="Cancelar">
+                      <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewMethod(false)} className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </IconTooltip>
                   </div>
                 )}
               </div>
@@ -297,9 +305,11 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="outline" size="icon" onClick={() => setShowNewPayee(true)} title="Nuevo beneficiario">
-                    <Plus className="h-4 w-4" />
-                  </Button>
+                  <IconTooltip label="Nuevo beneficiario">
+                    <Button type="button" variant="outline" size="icon" onClick={() => setShowNewPayee(true)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
                 </div>
               ) : (
                 <div className="flex gap-2 items-center">
@@ -309,9 +319,11 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                       <Check className="h-4 w-4" />
                     </Button>
                   </IconTooltip>
-                  <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewPayee(false)} title="Cancelar" className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <IconTooltip label="Cancelar">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewPayee(false)} className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
                 </div>
               )}
             </div>
