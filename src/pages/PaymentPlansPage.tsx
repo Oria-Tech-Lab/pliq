@@ -192,35 +192,38 @@ export default function PaymentPlansPage() {
                   </p>
                 )}
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                onClick={() => openEditPlan(plan)}
-                title="Editar plan"
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-              {plan.type === 'recurring' && (
+              <IconTooltip label="Editar plan">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-amber-500"
-                  onClick={() => setFinalizingId(plan.id)}
-                  title="Finalizar plan"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  onClick={() => openEditPlan(plan)}
                 >
-                  <Ban className="w-4 h-4" />
+                  <Pencil className="w-4 h-4" />
                 </Button>
+              </IconTooltip>
+              {plan.type === 'recurring' && (
+                <IconTooltip label="Finalizar plan">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:text-amber-500"
+                    onClick={() => setFinalizingId(plan.id)}
+                  >
+                    <Ban className="w-4 h-4" />
+                  </Button>
+                </IconTooltip>
               )}
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={() => setDeletingId(plan.id)}
-                title="Eliminar plan"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <IconTooltip label="Eliminar plan">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={() => setDeletingId(plan.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </IconTooltip>
             </div>
           </div>
 
