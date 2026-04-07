@@ -40,5 +40,5 @@ export function useCustomCategories() {
     setCategories(prev => prev.filter(c => c.id !== id));
   }, []);
 
-  return { categories, isLoaded, addCategory, updateCategory, deleteCategory };
+  return { categories, isLoaded, addCategory, addCategoryWithId, updateCategory, deleteCategory };
 }
