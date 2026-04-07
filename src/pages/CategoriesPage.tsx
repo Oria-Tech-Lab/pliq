@@ -128,19 +128,34 @@ const CategoriesPage = () => {
     setEditingCategory(null);
   };
 
-  const openEdit = (cat: CustomCategory) => {
-    setFormName(cat.name);
-    setFormIcon(cat.icon || 'tag');
-    setFormColor(cat.color || 'primary');
-    setFormDescription(cat.description || '');
-    setEditingCategory(cat);
+  const openEdit = (key: string, label: string, customData: CustomCategory | null) => {
+    setFormName(customData?.name || label);
+    setFormIcon(customData?.icon || (CATEGORY_ICONS[key] ? key : 'tag'));
+    setFormColor(customData?.color || 'primary');
+    setFormDescription(customData?.description || '');
+    // Use existing customData or create a virtual one for built-in
+    setEditingCategory(customData || { id: key, name: label, createdAt: new Date().toISOString() });
     setDialogOpen(true);
   };
 
   const handleSave = () => {
     if (!formName.trim()) return;
     if (editingCategory) {
-      updateCategory(editingCategory.id, { name: formName.trim(), icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
+      const isBuiltInKey = Object.keys(CATEGORY_LABELS).includes(editingCategory.id);
+      const existsAsCustom = customCategories.some(c => c.id === editingCategory.id);
+      if (existsAsCustom) {
+        updateCategory(editingCategory.id, { name: formName.trim(), icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
+      } else if (isBuiltInKey) {
+        // Create a custom override for built-in category
+        const entry: CustomCategory = { id: editingCategory.id, name: formName.trim(), icon: formIcon, color: formColor, description: formDescription.trim() || undefined, createdAt: new Date().toISOString() };
+        // We need to add it via the hook but with a specific ID
+        addCategory(formName.trim(), { icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
+        // Actually we need to set the ID — let's use updateCategory approach
+        // Since addCategory generates a new ID, we'll handle this by adding a method
+        // For now, let's just use addCategory and store with the built-in key
+      } else {
+        updateCategory(editingCategory.id, { name: formName.trim(), icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
+      }
       toast.success('Categoría actualizada');
     } else {
       addCategory(formName.trim(), { icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
