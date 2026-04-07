@@ -78,6 +78,12 @@ const CategoriesPage = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
 
+  // Form state for create/edit
+  const [formName, setFormName] = useState('');
+  const [formIcon, setFormIcon] = useState('tag');
+  const [formColor, setFormColor] = useState('primary');
+  const [formDescription, setFormDescription] = useState('');
+
   // Track built-in category overrides as custom categories
   const builtInOverrides = useMemo(() => {
     const map: Record<string, CustomCategory> = {};
