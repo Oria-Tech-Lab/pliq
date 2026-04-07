@@ -4,9 +4,11 @@ import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
 import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { PaymentPlan, PaymentInstance, PLAN_TYPE_LABELS } from '@/types/paymentPlan';
 import { FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
+import { SwipeableRow } from '@/components/payments/SwipeableRow';
 import { PaymentPlanForm } from '@/components/payments/PaymentPlanForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +19,9 @@ import { StatusBadge } from '@/components/payments/StatusBadge';
 import { CategoryBadge } from '@/components/payments/CategoryBadge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -29,9 +32,11 @@ export default function PaymentPlansPage() {
   const { payees, addPayee } = usePayees([], () => {});
   const { methods: paymentMethods } = usePaymentMethods();
   const allCategoryLabels = useCategoryLabels();
+  const isMobile = useIsMobile();
   const [formOpen, setFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
+  const [expandedHistory, setExpandedHistory] = useState<Set<string>>(new Set());
   const [editingPlan, setEditingPlan] = useState<PaymentPlan | null>(null);
   const [finalizingId, setFinalizingId] = useState<string | null>(null);
 
@@ -47,12 +52,20 @@ export default function PaymentPlansPage() {
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
 
-  // allCategoryLabels already includes built-in + custom from useCategoryLabels
+  const INITIAL_VISIBLE = 3;
 
   const toggleExpand = (id: string) => {
     setExpandedPlans(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleHistoryExpand = (planId: string) => {
+    setExpandedHistory(prev => {
+      const next = new Set(prev);
+      if (next.has(planId)) next.delete(planId); else next.add(planId);
       return next;
     });
   };
@@ -109,7 +122,6 @@ export default function PaymentPlansPage() {
     new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
 
   const getPaidCount = (plan: PaymentPlan) => plan.instances.filter(i => i.status === 'paid').length;
-  const getTotalAmount = (plan: PaymentPlan) => plan.instances.reduce((s, i) => s + i.amount, 0);
   const getPaidAmount = (plan: PaymentPlan) => plan.instances.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
 
   const getPlanStatusInfo = (plan: PaymentPlan) => {
@@ -132,129 +144,170 @@ export default function PaymentPlansPage() {
     const progress = totalInstances > 0 ? (paidCount / totalInstances) * 100 : 0;
     const statusInfo = getPlanStatusInfo(plan);
     const beneficiaryName = getPayeeName(plan);
+    const isHistoryExpanded = expandedHistory.has(plan.id);
+    const visibleInstances = isHistoryExpanded ? plan.instances : plan.instances.slice(0, INITIAL_VISIBLE);
+    const hasMore = plan.instances.length > INITIAL_VISIBLE;
 
     return (
       <div key={plan.id} className="payment-row animate-fade-in">
         <Collapsible open={isExpanded} onOpenChange={() => toggleExpand(plan.id)}>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Card header */}
+          <div className="flex items-start gap-2">
+            {/* Options menu - mobile: top-left; desktop: hidden, use icon buttons */}
+            {isMobile && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 mt-0.5 text-muted-foreground">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-44">
+                  <DropdownMenuItem onClick={() => openEditPlan(plan)} className="gap-2">
+                    <Pencil className="w-3.5 h-3.5" /> Editar plan
+                  </DropdownMenuItem>
+                  {plan.type === 'recurring' && (
+                    <DropdownMenuItem onClick={() => setFinalizingId(plan.id)} className="gap-2 text-amber-600">
+                      <Ban className="w-3.5 h-3.5" /> Finalizar plan
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => setDeletingId(plan.id)} className="gap-2 text-destructive">
+                    <Trash2 className="w-3.5 h-3.5" /> Eliminar plan
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* Main content area */}
             <CollapsibleTrigger asChild>
-              <button className="flex items-center gap-2 text-left flex-1 min-w-0 group">
-                {plan.type === 'recurring' ? (
-                  isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                ) : (
-                  <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-foreground truncate">{plan.name}</h3>
-                    <CategoryBadge category={plan.category} />
-                    <span className={cn('inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-lg border', statusInfo.className)}>
-                      {statusInfo.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5" />
-                      {beneficiaryName}
-                    </span>
-                    {plan.type === 'unique' && plan.dueDate && (
-                      <span className="inline-flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {format(new Date(plan.dueDate), "d 'de' MMMM yyyy", { locale: es })}
+              <button className="flex-1 min-w-0 text-left">
+                {/* Top row: name + amount */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {plan.type === 'recurring' ? (
+                        isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      ) : (
+                        <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      )}
+                      <h3 className="font-semibold text-foreground text-[15px] truncate">{plan.name}</h3>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      <CategoryBadge category={plan.category} />
+                      <span className={cn('inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded-md border', statusInfo.className)}>
+                        {statusInfo.label}
                       </span>
-                    )}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-lg tracking-tight text-foreground leading-tight">
+                      {formatCurrency(plan.amount)}
+                    </p>
                     {plan.type === 'recurring' && (
-                      <>
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5" />
-                          Desde {format(new Date(plan.startDate!), "MMM yyyy", { locale: es })}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          {plan.totalPayments ? `${paidCount}/${plan.totalPayments} pagos` : (
-                            <><Infinity className="w-3.5 h-3.5" /> {paidCount} pagados</>
-                          )}
-                        </span>
-                      </>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {formatCurrency(getPaidAmount(plan))} pagado
+                      </p>
                     )}
                   </div>
+                </div>
+
+                {/* Meta row */}
+                <div className="flex items-center gap-2 sm:gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
+                  <span className="inline-flex items-center gap-1">
+                    <User className="w-3 h-3" />
+                    <span className="truncate max-w-[120px] sm:max-w-none">{beneficiaryName}</span>
+                  </span>
+                  {plan.type === 'unique' && plan.dueDate && (
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {format(new Date(plan.dueDate), "d MMM yyyy", { locale: es })}
+                    </span>
+                  )}
+                  {plan.type === 'recurring' && (
+                    <>
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {format(new Date(plan.startDate!), "MMM yyyy", { locale: es })}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        {plan.totalPayments ? `${paidCount}/${plan.totalPayments}` : (
+                          <><Infinity className="w-3 h-3" /> {paidCount}</>
+                        )}
+                      </span>
+                    </>
+                  )}
                 </div>
               </button>
             </CollapsibleTrigger>
 
-            <div className="flex items-center gap-2">
-              <div className="text-right mr-2">
-                <p className="font-bold text-lg tracking-tight text-foreground">
-                  {formatCurrency(plan.amount)}
-                </p>
-                {plan.type === 'recurring' && (
-                  <p className="text-[11px] text-muted-foreground">
-                    {formatCurrency(getPaidAmount(plan))} pagado
-                  </p>
-                )}
-              </div>
-              <IconTooltip label="Editar plan">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  onClick={() => openEditPlan(plan)}
-                >
-                  <Pencil className="w-4 h-4" />
-                </Button>
-              </IconTooltip>
-              {plan.type === 'recurring' && (
-                <IconTooltip label="Finalizar plan">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-8 w-8 text-muted-foreground hover:text-amber-500"
-                    onClick={() => setFinalizingId(plan.id)}
-                  >
-                    <Ban className="w-4 h-4" />
+            {/* Desktop action buttons */}
+            {!isMobile && (
+              <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                <IconTooltip label="Editar plan">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => openEditPlan(plan)}>
+                    <Pencil className="w-4 h-4" />
                   </Button>
                 </IconTooltip>
-              )}
-              <IconTooltip label="Eliminar plan">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                  onClick={() => setDeletingId(plan.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </IconTooltip>
-            </div>
+                {plan.type === 'recurring' && (
+                  <IconTooltip label="Finalizar plan">
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-amber-500" onClick={() => setFinalizingId(plan.id)}>
+                      <Ban className="w-4 h-4" />
+                    </Button>
+                  </IconTooltip>
+                )}
+                <IconTooltip label="Eliminar plan">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeletingId(plan.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </IconTooltip>
+              </div>
+            )}
           </div>
 
+          {/* Progress bar */}
           {plan.type === 'recurring' && plan.totalPayments && (
             <div className="mt-3">
               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-paid rounded-full transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
+                <div className="h-full bg-paid rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
               </div>
             </div>
           )}
 
+          {/* History */}
           <CollapsibleContent>
-            <div className="mt-4 border-t border-border/60 pt-4 space-y-2">
-              <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Historial de pagos
+            <div className="mt-4 border-t border-border/60 pt-4 space-y-1.5">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Historial de pagos
+                </span>
+                {isMobile && (
+                  <span className="text-[10px] text-muted-foreground/60">Desliza para marcar</span>
+                )}
               </div>
-              {plan.instances.map((instance) => (
+              {visibleInstances.map((instance) => (
                 <InstanceRow
                   key={instance.id}
                   instance={instance}
                   planId={plan.id}
                   planPaymentMethod={plan.paymentMethod}
                   paymentMethods={paymentMethods}
+                  isMobile={isMobile}
                   onMarkPaid={markInstancePaid}
                   onMarkPending={markInstancePending}
                   onUpdateInstance={updateInstance}
                 />
               ))}
+              {hasMore && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-muted-foreground hover:text-foreground mt-1"
+                  onClick={(e) => { e.stopPropagation(); toggleHistoryExpand(plan.id); }}
+                >
+                  {isHistoryExpanded
+                    ? 'Ver menos'
+                    : `Ver ${plan.instances.length - INITIAL_VISIBLE} más`}
+                </Button>
+              )}
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -341,7 +394,6 @@ export default function PaymentPlansPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Finalize Plan Confirmation */}
       <AlertDialog open={!!finalizingId} onOpenChange={(open) => !open && setFinalizingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -355,7 +407,6 @@ export default function PaymentPlansPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Edit Plan Dialog */}
       <Dialog open={!!editingPlan} onOpenChange={(open) => !open && setEditingPlan(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -410,13 +461,10 @@ export default function PaymentPlansPage() {
                   <Label>Total de pagos</Label>
                   <div className="flex items-center gap-3">
                     <Input
-                      type="number"
-                      min="1"
-                      max="360"
+                      type="number" min="1" max="360"
                       value={editTotalPayments ?? ''}
                       onChange={e => setEditTotalPayments(e.target.value ? parseInt(e.target.value) : null)}
-                      placeholder="Indefinido"
-                      className="flex-1"
+                      placeholder="Indefinido" className="flex-1"
                     />
                     <span className="text-sm text-muted-foreground whitespace-nowrap">
                       {editTotalPayments ? `${editTotalPayments} pagos` : 'Indefinido'}
@@ -442,11 +490,13 @@ export default function PaymentPlansPage() {
   );
 }
 
+// ─── Instance Row ──────────────────────────────────────────────────
 function InstanceRow({
   instance,
   planId,
   planPaymentMethod,
   paymentMethods,
+  isMobile,
   onMarkPaid,
   onMarkPending,
   onUpdateInstance,
@@ -455,6 +505,7 @@ function InstanceRow({
   planId: string;
   planPaymentMethod: string;
   paymentMethods: import('@/types/payment').PaymentMethodEntry[];
+  isMobile: boolean;
   onMarkPaid: (planId: string, instanceId: string) => void;
   onMarkPending: (planId: string, instanceId: string) => void;
   onUpdateInstance: (planId: string, instanceId: string, data: { amount?: number; paymentMethod?: string }) => void;
@@ -501,80 +552,104 @@ function InstanceRow({
     setEditOpen(true);
   };
 
-  return (
-    <>
-      <div className={cn(
-        'flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors',
-        instance.status === 'paid' && 'bg-paid/5',
-        instance.status === 'overdue' && 'bg-overdue/5',
-        instance.status === 'pending' && 'bg-muted/30',
-      )}>
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={cn(
-            'w-2 h-2 rounded-full flex-shrink-0',
-            instance.status === 'paid' && 'bg-paid',
-            instance.status === 'overdue' && 'bg-overdue',
-            instance.status === 'pending' && 'bg-pending',
-          )} />
-          <div className="min-w-0">
+  const handleSwipePaid = () => {
+    onMarkPaid(planId, instance.id);
+    toast.success('Marcado como pagado', {
+      action: { label: 'Deshacer', onClick: () => onMarkPending(planId, instance.id) },
+    });
+  };
+
+  const handleSwipePending = () => {
+    onMarkPending(planId, instance.id);
+    toast.success('Marcado como pendiente');
+  };
+
+  const rowContent = (
+    <div className={cn(
+      'flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors',
+      instance.status === 'paid' && 'bg-paid/5',
+      instance.status === 'overdue' && 'bg-overdue/5',
+      instance.status === 'pending' && 'bg-muted/30',
+    )}>
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className={cn(
+          'w-2 h-2 rounded-full flex-shrink-0',
+          instance.status === 'paid' && 'bg-paid',
+          instance.status === 'overdue' && 'bg-overdue',
+          instance.status === 'pending' && 'bg-pending',
+        )} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
             <p className={cn(
-              'text-sm font-medium capitalize',
+              'text-sm font-medium capitalize truncate',
               instance.status === 'paid' && 'text-muted-foreground line-through'
             )}>
               {instance.periodLabel}
             </p>
-            <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap">
-              <span>Vence: {format(new Date(instance.dueDate), "d MMM yyyy", { locale: es })}</span>
-              {instance.paidDate && <span>· Pagado: {format(new Date(instance.paidDate), "d MMM", { locale: es })}</span>}
-              <span className="inline-flex items-center gap-1">
-                <Wallet className="w-3 h-3" />
-                {getMethodLabel(effectiveMethod)}
-              </span>
-            </div>
+            <span className={cn(
+              'text-sm font-semibold shrink-0',
+              instance.status === 'paid' ? 'text-muted-foreground' : 'text-foreground'
+            )}>
+              {formatCurrency(instance.amount)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground flex-wrap mt-0.5">
+            <span>{format(new Date(instance.dueDate), "d MMM", { locale: es })}</span>
+            {instance.paidDate && <span>· {format(new Date(instance.paidDate), "d MMM", { locale: es })}</span>}
+            <span className="inline-flex items-center gap-0.5">
+              <Wallet className="w-3 h-3" />
+              {getMethodLabel(effectiveMethod)}
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={cn(
-            'text-sm font-semibold',
-            instance.status === 'paid' ? 'text-muted-foreground' : 'text-foreground'
-          )}>
-            {formatCurrency(instance.amount)}
-          </span>
+      </div>
+
+      {/* Desktop buttons */}
+      {!isMobile && (
+        <div className="flex items-center gap-1 ml-2 shrink-0">
           <IconTooltip label="Editar">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
-              onClick={openEdit}
-            >
+            <Button size="icon" variant="ghost" className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground" onClick={openEdit}>
               <Pencil className="w-3.5 h-3.5" />
             </Button>
           </IconTooltip>
           {instance.status !== 'paid' ? (
             <IconTooltip label="Marcar como pagado">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-7 w-7 rounded-lg text-paid hover:text-paid hover:bg-paid/10"
-                onClick={openConfirmPaid}
-              >
+              <Button size="icon" variant="ghost" className="h-7 w-7 rounded-lg text-paid hover:text-paid hover:bg-paid/10" onClick={openConfirmPaid}>
                 <Check className="w-3.5 h-3.5" />
               </Button>
             </IconTooltip>
           ) : (
             <IconTooltip label="Marcar como pendiente">
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
-                onClick={() => onMarkPending(planId, instance.id)}
-              >
+              <Button size="icon" variant="ghost" className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground" onClick={() => onMarkPending(planId, instance.id)}>
                 <RotateCcw className="w-3.5 h-3.5" />
               </Button>
             </IconTooltip>
           )}
         </div>
-      </div>
+      )}
+
+      {/* Mobile: edit button only (swipe handles paid/pending) */}
+      {isMobile && (
+        <div className="ml-2 shrink-0">
+          <Button size="icon" variant="ghost" className="h-7 w-7 rounded-lg text-muted-foreground" onClick={openEdit}>
+            <Pencil className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      {isMobile ? (
+        <SwipeableRow
+          isPaid={instance.status === 'paid'}
+          onSwipeRight={instance.status !== 'paid' ? handleSwipePaid : undefined}
+          onSwipeLeft={instance.status === 'paid' ? handleSwipePending : undefined}
+        >
+          {rowContent}
+        </SwipeableRow>
+      ) : rowContent}
 
       {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -586,12 +661,7 @@ function InstanceRow({
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Monto</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={editAmount}
-                onChange={(e) => setEditAmount(Number(e.target.value))}
-              />
+              <Input type="number" step="0.01" value={editAmount} onChange={(e) => setEditAmount(Number(e.target.value))} />
             </div>
             <div className="space-y-2">
               <Label>Método de pago</Label>
@@ -622,12 +692,7 @@ function InstanceRow({
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Monto pagado</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={editAmount}
-                onChange={(e) => setEditAmount(Number(e.target.value))}
-              />
+              <Input type="number" step="0.01" value={editAmount} onChange={(e) => setEditAmount(Number(e.target.value))} />
             </div>
             <div className="space-y-2">
               <Label>Método de pago</Label>
