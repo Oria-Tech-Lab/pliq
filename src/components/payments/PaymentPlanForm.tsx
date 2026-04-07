@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import { addWeeks, addMonths, addYears, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Plus, Repeat, FileText, CalendarCheck, Check, X, Wallet } from 'lucide-react';
+import { CalendarIcon, Plus, Repeat, FileText, CalendarCheck, Check, X, Wallet, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 
@@ -41,6 +41,7 @@ const defaultForm = {
   frequency: 'monthly' as PaymentFrequency,
   totalPayments: 12 as number | null,
   isIndefinite: false,
+  notificationsEnabled: true,
 };
 
 function computeEndDate(startDate: string, frequency: PaymentFrequency, totalPayments: number): Date {
@@ -113,6 +114,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       startDate: form.type === 'recurring' ? form.startDate : undefined,
       frequency: form.type === 'recurring' ? form.frequency : undefined,
       totalPayments: form.type === 'recurring' ? (form.isIndefinite ? null : form.totalPayments) : undefined,
+      notificationsEnabled: form.notificationsEnabled,
     });
     onOpenChange(false);
   };
@@ -417,6 +419,18 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                 </div>
               </>
             )}
+
+            {/* Notifications */}
+            <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium cursor-pointer">Recordatorio</Label>
+                <p className="text-[11px] text-muted-foreground">Recibir notificación push antes del vencimiento</p>
+              </div>
+              <Switch
+                checked={form.notificationsEnabled}
+                onCheckedChange={v => setForm({ ...form, notificationsEnabled: v })}
+              />
+            </div>
 
             {/* Notes */}
             <div className="space-y-2">
