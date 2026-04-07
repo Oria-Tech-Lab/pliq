@@ -1,42 +1,52 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CustomCategory } from '@/types/payment';
-
-const STORAGE_KEY = 'custom-categories-data';
-const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
+import { supabase } from '@/integrations/supabase/client';
 
 export function useCustomCategories() {
   const [categories, setCategories] = useState<CustomCategory[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try { setCategories(JSON.parse(stored)); } catch { setCategories([]); }
-    }
-    setIsLoaded(true);
+    const load = async () => {
+      const { data } = await supabase.from('custom_categories').select('*').order('created_at');
+      if (data) {
+        setCategories(data.map(r => ({
+          id: r.id, name: r.name, icon: r.icon ?? undefined, color: r.color ?? undefined,
+          description: r.description ?? undefined, createdAt: r.created_at,
+        })));
+      }
+      setIsLoaded(true);
+    };
+    load();
   }, []);
 
-  useEffect(() => {
-    if (isLoaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
-  }, [categories, isLoaded]);
-
-  const addCategory = useCallback((name: string, extra?: { icon?: string; color?: string; description?: string }): CustomCategory => {
-    const entry: CustomCategory = { id: generateId(), name: name.trim(), ...extra, createdAt: new Date().toISOString() };
+  const addCategory = useCallback(async (name: string, extra?: { icon?: string; color?: string; description?: string }): Promise<CustomCategory> => {
+    const { data, error } = await supabase.from('custom_categories').insert({
+      name: name.trim(), icon: extra?.icon, color: extra?.color, description: extra?.description,
+    }).select().single();
+    if (error || !data) throw error;
+    const entry: CustomCategory = { id: data.id, name: data.name, icon: data.icon ?? undefined, color: data.color ?? undefined, description: data.description ?? undefined, createdAt: data.created_at };
     setCategories(prev => [...prev, entry]);
     return entry;
   }, []);
 
-  const addCategoryWithId = useCallback((id: string, name: string, extra?: { icon?: string; color?: string; description?: string }): CustomCategory => {
-    const entry: CustomCategory = { id, name: name.trim(), ...extra, createdAt: new Date().toISOString() };
+  const addCategoryWithId = useCallback(async (id: string, name: string, extra?: { icon?: string; color?: string; description?: string }): Promise<CustomCategory> => {
+    const { data, error } = await supabase.from('custom_categories').insert({
+      id, name: name.trim(), icon: extra?.icon, color: extra?.color, description: extra?.description,
+    }).select().single();
+    if (error || !data) throw error;
+    const entry: CustomCategory = { id: data.id, name: data.name, icon: data.icon ?? undefined, color: data.color ?? undefined, description: data.description ?? undefined, createdAt: data.created_at };
     setCategories(prev => [...prev, entry]);
     return entry;
   }, []);
 
-  const updateCategory = useCallback((id: string, data: Partial<Pick<CustomCategory, 'name' | 'icon' | 'color' | 'description'>>) => {
-    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+  const updateCategory = useCallback(async (id: string, upd: Partial<Pick<CustomCategory, 'name' | 'icon' | 'color' | 'description'>>) => {
+    await supabase.from('custom_categories').update(upd).eq('id', id);
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...upd } : c));
   }, []);
 
-  const deleteCategory = useCallback((id: string) => {
+  const deleteCategory = useCallback(async (id: string) => {
+    await supabase.from('custom_categories').delete().eq('id', id);
     setCategories(prev => prev.filter(c => c.id !== id));
   }, []);
 
