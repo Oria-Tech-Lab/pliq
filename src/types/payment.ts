@@ -13,6 +13,7 @@ export type BeneficiaryType = 'persona' | 'empresa' | 'gobierno' | 'otro';
 export interface BankAccount {
   id: string;
   bank: string;
+  accountHolder: string;
   accountNumber: string;
   interbankCode: string;
 }
