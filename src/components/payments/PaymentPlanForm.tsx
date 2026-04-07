@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import { addWeeks, addMonths, addYears, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Plus, Repeat, FileText, CalendarCheck } from 'lucide-react';
+import { CalendarIcon, Plus, Repeat, FileText, CalendarCheck, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PaymentPlanFormProps {
@@ -217,10 +217,14 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                   </Button>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <Input autoFocus placeholder="Nombre de categoría" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCategory(); } if (e.key === 'Escape') setShowNewCategory(false); }} />
-                  <Button type="button" size="sm" onClick={handleAddCategory} disabled={!newCategoryName.trim()}>Agregar</Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewCategory(false)}>Cancelar</Button>
+                <div className="flex gap-2 items-center">
+                  <Input autoFocus placeholder="Nombre de categoría" className="flex-1" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCategory(); } if (e.key === 'Escape') setShowNewCategory(false); }} />
+                  <Button type="button" variant="outline" size="icon" onClick={handleAddCategory} disabled={!newCategoryName.trim()} title="Confirmar" className="shrink-0">
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewCategory(false)} title="Cancelar" className="shrink-0">
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
             </div>
@@ -258,10 +262,14 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                     )}
                   </div>
                 ) : (
-                  <div className="flex gap-2">
-                    <Input autoFocus placeholder="Nombre del método" value={newMethodName} onChange={e => setNewMethodName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddMethod(); } if (e.key === 'Escape') setShowNewMethod(false); }} />
-                    <Button type="button" size="sm" onClick={handleAddMethod} disabled={!newMethodName.trim()}>Agregar</Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewMethod(false)}>Cancelar</Button>
+                  <div className="flex gap-2 items-center">
+                    <Input autoFocus placeholder="Nombre del método" className="flex-1" value={newMethodName} onChange={e => setNewMethodName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddMethod(); } if (e.key === 'Escape') setShowNewMethod(false); }} />
+                    <Button type="button" variant="outline" size="icon" onClick={handleAddMethod} disabled={!newMethodName.trim()} title="Confirmar" className="shrink-0">
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewMethod(false)} title="Cancelar" className="shrink-0">
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                 )}
               </div>
@@ -285,10 +293,14 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                   </Button>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <Input autoFocus placeholder="Nombre del beneficiario" value={newPayeeName} onChange={e => setNewPayeeName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddPayee(); } if (e.key === 'Escape') setShowNewPayee(false); }} />
-                  <Button type="button" size="sm" onClick={handleAddPayee} disabled={!newPayeeName.trim()}>Agregar</Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewPayee(false)}>Cancelar</Button>
+                <div className="flex gap-2 items-center">
+                  <Input autoFocus placeholder="Nombre del beneficiario" className="flex-1" value={newPayeeName} onChange={e => setNewPayeeName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddPayee(); } if (e.key === 'Escape') setShowNewPayee(false); }} />
+                  <Button type="button" variant="outline" size="icon" onClick={handleAddPayee} disabled={!newPayeeName.trim()} title="Confirmar" className="shrink-0">
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewPayee(false)} title="Cancelar" className="shrink-0">
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
             </div>
