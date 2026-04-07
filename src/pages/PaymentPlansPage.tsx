@@ -98,10 +98,56 @@ export default function PaymentPlansPage() {
     setEditFrequency(plan.frequency || 'monthly');
     setEditTotalPayments(plan.totalPayments ?? null);
     setEditDueDate(plan.dueDate || '');
-    // Find matching method from paymentMethods list, or fall back to legacy key
     const matchedMethod = paymentMethods.find(m => m.id === plan.paymentMethod);
     setEditPaymentMethodId(matchedMethod ? plan.paymentMethod : (plan.paymentMethod || ''));
+    setEditShowNewCategory(false);
+    setEditShowNewPayee(false);
+    setEditShowNewMethod(false);
+    setEditNewCategoryName('');
+    setEditNewPayeeName('');
+    setEditNewMethodName('');
   };
+
+  const handleEditAddCategory = () => {
+    if (!editNewCategoryName.trim()) return;
+    const cat = addCategory(editNewCategoryName);
+    setEditCategory(cat.id);
+    setEditShowNewCategory(false);
+    setEditNewCategoryName('');
+  };
+
+  const handleEditAddPayee = () => {
+    if (!editNewPayeeName.trim()) return;
+    const payee = addPayee(editNewPayeeName);
+    setEditPayeeId(payee.id);
+    setEditShowNewPayee(false);
+    setEditNewPayeeName('');
+  };
+
+  const handleEditAddMethod = () => {
+    if (!editNewMethodName.trim()) return;
+    const m = addPaymentMethod({ name: editNewMethodName.trim(), provider: '', type: 'bank_account', initialBalance: 0, remainingBalance: 0 });
+    setEditPaymentMethodId(m.id);
+    setEditShowNewMethod(false);
+    setEditNewMethodName('');
+  };
+
+  const editProjectedEndDate = useMemo(() => {
+    if (!editingPlan || editingPlan.type !== 'recurring' || !editTotalPayments || !editingPlan.startDate) return null;
+    const start = new Date(editingPlan.startDate);
+    const freq = editFrequency as PaymentFrequency;
+    switch (freq) {
+      case 'weekly': return addWeeks(start, editTotalPayments - 1);
+      case 'monthly': return addMonths(start, editTotalPayments - 1);
+      case 'yearly': return addYears(start, editTotalPayments - 1);
+      default: return start;
+    }
+  }, [editingPlan, editTotalPayments, editFrequency]);
+
+  const editProjectedTotal = useMemo(() => {
+    if (!editTotalPayments) return null;
+    return editAmount * editTotalPayments;
+  }, [editAmount, editTotalPayments]);
 
   const handleSaveEditPlan = () => {
     if (!editingPlan) return;
