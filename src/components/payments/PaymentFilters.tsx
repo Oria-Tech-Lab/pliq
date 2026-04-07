@@ -69,7 +69,7 @@ export function PaymentFilters({
         </Select>
 
         {hasFilters && (
-          <Button variant="ghost" size="icon" onClick={clearFilters} className="shrink-0 h-9 w-9">
+          <Button variant="ghost" size="icon" onClick={clearFilters} className="shrink-0 h-9 w-9" title="Limpiar filtros">
             <X className="w-4 h-4" />
           </Button>
         )}

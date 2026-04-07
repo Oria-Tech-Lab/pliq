@@ -110,7 +110,7 @@ const PaymentMethodsPage = () => {
                               <p className="text-[10px] text-muted-foreground">de {formatCurrency(method.initialBalance)}</p>
                             )}
                           </div>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteMethod(method.id)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteMethod(method.id)} title="Eliminar método">
                             <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                           </Button>
                         </div>

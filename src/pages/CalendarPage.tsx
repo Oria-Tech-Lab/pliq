@@ -79,13 +79,13 @@ const CalendarPage = () => {
     <AppLayout onAddPayment={() => navigate('/planes')} title="Calendario">
       <div className="container py-6 space-y-6">
         <div className="flex items-center justify-between animate-slide-up">
-          <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(prev => subMonths(prev, 1))}>
+          <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(prev => subMonths(prev, 1))} title="Mes anterior">
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <h2 className="font-display font-bold text-xl text-foreground capitalize">
             {format(currentMonth, 'MMMM yyyy', { locale: es })}
           </h2>
-          <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(prev => addMonths(prev, 1))}>
+          <Button variant="ghost" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(prev => addMonths(prev, 1))} title="Mes siguiente">
             <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
