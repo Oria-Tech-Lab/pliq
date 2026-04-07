@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function PaymentPlansPage() {
+  const { settings: notifDefaults } = useNotificationSettings();
   const { plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
   const { payees, addPayee } = usePayees([], () => {});
   const { methods: paymentMethods, addMethod: addPaymentMethod } = usePaymentMethods();
