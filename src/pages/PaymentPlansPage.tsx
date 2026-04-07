@@ -22,7 +22,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical, CalendarCheck, X } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical, CalendarCheck, X, Upload } from 'lucide-react';
 import { format, differenceInCalendarDays, addWeeks, addMonths, addYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -362,6 +362,7 @@ export default function PaymentPlansPage() {
                   key={instance.id}
                   instance={instance}
                   planId={plan.id}
+                  planName={plan.name}
                   planPaymentMethod={plan.paymentMethod}
                   paymentMethods={paymentMethods}
                   isMobile={isMobile}
@@ -693,6 +694,7 @@ export default function PaymentPlansPage() {
 function InstanceRow({
   instance,
   planId,
+  planName,
   planPaymentMethod,
   paymentMethods,
   isMobile,
@@ -702,6 +704,7 @@ function InstanceRow({
 }: {
   instance: PaymentInstance;
   planId: string;
+  planName: string;
   planPaymentMethod: string;
   paymentMethods: import('@/types/payment').PaymentMethodEntry[];
   isMobile: boolean;
@@ -713,6 +716,8 @@ function InstanceRow({
   const [confirmPaidOpen, setConfirmPaidOpen] = useState(false);
   const [editAmount, setEditAmount] = useState(instance.amount);
   const [editMethod, setEditMethod] = useState(instance.paymentMethod || planPaymentMethod);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
 
   const effectiveMethod = instance.paymentMethod || planPaymentMethod;
 
@@ -742,7 +747,18 @@ function InstanceRow({
   const openConfirmPaid = () => {
     setEditAmount(instance.amount);
     setEditMethod(instance.paymentMethod || planPaymentMethod);
+    setReceiptFile(null);
+    setReceiptPreview(null);
     setConfirmPaidOpen(true);
+  };
+
+  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setReceiptFile(file);
+      const url = URL.createObjectURL(file);
+      setReceiptPreview(url);
+    }
   };
 
   const openEdit = () => {
@@ -883,15 +899,42 @@ function InstanceRow({
 
       {/* Confirm Paid Dialog */}
       <Dialog open={confirmPaidOpen} onOpenChange={setConfirmPaidOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md flex flex-col">
           <DialogHeader>
-            <DialogTitle>Confirmar pago — {instance.periodLabel}</DialogTitle>
-            <DialogDescription>Confirma el monto y método de pago antes de marcar como pagado.</DialogDescription>
+            <DialogTitle>Confirmar pago</DialogTitle>
+            <DialogDescription>Confirma los datos antes de marcar como pagado.</DialogDescription>
           </DialogHeader>
+
+          {/* Payment context info */}
+          <div className="rounded-xl bg-muted/50 p-3 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-foreground">{planName}</span>
+              <span className="text-xs text-muted-foreground">{instance.periodLabel}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Vence: {format(new Date(instance.dueDate), "d 'de' MMMM yyyy", { locale: es })}</span>
+            </div>
+          </div>
+
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>Monto pagado</Label>
-              <Input type="number" step="0.01" value={editAmount} onChange={(e) => setEditAmount(Number(e.target.value))} />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">S/</span>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  className="pl-9 tabular-nums"
+                  value={editAmount.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                    const num = parseFloat(raw);
+                    if (!isNaN(num)) setEditAmount(num);
+                    else if (raw === '' || raw === '.') setEditAmount(0);
+                  }}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Método de pago</Label>
@@ -904,13 +947,55 @@ function InstanceRow({
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Comprobante de pago</Label>
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor={`receipt-${instance.id}`}
+                  className="flex items-center gap-2 cursor-pointer rounded-xl border border-dashed border-border hover:border-primary/50 hover:bg-muted/30 transition-colors p-4 text-sm text-muted-foreground"
+                >
+                  <Upload className="w-4 h-4 shrink-0" />
+                  <span>{receiptFile ? receiptFile.name : 'Seleccionar imagen (JPEG, PNG)'}</span>
+                  <input
+                    id={`receipt-${instance.id}`}
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg"
+                    className="hidden"
+                    onChange={handleReceiptChange}
+                  />
+                </label>
+                {receiptPreview && (
+                  <div className="relative rounded-lg overflow-hidden border border-border">
+                    <img src={receiptPreview} alt="Comprobante" className="w-full max-h-40 object-cover" />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="absolute top-1 right-1 h-6 w-6 bg-background/80 hover:bg-background rounded-full"
+                      onClick={() => { setReceiptFile(null); setReceiptPreview(null); }}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmPaidOpen(false)}>Cancelar</Button>
-            <Button className="bg-paid text-paid-foreground hover:bg-paid/90 gap-2" onClick={handleConfirmPaid}>
-              <Check className="w-4 h-4" /> Confirmar pago
+
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              className="w-full h-12 rounded-xl bg-paid text-paid-foreground hover:bg-paid/90 gap-2 text-base font-semibold"
+              onClick={handleConfirmPaid}
+            >
+              <Check className="w-5 h-5" /> Confirmar pago
             </Button>
-          </DialogFooter>
+            <Button
+              variant="outline"
+              className="w-full h-12 rounded-xl text-base"
+              onClick={() => setConfirmPaidOpen(false)}
+            >
+              Cancelar
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </>
