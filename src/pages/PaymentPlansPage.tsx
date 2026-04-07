@@ -134,7 +134,21 @@ export default function PaymentPlansPage() {
     const allPaid = plan.instances.length > 0 && plan.instances.every(i => i.status === 'paid');
     if (allPaid) return { label: 'Completado', className: 'bg-paid/12 text-paid border-paid/25' };
     if (hasOverdue) return { label: 'Vencido', className: 'bg-overdue/12 text-overdue border-overdue/25' };
-    return { label: 'Al día', className: 'bg-primary/10 text-primary border-primary/20' };
+
+    // Check if any pending instance is within 5 days of due date
+    const today = new Date();
+    const nearDue = plan.instances.find(i => {
+      if (i.status !== 'pending') return false;
+      const daysLeft = differenceInCalendarDays(new Date(i.dueDate), today);
+      return daysLeft >= 0 && daysLeft <= 5;
+    });
+    if (nearDue) {
+      const daysLeft = differenceInCalendarDays(new Date(nearDue.dueDate), today);
+      const label = daysLeft === 0 ? 'Vence hoy' : daysLeft === 1 ? 'Vence mañana' : `${daysLeft} días`;
+      return { label, className: 'bg-pending/12 text-pending border-pending/25' };
+    }
+
+    return { label: 'Al día', className: 'bg-paid/12 text-paid border-paid/25' };
   };
 
   const getPayeeName = (plan: PaymentPlan) => {
