@@ -1,36 +1,46 @@
 import { useState, useEffect, useCallback } from 'react';
 import { PaymentMethodEntry } from '@/types/payment';
-
-const STORAGE_KEY = 'payment-methods-data';
-const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
+import { supabase } from '@/integrations/supabase/client';
 
 export function usePaymentMethods() {
   const [methods, setMethods] = useState<PaymentMethodEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try { setMethods(JSON.parse(stored)); } catch { setMethods([]); }
-    }
-    setIsLoaded(true);
+    const load = async () => {
+      const { data } = await supabase.from('payment_methods').select('*').order('created_at');
+      if (data) {
+        setMethods(data.map(r => ({
+          id: r.id, name: r.name, provider: r.provider, type: r.type as PaymentMethodEntry['type'],
+          initialBalance: r.initial_balance, remainingBalance: r.remaining_balance, createdAt: r.created_at,
+        })));
+      }
+      setIsLoaded(true);
+    };
+    load();
   }, []);
 
-  useEffect(() => {
-    if (isLoaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(methods));
-  }, [methods, isLoaded]);
-
-  const addMethod = useCallback((data: Omit<PaymentMethodEntry, 'id' | 'createdAt'>): PaymentMethodEntry => {
-    const entry: PaymentMethodEntry = { ...data, id: generateId(), createdAt: new Date().toISOString() };
+  const addMethod = useCallback(async (d: Omit<PaymentMethodEntry, 'id' | 'createdAt'>): Promise<PaymentMethodEntry> => {
+    const { data, error } = await supabase.from('payment_methods').insert({
+      name: d.name, provider: d.provider, type: d.type,
+      initial_balance: d.initialBalance, remaining_balance: d.remainingBalance,
+    }).select().single();
+    if (error || !data) throw error;
+    const entry: PaymentMethodEntry = {
+      id: data.id, name: data.name, provider: data.provider, type: data.type as PaymentMethodEntry['type'],
+      initialBalance: data.initial_balance, remainingBalance: data.remaining_balance, createdAt: data.created_at,
+    };
     setMethods(prev => [...prev, entry]);
     return entry;
   }, []);
 
-  const deleteMethod = useCallback((id: string) => {
+  const deleteMethod = useCallback(async (id: string) => {
+    await supabase.from('payment_methods').delete().eq('id', id);
     setMethods(prev => prev.filter(m => m.id !== id));
   }, []);
 
-  const updateBalance = useCallback((id: string, remaining: number) => {
+  const updateBalance = useCallback(async (id: string, remaining: number) => {
+    await supabase.from('payment_methods').update({ remaining_balance: remaining }).eq('id', id);
     setMethods(prev => prev.map(m => m.id === id ? { ...m, remainingBalance: remaining } : m));
   }, []);
 

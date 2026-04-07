@@ -23,7 +23,7 @@ interface PaymentPlanFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   payees: Payee[];
-  onAddPayee: (name: string) => Payee;
+  onAddPayee: (name: string) => Payee | Promise<Payee>;
   onSubmit: (data: Omit<PaymentPlan, 'id' | 'instances' | 'status' | 'createdAt' | 'updatedAt'>) => void;
 }
 
@@ -129,25 +129,25 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
     onOpenChange(false);
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
-    const cat = addCategory(newCategoryName);
+    const cat = await addCategory(newCategoryName);
     setForm({ ...form, category: cat.id });
     setShowNewCategory(false);
     setNewCategoryName('');
   };
 
-  const handleAddPayee = () => {
+  const handleAddPayee = async () => {
     if (!newPayeeName.trim()) return;
-    const payee = onAddPayee(newPayeeName);
+    const payee = await onAddPayee(newPayeeName);
     setForm({ ...form, payeeId: payee.id, payTo: payee.name });
     setShowNewPayee(false);
     setNewPayeeName('');
   };
 
-  const handleAddMethod = () => {
+  const handleAddMethod = async () => {
     if (!newMethodName.trim()) return;
-    const m = addMethod({ name: newMethodName.trim(), provider: '', type: 'bank_account', initialBalance: 0, remainingBalance: 0 });
+    const m = await addMethod({ name: newMethodName.trim(), provider: '', type: 'bank_account', initialBalance: 0, remainingBalance: 0 });
     setForm({ ...form, paymentMethodId: m.id });
     setShowNewMethod(false);
     setNewMethodName('');

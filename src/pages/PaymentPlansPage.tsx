@@ -117,25 +117,25 @@ export default function PaymentPlansPage() {
     setEditNewMethodName('');
   };
 
-  const handleEditAddCategory = () => {
+  const handleEditAddCategory = async () => {
     if (!editNewCategoryName.trim()) return;
-    const cat = addCategory(editNewCategoryName);
+    const cat = await addCategory(editNewCategoryName);
     setEditCategory(cat.id);
     setEditShowNewCategory(false);
     setEditNewCategoryName('');
   };
 
-  const handleEditAddPayee = () => {
+  const handleEditAddPayee = async () => {
     if (!editNewPayeeName.trim()) return;
-    const payee = addPayee(editNewPayeeName);
+    const payee = await addPayee(editNewPayeeName);
     setEditPayeeId(payee.id);
     setEditShowNewPayee(false);
     setEditNewPayeeName('');
   };
 
-  const handleEditAddMethod = () => {
+  const handleEditAddMethod = async () => {
     if (!editNewMethodName.trim()) return;
-    const m = addPaymentMethod({ name: editNewMethodName.trim(), provider: '', type: 'bank_account', initialBalance: 0, remainingBalance: 0 });
+    const m = await addPaymentMethod({ name: editNewMethodName.trim(), provider: '', type: 'bank_account', initialBalance: 0, remainingBalance: 0 });
     setEditPaymentMethodId(m.id);
     setEditShowNewMethod(false);
     setEditNewMethodName('');
