@@ -24,7 +24,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical, CalendarCheck, X, Upload } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical, CalendarCheck, X, Upload, Bell } from 'lucide-react';
 import { format, differenceInCalendarDays, addWeeks, addMonths, addYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
