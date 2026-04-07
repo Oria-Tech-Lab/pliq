@@ -14,7 +14,285 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bank_accounts: {
+        Row: {
+          account_holder: string
+          account_number: string
+          bank: string
+          created_at: string
+          id: string
+          interbank_code: string
+          payee_id: string
+        }
+        Insert: {
+          account_holder?: string
+          account_number?: string
+          bank?: string
+          created_at?: string
+          id?: string
+          interbank_code?: string
+          payee_id: string
+        }
+        Update: {
+          account_holder?: string
+          account_number?: string
+          bank?: string
+          created_at?: string
+          id?: string
+          interbank_code?: string
+          payee_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_payee_id_fkey"
+            columns: ["payee_id"]
+            isOneToOne: false
+            referencedRelation: "payees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      notification_settings: {
+        Row: {
+          created_at: string
+          default_days_before: number
+          default_time: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_days_before?: number
+          default_time?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_days_before?: number
+          default_time?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payees: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      payment_instances: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_date: string | null
+          payment_method: string | null
+          period_label: string
+          plan_id: string
+          status: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          period_label?: string
+          plan_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          period_label?: string
+          plan_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_instances_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "payment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_methods: {
+        Row: {
+          created_at: string
+          id: string
+          initial_balance: number
+          name: string
+          provider: string
+          remaining_balance: number
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          initial_balance?: number
+          name: string
+          provider?: string
+          remaining_balance?: number
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          initial_balance?: number
+          name?: string
+          provider?: string
+          remaining_balance?: number
+          type?: string
+        }
+        Relationships: []
+      }
+      payment_plans: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          due_date: string | null
+          frequency: string | null
+          id: string
+          name: string
+          notes: string | null
+          notification_days_before: number | null
+          notification_time: string | null
+          notifications_enabled: boolean | null
+          pay_to: string
+          payee_id: string | null
+          payment_method: string
+          start_date: string | null
+          status: string
+          total_payments: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          due_date?: string | null
+          frequency?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          notification_days_before?: number | null
+          notification_time?: string | null
+          notifications_enabled?: boolean | null
+          pay_to?: string
+          payee_id?: string | null
+          payment_method?: string
+          start_date?: string | null
+          status?: string
+          total_payments?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          due_date?: string | null
+          frequency?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          notification_days_before?: number | null
+          notification_time?: string | null
+          notifications_enabled?: boolean | null
+          pay_to?: string
+          payee_id?: string | null
+          payment_method?: string
+          start_date?: string | null
+          status?: string
+          total_payments?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_plans_payee_id_fkey"
+            columns: ["payee_id"]
+            isOneToOne: false
+            referencedRelation: "payees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      providers: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
