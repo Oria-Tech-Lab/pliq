@@ -85,6 +85,14 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
     return computeEndDate(form.startDate, form.frequency, form.totalPayments);
   }, [form.type, form.isIndefinite, form.totalPayments, form.startDate, form.frequency]);
 
+  const projectedTotal = useMemo(() => {
+    if (form.type !== 'recurring' || form.isIndefinite || !form.totalPayments || !form.amount) return null;
+    return form.amount * form.totalPayments;
+  }, [form.type, form.isIndefinite, form.totalPayments, form.amount]);
+
+  const formatCurrency = (n: number) =>
+    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
+
   const isRecurring = form.type === 'recurring';
   const modalTitle = isRecurring ? 'Nuevo pago recurrente' : 'Nuevo pago único';
   const submitLabel = isRecurring ? 'Crear pago recurrente' : 'Crear pago único';
