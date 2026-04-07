@@ -123,6 +123,8 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       frequency: form.type === 'recurring' ? form.frequency : undefined,
       totalPayments: form.type === 'recurring' ? (form.isIndefinite ? null : form.totalPayments) : undefined,
       notificationsEnabled: form.notificationsEnabled,
+      notificationDaysBefore: form.notificationsEnabled ? form.notificationDaysBefore : undefined,
+      notificationTime: form.notificationsEnabled ? form.notificationTime : undefined,
     });
     onOpenChange(false);
   };
