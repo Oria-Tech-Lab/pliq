@@ -81,6 +81,10 @@ export function usePayees(payments: Payment[], updatePaymentPayeeId?: (paymentId
     setPayees(prev => prev.filter(p => p.id !== id));
   }, []);
 
+  const updatePayee = useCallback((id: string, data: Partial<Pick<Payee, 'name' | 'type' | 'bankAccounts'>>) => {
+    setPayees(prev => prev.map(p => p.id === id ? { ...p, ...data } : p));
+  }, []);
+
   const getPayeeById = useCallback((id: string): Payee | undefined => {
     return payees.find(p => p.id === id);
   }, [payees]);
@@ -94,6 +98,7 @@ export function usePayees(payments: Payment[], updatePaymentPayeeId?: (paymentId
     isLoaded,
     addPayee,
     deletePayee,
+    updatePayee,
     getPayeeById,
     getPayeeByName,
   };
