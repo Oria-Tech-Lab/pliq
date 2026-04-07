@@ -6,7 +6,7 @@ import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PaymentPlan, PaymentInstance, PLAN_TYPE_LABELS } from '@/types/paymentPlan';
-import { FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
+import { FREQUENCY_LABELS, METHOD_LABELS, METHOD_TYPE_LABELS } from '@/types/payment';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { SwipeableRow } from '@/components/payments/SwipeableRow';
 import { PaymentPlanForm } from '@/components/payments/PaymentPlanForm';
@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, differenceInCalendarDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
