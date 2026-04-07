@@ -255,7 +255,7 @@ export function usePaymentPlans() {
   }, [plans, markInstancePending]);
 
   return {
-    plans, isLoading, addPlan, deletePlan,
+    plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan,
     markInstancePaid, markInstancePending, updateInstance,
     flattenedPayments, findPlanByInstanceId,
     markPaidByInstanceId, markPendingByInstanceId,
