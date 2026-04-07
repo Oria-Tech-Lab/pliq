@@ -140,25 +140,18 @@ const CategoriesPage = () => {
 
   const handleSave = () => {
     if (!formName.trim()) return;
+    const extra = { icon: formIcon, color: formColor, description: formDescription.trim() || undefined };
     if (editingCategory) {
-      const isBuiltInKey = Object.keys(CATEGORY_LABELS).includes(editingCategory.id);
       const existsAsCustom = customCategories.some(c => c.id === editingCategory.id);
       if (existsAsCustom) {
-        updateCategory(editingCategory.id, { name: formName.trim(), icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
-      } else if (isBuiltInKey) {
-        // Create a custom override for built-in category
-        const entry: CustomCategory = { id: editingCategory.id, name: formName.trim(), icon: formIcon, color: formColor, description: formDescription.trim() || undefined, createdAt: new Date().toISOString() };
-        // We need to add it via the hook but with a specific ID
-        addCategory(formName.trim(), { icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
-        // Actually we need to set the ID — let's use updateCategory approach
-        // Since addCategory generates a new ID, we'll handle this by adding a method
-        // For now, let's just use addCategory and store with the built-in key
+        updateCategory(editingCategory.id, { name: formName.trim(), ...extra });
       } else {
-        updateCategory(editingCategory.id, { name: formName.trim(), icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
+        // Built-in category being edited for the first time — create override with same ID
+        addCategoryWithId(editingCategory.id, formName.trim(), extra);
       }
       toast.success('Categoría actualizada');
     } else {
-      addCategory(formName.trim(), { icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
+      addCategory(formName.trim(), extra);
       toast.success('Categoría creada');
     }
     setDialogOpen(false);
