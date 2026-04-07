@@ -157,8 +157,8 @@ const BeneficiariesPage = () => {
                       onClick={(e) => openEdit(payee, e)}
                     >
                       <Pencil className="w-3.5 h-3.5" />
+                    </Button>
                   </IconTooltip>
-                  </Button>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
                 </div>
               </Link>

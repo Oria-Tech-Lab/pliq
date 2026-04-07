@@ -216,19 +216,19 @@ const CategoriesPage = () => {
                               onClick={() => openEdit(key, label, customData)}
                             >
                               <Pencil className="w-3.5 h-3.5" />
-                          </IconTooltip>
-                          </Button>
-                          {canDelete && (
-                              <IconTooltip label="Eliminar categoría">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                                  onClick={() => setDeletingId(key)}
-                                >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </IconTooltip>
                             </Button>
+                          </IconTooltip>
+                          {canDelete && (
+                            <IconTooltip label="Eliminar categoría">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                onClick={() => setDeletingId(key)}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </IconTooltip>
                           )}
                         </div>
                       </div>
