@@ -73,7 +73,7 @@ function getColorClasses(colorValue?: string) {
 
 const CategoriesPage = () => {
   const { flattenedPayments: payments } = usePaymentPlans();
-  const { categories: customCategories, addCategory, updateCategory, deleteCategory } = useCustomCategories();
+  const { categories: customCategories, addCategory, addCategoryWithId, updateCategory, deleteCategory } = useCustomCategories();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
