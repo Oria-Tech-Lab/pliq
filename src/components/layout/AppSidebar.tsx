@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard, ClipboardList, Settings } from 'lucide-react';
+import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard, ClipboardList, Settings, Bell } from 'lucide-react';
+import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
