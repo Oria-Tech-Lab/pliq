@@ -6,7 +6,7 @@ import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PaymentPlan, PaymentInstance, PLAN_TYPE_LABELS } from '@/types/paymentPlan';
-import { FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
+import { FREQUENCY_LABELS, METHOD_LABELS, METHOD_TYPE_LABELS } from '@/types/payment';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { SwipeableRow } from '@/components/payments/SwipeableRow';
 import { PaymentPlanForm } from '@/components/payments/PaymentPlanForm';
@@ -22,7 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, differenceInCalendarDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -48,6 +48,7 @@ export default function PaymentPlansPage() {
   const [editFrequency, setEditFrequency] = useState<string>('monthly');
   const [editTotalPayments, setEditTotalPayments] = useState<number | null>(null);
   const [editDueDate, setEditDueDate] = useState('');
+  const [editPaymentMethodId, setEditPaymentMethodId] = useState('');
 
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
@@ -88,6 +89,9 @@ export default function PaymentPlansPage() {
     setEditFrequency(plan.frequency || 'monthly');
     setEditTotalPayments(plan.totalPayments ?? null);
     setEditDueDate(plan.dueDate || '');
+    // Find matching method from paymentMethods list, or fall back to legacy key
+    const matchedMethod = paymentMethods.find(m => m.id === plan.paymentMethod);
+    setEditPaymentMethodId(matchedMethod ? plan.paymentMethod : (plan.paymentMethod || ''));
   };
 
   const handleSaveEditPlan = () => {
@@ -99,6 +103,7 @@ export default function PaymentPlansPage() {
       payeeId: editPayeeId || undefined,
       payTo: payee?.name || editingPlan.payTo,
       amount: editAmount,
+      paymentMethod: editPaymentMethodId as any || editingPlan.paymentMethod,
       ...(editingPlan.type === 'recurring' ? {
         frequency: editFrequency as any,
         totalPayments: editTotalPayments,
@@ -129,7 +134,21 @@ export default function PaymentPlansPage() {
     const allPaid = plan.instances.length > 0 && plan.instances.every(i => i.status === 'paid');
     if (allPaid) return { label: 'Completado', className: 'bg-paid/12 text-paid border-paid/25' };
     if (hasOverdue) return { label: 'Vencido', className: 'bg-overdue/12 text-overdue border-overdue/25' };
-    return { label: 'Al día', className: 'bg-primary/10 text-primary border-primary/20' };
+
+    // Check if any pending instance is within 5 days of due date
+    const today = new Date();
+    const nearDue = plan.instances.find(i => {
+      if (i.status !== 'pending') return false;
+      const daysLeft = differenceInCalendarDays(new Date(i.dueDate), today);
+      return daysLeft >= 0 && daysLeft <= 5;
+    });
+    if (nearDue) {
+      const daysLeft = differenceInCalendarDays(new Date(nearDue.dueDate), today);
+      const label = daysLeft === 0 ? 'Vence hoy' : daysLeft === 1 ? 'Vence mañana' : `${daysLeft} días`;
+      return { label, className: 'bg-pending/12 text-pending border-pending/25' };
+    }
+
+    return { label: 'Al día', className: 'bg-paid/12 text-paid border-paid/25' };
   };
 
   const getPayeeName = (plan: PaymentPlan) => {
@@ -153,30 +172,6 @@ export default function PaymentPlansPage() {
         <Collapsible open={isExpanded} onOpenChange={() => toggleExpand(plan.id)}>
           {/* Card header */}
           <div className="flex items-start gap-2">
-            {/* Options menu - mobile: top-left; desktop: hidden, use icon buttons */}
-            {isMobile && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 mt-0.5 text-muted-foreground">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-44">
-                  <DropdownMenuItem onClick={() => openEditPlan(plan)} className="gap-2">
-                    <Pencil className="w-3.5 h-3.5" /> Editar plan
-                  </DropdownMenuItem>
-                  {plan.type === 'recurring' && (
-                    <DropdownMenuItem onClick={() => setFinalizingId(plan.id)} className="gap-2 text-amber-600">
-                      <Ban className="w-3.5 h-3.5" /> Finalizar plan
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => setDeletingId(plan.id)} className="gap-2 text-destructive">
-                    <Trash2 className="w-3.5 h-3.5" /> Eliminar plan
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
             {/* Main content area */}
             <CollapsibleTrigger asChild>
               <button className="flex-1 min-w-0 text-left">
@@ -238,6 +233,30 @@ export default function PaymentPlansPage() {
                 </div>
               </button>
             </CollapsibleTrigger>
+
+            {/* Mobile: options menu on the right */}
+            {isMobile && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 mt-0.5 text-muted-foreground">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem onClick={() => openEditPlan(plan)} className="gap-2">
+                    <Pencil className="w-3.5 h-3.5" /> Editar plan
+                  </DropdownMenuItem>
+                  {plan.type === 'recurring' && (
+                    <DropdownMenuItem onClick={() => setFinalizingId(plan.id)} className="gap-2 text-amber-600">
+                      <Ban className="w-3.5 h-3.5" /> Finalizar plan
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => setDeletingId(plan.id)} className="gap-2 text-destructive">
+                    <Trash2 className="w-3.5 h-3.5" /> Eliminar plan
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {/* Desktop action buttons */}
             {!isMobile && (
@@ -440,9 +459,24 @@ export default function PaymentPlansPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Monto (S/)</Label>
-              <Input type="number" step="0.01" min="0" value={editAmount || ''} onChange={e => setEditAmount(parseFloat(e.target.value) || 0)} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Monto (S/)</Label>
+                <Input type="number" step="0.01" min="0" value={editAmount || ''} onChange={e => setEditAmount(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Método de pago</Label>
+                <Select value={editPaymentMethodId} onValueChange={setEditPaymentMethodId}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
+                  <SelectContent>
+                    {paymentMethods.map(m => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name} <span className="text-muted-foreground ml-1">({METHOD_TYPE_LABELS[m.type]})</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             {editingPlan?.type === 'recurring' && (
               <>
