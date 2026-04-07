@@ -219,10 +219,10 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
               ) : (
                 <div className="flex gap-2 items-center">
                   <Input autoFocus placeholder="Nombre de categoría" className="flex-1" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCategory(); } if (e.key === 'Escape') setShowNewCategory(false); }} />
-                  <Button type="button" variant="outline" size="icon" onClick={handleAddCategory} disabled={!newCategoryName.trim()} title="Confirmar" className="shrink-0">
+                  <Button type="button" variant="outline" size="icon" onClick={handleAddCategory} disabled={!newCategoryName.trim()} title="Confirmar" className="shrink-0 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary">
                     <Check className="h-4 w-4" />
                   </Button>
-                  <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewCategory(false)} title="Cancelar" className="shrink-0">
+                  <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewCategory(false)} title="Cancelar" className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
