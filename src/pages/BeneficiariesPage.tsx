@@ -71,25 +71,15 @@ const BeneficiariesPage = () => {
     setDialogOpen(true);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!name.trim()) return;
     if (editingPayee) {
-      updatePayee(editingPayee.id, { name: name.trim(), type, bankAccounts });
+      await updatePayee(editingPayee.id, { name: name.trim(), type, bankAccounts });
       toast.success('Beneficiario actualizado');
     } else {
-      const newPayee = addPayeeBase(name);
-      // Patch with extra data via localStorage
-      const stored = localStorage.getItem('payees-app-data');
-      if (stored) {
-        try {
-          const all = JSON.parse(stored) as Payee[];
-          const idx = all.findIndex(p => p.id === newPayee.id);
-          if (idx >= 0) {
-            all[idx] = { ...all[idx], type, bankAccounts };
-            localStorage.setItem('payees-app-data', JSON.stringify(all));
-          }
-        } catch {}
-      }
+      const newPayee = await addPayeeBase(name);
+      // Update with extra data
+      await updatePayee(newPayee.id, { type, bankAccounts });
       toast.success('Beneficiario creado');
     }
     resetForm();
