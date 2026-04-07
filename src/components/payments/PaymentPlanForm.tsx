@@ -420,6 +420,18 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
               </>
             )}
 
+            {/* Notifications */}
+            <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3">
+              <div className="space-y-0.5">
+                <Label className="text-sm font-medium cursor-pointer">Recordatorio</Label>
+                <p className="text-[11px] text-muted-foreground">Recibir notificación push antes del vencimiento</p>
+              </div>
+              <Switch
+                checked={form.notificationsEnabled}
+                onCheckedChange={v => setForm({ ...form, notificationsEnabled: v })}
+              />
+            </div>
+
             {/* Notes */}
             <div className="space-y-2">
               <Label htmlFor="plan-notes">Notas (opcional)</Label>
