@@ -482,38 +482,91 @@ export default function PaymentPlansPage() {
       </AlertDialog>
 
       <Dialog open={!!editingPlan} onOpenChange={(open) => !open && setEditingPlan(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar plan de pago</DialogTitle>
+        <DialogContent className="sm:max-w-[540px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle className="font-display text-xl">Editar plan de pago</DialogTitle>
             <DialogDescription>Modifica los datos generales del plan.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-5">
+            {/* Name */}
             <div className="space-y-2">
               <Label>Nombre</Label>
               <Input value={editName} onChange={e => setEditName(e.target.value)} />
             </div>
+
+            {/* Category with inline creation */}
             <div className="space-y-2">
               <Label>Categoría</Label>
-              <Select value={editCategory} onValueChange={setEditCategory}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(allCategoryLabels).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!editShowNewCategory ? (
+                <div className="flex gap-2">
+                  <Select value={editCategory} onValueChange={setEditCategory}>
+                    <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(allCategoryLabels).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <IconTooltip label="Nueva categoría">
+                    <Button type="button" variant="outline" size="icon" onClick={() => setEditShowNewCategory(true)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                </div>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <Input autoFocus placeholder="Nombre de categoría" className="flex-1" value={editNewCategoryName} onChange={e => setEditNewCategoryName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleEditAddCategory(); } if (e.key === 'Escape') setEditShowNewCategory(false); }} />
+                  <IconTooltip label="Confirmar">
+                    <Button type="button" variant="outline" size="icon" onClick={handleEditAddCategory} disabled={!editNewCategoryName.trim()} className="shrink-0 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary">
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                  <IconTooltip label="Cancelar">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setEditShowNewCategory(false)} className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                </div>
+              )}
             </div>
+
+            {/* Beneficiary with inline creation */}
             <div className="space-y-2">
               <Label>Beneficiario</Label>
-              <Select value={editPayeeId} onValueChange={setEditPayeeId}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar beneficiario" /></SelectTrigger>
-                <SelectContent>
-                  {payees.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!editShowNewPayee ? (
+                <div className="flex gap-2">
+                  <Select value={editPayeeId} onValueChange={setEditPayeeId}>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar beneficiario" /></SelectTrigger>
+                    <SelectContent>
+                      {payees.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <IconTooltip label="Nuevo beneficiario">
+                    <Button type="button" variant="outline" size="icon" onClick={() => setEditShowNewPayee(true)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                </div>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <Input autoFocus placeholder="Nombre del beneficiario" className="flex-1" value={editNewPayeeName} onChange={e => setEditNewPayeeName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleEditAddPayee(); } if (e.key === 'Escape') setEditShowNewPayee(false); }} />
+                  <IconTooltip label="Confirmar">
+                    <Button type="button" variant="outline" size="icon" onClick={handleEditAddPayee} disabled={!editNewPayeeName.trim()} className="shrink-0 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary">
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                  <IconTooltip label="Cancelar">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setEditShowNewPayee(false)} className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                </div>
+              )}
             </div>
+
+            {/* Amount & Payment method with inline creation */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Monto (S/)</Label>
@@ -521,18 +574,51 @@ export default function PaymentPlansPage() {
               </div>
               <div className="space-y-2">
                 <Label>Método de pago</Label>
-                <Select value={editPaymentMethodId} onValueChange={setEditPaymentMethodId}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
-                  <SelectContent>
-                    {paymentMethods.map(m => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.name} <span className="text-muted-foreground ml-1">({METHOD_TYPE_LABELS[m.type]})</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {!editShowNewMethod ? (
+                  <div className="flex gap-2">
+                    {paymentMethods.length > 0 ? (
+                      <Select value={editPaymentMethodId} onValueChange={setEditPaymentMethodId}>
+                        <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
+                        <SelectContent>
+                          {paymentMethods.map(m => (
+                            <SelectItem key={m.id} value={m.id}>
+                              {m.name} <span className="text-muted-foreground ml-1">({METHOD_TYPE_LABELS[m.type]})</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Button type="button" variant="outline" className="flex-1 text-muted-foreground" onClick={() => setEditShowNewMethod(true)}>
+                        <Plus className="h-4 w-4 mr-2" /> Agregar método
+                      </Button>
+                    )}
+                    {paymentMethods.length > 0 && (
+                      <IconTooltip label="Nuevo método">
+                        <Button type="button" variant="outline" size="icon" onClick={() => setEditShowNewMethod(true)}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </IconTooltip>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex gap-2 items-center">
+                    <Input autoFocus placeholder="Nombre del método" className="flex-1" value={editNewMethodName} onChange={e => setEditNewMethodName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleEditAddMethod(); } if (e.key === 'Escape') setEditShowNewMethod(false); }} />
+                    <IconTooltip label="Confirmar">
+                      <Button type="button" variant="outline" size="icon" onClick={handleEditAddMethod} disabled={!editNewMethodName.trim()} className="shrink-0 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary">
+                        <Check className="h-4 w-4" />
+                      </Button>
+                    </IconTooltip>
+                    <IconTooltip label="Cancelar">
+                      <Button type="button" variant="ghost" size="icon" onClick={() => setEditShowNewMethod(false)} className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </IconTooltip>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Recurring fields */}
             {editingPlan?.type === 'recurring' && (
               <>
                 <div className="space-y-2">
@@ -546,7 +632,7 @@ export default function PaymentPlansPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Total de pagos</Label>
                   <div className="flex items-center gap-3">
                     <Input
@@ -559,9 +645,27 @@ export default function PaymentPlansPage() {
                       {editTotalPayments ? `${editTotalPayments} pagos` : 'Indefinido'}
                     </span>
                   </div>
+                  {editProjectedEndDate && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">
+                      <CalendarCheck className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span>
+                        Finaliza el <strong className="text-foreground">{format(editProjectedEndDate, "d 'de' MMMM yyyy", { locale: es })}</strong>
+                      </span>
+                    </div>
+                  )}
+                  {editProjectedTotal !== null && editTotalPayments && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">
+                      <Wallet className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span>
+                        Total proyectado: <strong className="text-foreground">{formatCurrency(editProjectedTotal)}</strong>
+                      </span>
+                    </div>
+                  )}
                 </div>
               </>
             )}
+
+            {/* Unique: due date */}
             {editingPlan?.type === 'unique' && (
               <div className="space-y-2">
                 <Label>Fecha de vencimiento</Label>
@@ -569,10 +673,16 @@ export default function PaymentPlansPage() {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingPlan(null)}>Cancelar</Button>
-            <Button onClick={handleSaveEditPlan}>Guardar cambios</Button>
-          </DialogFooter>
+
+          {/* Full-width sticky footer buttons */}
+          <div className="border-t border-border bg-card px-6 py-4 flex gap-3">
+            <Button variant="outline" onClick={() => setEditingPlan(null)} className="flex-1 h-12 text-base rounded-xl">
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEditPlan} className="flex-1 h-12 text-base rounded-xl font-semibold gap-2">
+              <Check className="w-4 h-4" /> Guardar cambios
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </AppLayout>
