@@ -68,6 +68,45 @@ export default function PaymentPlansPage() {
     }
   };
 
+  const openEditPlan = (plan: PaymentPlan) => {
+    setEditingPlan(plan);
+    setEditName(plan.name);
+    setEditCategory(plan.category);
+    setEditPayeeId(plan.payeeId || '');
+    setEditAmount(plan.amount);
+    setEditFrequency(plan.frequency || 'monthly');
+    setEditTotalPayments(plan.totalPayments ?? null);
+    setEditDueDate(plan.dueDate || '');
+  };
+
+  const handleSaveEditPlan = () => {
+    if (!editingPlan) return;
+    const payee = payees.find(p => p.id === editPayeeId);
+    updatePlan(editingPlan.id, {
+      name: editName,
+      category: editCategory,
+      payeeId: editPayeeId || undefined,
+      payTo: payee?.name || editingPlan.payTo,
+      amount: editAmount,
+      ...(editingPlan.type === 'recurring' ? {
+        frequency: editFrequency as any,
+        totalPayments: editTotalPayments,
+      } : {
+        dueDate: editDueDate,
+      }),
+    });
+    setEditingPlan(null);
+    toast.success('Plan actualizado');
+  };
+
+  const handleFinalize = () => {
+    if (finalizingId) {
+      finalizePlan(finalizingId);
+      toast.success('Plan finalizado', { description: 'No se generarán más pagos' });
+      setFinalizingId(null);
+    }
+  };
+
   const formatCurrency = (n: number) =>
     new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
 
