@@ -30,6 +30,8 @@ export interface PaymentPlan {
   startDate?: string;
   frequency?: PaymentFrequency;
   totalPayments?: number | null; // null = indefinite
+  // Notifications
+  notificationsEnabled?: boolean;
   // Computed
   instances: PaymentInstance[];
   status: 'active' | 'completed' | 'pending';

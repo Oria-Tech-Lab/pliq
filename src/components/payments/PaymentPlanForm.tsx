@@ -41,6 +41,7 @@ const defaultForm = {
   frequency: 'monthly' as PaymentFrequency,
   totalPayments: 12 as number | null,
   isIndefinite: false,
+  notificationsEnabled: true,
 };
 
 function computeEndDate(startDate: string, frequency: PaymentFrequency, totalPayments: number): Date {
