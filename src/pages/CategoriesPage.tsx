@@ -107,11 +107,11 @@ const CategoriesPage = () => {
       return { key: cat, label: override?.name || CATEGORY_LABELS[cat], count: catPayments.length, total, pending, isCustom: false, customData: override || null, isBuiltIn: true };
     });
 
-    const custom = customCategories.map(cc => {
+    const custom = customCategories.filter(cc => !Object.keys(CATEGORY_LABELS).includes(cc.id)).map(cc => {
       const catPayments = payments.filter(p => p.category === cc.id);
       const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
       const pending = catPayments.filter(p => p.status !== 'paid').length;
-      return { key: cc.id, label: cc.name, count: catPayments.length, total, pending, isCustom: true, customData: cc };
+      return { key: cc.id, label: cc.name, count: catPayments.length, total, pending, isCustom: true, customData: cc, isBuiltIn: false };
     });
 
     return [...builtIn, ...custom].filter(c => c.count > 0 || c.isCustom).sort((a, b) => b.total - a.total);
