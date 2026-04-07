@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Payment, PaymentStatus, PaymentCategory, QuickFilter } from '@/types/payment';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { SummaryCards } from '@/components/payments/SummaryCards';
 import { PaymentFilters } from '@/components/payments/PaymentFilters';
 import { PaymentList } from '@/components/payments/PaymentList';
+import { NotificationBar } from '@/components/payments/NotificationBar';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { isToday, isThisWeek, isThisMonth } from 'date-fns';
@@ -35,7 +36,7 @@ const Index = () => {
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<PaymentCategory | 'all'>('all');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>(
-    initialFilter && VALID_FILTERS.includes(initialFilter) ? initialFilter : 'month'
+    initialFilter && VALID_FILTERS.includes(initialFilter) ? initialFilter : 'pending'
   );
 
   const payments = flattenedPayments;
@@ -84,22 +85,25 @@ const Index = () => {
 
   return (
     <AppLayout onAddPayment={handleAddPayment} title="Inicio">
-      <div className="container py-6 space-y-6">
+      <div className="container py-4 space-y-4">
+        {/* Notification bar */}
+        <NotificationBar payments={payments} />
+
         <section className="animate-slide-up">
           <SummaryCards payments={payments} activeFilter={quickFilter} onCardClick={handleQuickFilter} />
         </section>
 
-        <section className="space-y-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <section className="space-y-3 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="font-display font-semibold text-xl text-foreground">{sectionTitle}</h2>
+              <h2 className="font-display font-semibold text-lg text-foreground">{sectionTitle}</h2>
               {quickFilter && (
                 <Button variant="ghost" size="sm" onClick={() => setQuickFilter(null)} className="h-7 px-2 text-muted-foreground hover:text-foreground">
                   <X className="w-3.5 h-3.5 mr-1" /> Limpiar
                 </Button>
               )}
             </div>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {displayCount} {displayCount === 1 ? 'pago' : 'pagos'}
             </span>
           </div>
@@ -117,6 +121,7 @@ const Index = () => {
             onEdit={() => navigate('/planes')}
             onDelete={() => {}}
             onAddPayment={handleAddPayment}
+            pageSize={10}
           />
         </section>
       </div>

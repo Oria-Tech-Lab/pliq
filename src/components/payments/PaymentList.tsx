@@ -1,7 +1,9 @@
 import { Payment, Payee, PaymentStatus, PaymentCategory } from '@/types/payment';
 import { PaymentCard } from './PaymentCard';
 import { EmptyState } from './EmptyState';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaymentListProps {
   payments: Payment[];
@@ -14,6 +16,7 @@ interface PaymentListProps {
   onEdit: (payment: Payment) => void;
   onDelete: (id: string) => void;
   onAddPayment: () => void;
+  pageSize?: number;
 }
 
 export function PaymentList({
@@ -27,7 +30,10 @@ export function PaymentList({
   onEdit,
   onDelete,
   onAddPayment,
+  pageSize = 10,
 }: PaymentListProps) {
+  const [page, setPage] = useState(0);
+
   const filteredPayments = useMemo(() => {
     return payments
       .filter(p => {
@@ -52,6 +58,12 @@ export function PaymentList({
       });
   }, [payments, payees, searchQuery, statusFilter, categoryFilter]);
 
+  // Reset page when filters change
+  useMemo(() => setPage(0), [searchQuery, statusFilter, categoryFilter, payments]);
+
+  const totalPages = Math.ceil(filteredPayments.length / pageSize);
+  const paginatedPayments = filteredPayments.slice(page * pageSize, (page + 1) * pageSize);
+
   const hasFilters = !!(searchQuery || statusFilter !== 'all' || categoryFilter !== 'all');
 
   if (payments.length === 0) {
@@ -64,7 +76,7 @@ export function PaymentList({
 
   return (
     <div className="space-y-3">
-      {filteredPayments.map((payment) => (
+      {paginatedPayments.map((payment) => (
         <PaymentCard
           key={payment.id}
           payment={payment}
@@ -75,6 +87,48 @@ export function PaymentList({
           onDelete={onDelete}
         />
       ))}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <p className="text-[11px] text-muted-foreground">
+            {page * pageSize + 1}–{Math.min((page + 1) * pageSize, filteredPayments.length)} de {filteredPayments.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg"
+              disabled={page === 0}
+              onClick={() => setPage(p => p - 1)}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i)}
+                className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
+                  i === page
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage(p => p + 1)}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

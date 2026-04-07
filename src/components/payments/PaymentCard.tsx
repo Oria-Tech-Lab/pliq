@@ -3,9 +3,9 @@ import { StatusBadge } from './StatusBadge';
 import { CategoryBadge } from './CategoryBadge';
 import { Button } from '@/components/ui/button';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
-import { format } from 'date-fns';
+import { format, differenceInDays, startOfDay, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Check, RotateCcw, Pencil, Trash2, Calendar, User, Wallet, Repeat } from 'lucide-react';
+import { Check, RotateCcw, Pencil, Trash2, Calendar, User, Wallet, Repeat, Clock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
@@ -16,6 +16,17 @@ interface PaymentCardProps {
   onMarkAsPending: (id: string) => void;
   onEdit: (payment: Payment) => void;
   onDelete: (id: string) => void;
+}
+
+function getDueAlert(payment: Payment): { label: string; variant: 'today' | 'soon' } | null {
+  if (payment.status === 'paid') return null;
+  const today = startOfDay(new Date());
+  const due = startOfDay(new Date(payment.dueDate));
+  const diff = differenceInDays(due, today);
+  if (diff < 0) return null; // overdue handled by status
+  if (diff === 0) return { label: 'Vence hoy', variant: 'today' };
+  if (diff <= 5) return { label: `Vence en ${diff} día${diff > 1 ? 's' : ''}`, variant: 'soon' };
+  return null;
 }
 
 export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPending, onEdit, onDelete }: PaymentCardProps) {
@@ -29,25 +40,20 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
   const payeeName = payee?.name || payment.payTo;
   const isPaid = payment.status === 'paid';
   const isOverdue = payment.status === 'overdue';
+  const dueAlert = getDueAlert(payment);
 
   return (
     <div className={cn(
-      'payment-row group animate-fade-in relative overflow-hidden',
+      'bg-card rounded-2xl border border-border/60 p-4 shadow-sm group relative overflow-hidden transition-all',
       isOverdue && 'border-l-[3px] border-l-overdue',
       isPaid && 'border-l-[3px] border-l-paid',
+      !isPaid && !isOverdue && 'border-l-[3px] border-l-primary/30',
     )}>
-      <div className={cn(
-        'absolute top-0 left-0 right-0 h-[2px]',
-        isPaid && 'bg-paid/30',
-        isOverdue && 'bg-overdue/30',
-        !isPaid && !isOverdue && 'bg-primary/10',
-      )} />
-
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className={cn(
-              "font-semibold text-[15px] text-foreground",
+              "font-semibold text-sm text-foreground",
               isPaid && 'line-through text-muted-foreground'
             )}>
               {payment.name}
@@ -56,43 +62,58 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
             <StatusBadge status={payment.status} />
           </div>
 
-          <div className="flex items-center gap-4 mt-2.5 text-[13px] text-muted-foreground flex-wrap">
-            <span className="inline-flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-muted-foreground/70" />
+          {/* Due alert badge */}
+          {dueAlert && (
+            <div className={cn(
+              'inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-md text-[10px] font-semibold',
+              dueAlert.variant === 'today'
+                ? 'bg-overdue/10 text-overdue'
+                : 'bg-warning/10 text-warning-foreground'
+            )}>
+              {dueAlert.variant === 'today'
+                ? <AlertTriangle className="w-3 h-3" />
+                : <Clock className="w-3 h-3" />}
+              {dueAlert.label}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 mt-2 text-[12px] text-muted-foreground flex-wrap">
+            <span className="inline-flex items-center gap-1">
+              <Calendar className="w-3 h-3 text-muted-foreground/70" />
               {formattedDate}
             </span>
             {payee ? (
               <Link
                 to={`/payee/${payee.id}`}
-                className="inline-flex items-center gap-1.5 hover:text-primary transition-colors underline-offset-2 hover:underline"
+                className="inline-flex items-center gap-1 hover:text-primary transition-colors underline-offset-2 hover:underline"
               >
-                <User className="w-3.5 h-3.5 text-muted-foreground/70" />
+                <User className="w-3 h-3 text-muted-foreground/70" />
                 {payeeName}
               </Link>
             ) : (
-              <span className="inline-flex items-center gap-1.5">
-                <User className="w-3.5 h-3.5 text-muted-foreground/70" />
+              <span className="inline-flex items-center gap-1">
+                <User className="w-3 h-3 text-muted-foreground/70" />
                 {payeeName}
               </span>
             )}
-            <span className="inline-flex items-center gap-1.5">
-              <Wallet className="w-3.5 h-3.5 text-muted-foreground/70" />
+            <span className="inline-flex items-center gap-1">
+              <Wallet className="w-3 h-3 text-muted-foreground/70" />
               {METHOD_LABELS[payment.paymentMethod]}
             </span>
           </div>
 
           {payment.frequency !== 'once' && (
-            <span className="inline-flex items-center gap-1 mt-2.5 text-[11px] text-primary bg-primary/8 px-2.5 py-1 rounded-lg font-medium">
+            <span className="inline-flex items-center gap-1 mt-2 text-[10px] text-primary bg-primary/8 px-2 py-0.5 rounded-md font-medium">
               <Repeat className="w-3 h-3" />
               {FREQUENCY_LABELS[payment.frequency]}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-4 sm:gap-5">
+        <div className="flex items-center gap-3 sm:gap-4">
           <div className="text-right">
             <p className={cn(
-              "font-bold text-lg tracking-tight tabular-nums",
+              "font-bold text-base tracking-tight tabular-nums",
               isPaid ? 'text-muted-foreground' : isOverdue ? 'text-overdue' : 'text-foreground'
             )}>
               {formattedAmount}
@@ -148,7 +169,7 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
       </div>
 
       {payment.notes && (
-        <p className="mt-3 text-[13px] text-muted-foreground border-t border-border/40 pt-3 italic">
+        <p className="mt-3 text-[11px] text-muted-foreground border-t border-border/40 pt-2 italic">
           {payment.notes}
         </p>
       )}
