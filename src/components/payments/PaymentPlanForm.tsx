@@ -43,6 +43,8 @@ const defaultForm = {
   totalPayments: 12 as number | null,
   isIndefinite: false,
   notificationsEnabled: true,
+  notificationDaysBefore: 1,
+  notificationTime: '09:00',
 };
 
 function computeEndDate(startDate: string, frequency: PaymentFrequency, totalPayments: number): Date {
