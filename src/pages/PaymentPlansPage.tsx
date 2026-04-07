@@ -540,35 +540,38 @@ function InstanceRow({
           )}>
             {formatCurrency(instance.amount)}
           </span>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
-            onClick={openEdit}
-            title="Editar"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </Button>
-          {instance.status !== 'paid' ? (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 rounded-lg text-paid hover:text-paid hover:bg-paid/10"
-              onClick={openConfirmPaid}
-              title="Marcar como pagado"
-            >
-              <Check className="w-3.5 h-3.5" />
-            </Button>
-          ) : (
+          <IconTooltip label="Editar">
             <Button
               size="icon"
               variant="ghost"
               className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
-              onClick={() => onMarkPending(planId, instance.id)}
-              title="Marcar como pendiente"
+              onClick={openEdit}
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <Pencil className="w-3.5 h-3.5" />
             </Button>
+          </IconTooltip>
+          {instance.status !== 'paid' ? (
+            <IconTooltip label="Marcar como pagado">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 rounded-lg text-paid hover:text-paid hover:bg-paid/10"
+                onClick={openConfirmPaid}
+              >
+                <Check className="w-3.5 h-3.5" />
+              </Button>
+            </IconTooltip>
+          ) : (
+            <IconTooltip label="Marcar como pendiente">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
+                onClick={() => onMarkPending(planId, instance.id)}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </Button>
+            </IconTooltip>
           )}
         </div>
       </div>
