@@ -219,6 +219,7 @@ export default function PaymentPlansPage() {
                 variant="ghost"
                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
                 onClick={() => setDeletingId(plan.id)}
+                title="Eliminar plan"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
