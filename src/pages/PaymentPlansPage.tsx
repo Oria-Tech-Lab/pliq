@@ -183,8 +183,8 @@ export default function PaymentPlansPage() {
               </button>
             </CollapsibleTrigger>
 
-            <div className="flex items-center gap-4">
-              <div className="text-right">
+            <div className="flex items-center gap-2">
+              <div className="text-right mr-2">
                 <p className="font-bold text-lg tracking-tight text-foreground">
                   {formatCurrency(plan.amount)}
                 </p>
@@ -194,6 +194,26 @@ export default function PaymentPlansPage() {
                   </p>
                 )}
               </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => openEditPlan(plan)}
+                title="Editar plan"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              {plan.type === 'recurring' && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:text-amber-500"
+                  onClick={() => setFinalizingId(plan.id)}
+                  title="Finalizar plan"
+                >
+                  <Ban className="w-4 h-4" />
+                </Button>
+              )}
               <Button
                 size="icon"
                 variant="ghost"
