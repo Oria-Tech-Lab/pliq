@@ -685,6 +685,49 @@ export default function PaymentPlansPage() {
                 <Input type="date" value={editDueDate ? new Date(editDueDate).toISOString().split('T')[0] : ''} onChange={e => setEditDueDate(new Date(e.target.value).toISOString())} />
               </div>
             )}
+
+            {/* Notifications */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium cursor-pointer">Recordatorio</Label>
+                  <p className="text-[11px] text-muted-foreground">Notificación push antes del vencimiento</p>
+                </div>
+                <Switch
+                  checked={editNotificationsEnabled}
+                  onCheckedChange={setEditNotificationsEnabled}
+                />
+              </div>
+              {editNotificationsEnabled && (
+                <div className="grid grid-cols-2 gap-3 pl-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Días antes</Label>
+                    <Select value={String(editNotificationDaysBefore)} onValueChange={v => setEditNotificationDaysBefore(parseInt(v))}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">El mismo día</SelectItem>
+                        <SelectItem value="1">1 día antes</SelectItem>
+                        <SelectItem value="2">2 días antes</SelectItem>
+                        <SelectItem value="3">3 días antes</SelectItem>
+                        <SelectItem value="5">5 días antes</SelectItem>
+                        <SelectItem value="7">7 días antes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Hora</Label>
+                    <Input
+                      type="time"
+                      className="h-9"
+                      value={editNotificationTime}
+                      onChange={e => setEditNotificationTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Full-width sticky footer buttons */}
