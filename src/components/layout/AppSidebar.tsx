@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard, ClipboardList, Settings } from 'lucide-react';
+import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard, ClipboardList, Settings, Bell } from 'lucide-react';
+import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +40,9 @@ export function AppSidebar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [userName, setUserName] = useState('');
   const [editName, setEditName] = useState('');
+  const { settings: notifSettings, updateSettings: updateNotifSettings } = useNotificationSettings();
+  const [editNotifTime, setEditNotifTime] = useState(notifSettings.defaultTime);
+  const [editNotifDays, setEditNotifDays] = useState(notifSettings.defaultDaysBefore);
 
   useEffect(() => {
     const stored = localStorage.getItem(USER_NAME_KEY);
@@ -46,6 +51,8 @@ export function AppSidebar() {
 
   const openSettings = () => {
     setEditName(userName);
+    setEditNotifTime(notifSettings.defaultTime);
+    setEditNotifDays(notifSettings.defaultDaysBefore);
     setSettingsOpen(true);
   };
 
@@ -53,6 +60,7 @@ export function AppSidebar() {
     const trimmed = editName.trim();
     setUserName(trimmed);
     localStorage.setItem(USER_NAME_KEY, trimmed);
+    updateNotifSettings({ defaultTime: editNotifTime, defaultDaysBefore: editNotifDays });
     setSettingsOpen(false);
   };
 
@@ -136,7 +144,7 @@ export function AppSidebar() {
             <DialogTitle>Configuración</DialogTitle>
             <DialogDescription>Personaliza tu experiencia.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="space-y-5 py-2">
             <div className="space-y-2">
               <Label>Tu nombre</Label>
               <Input
@@ -146,6 +154,41 @@ export function AppSidebar() {
                 onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveSettings(); } }}
               />
               <p className="text-[11px] text-muted-foreground">Se mostrará como saludo en el menú lateral.</p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-primary" />
+                <Label className="text-sm font-semibold">Recordatorios predeterminados</Label>
+              </div>
+              <p className="text-[11px] text-muted-foreground -mt-1">Se usará como valor por defecto al crear nuevos pagos.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Días antes</Label>
+                  <Select value={String(editNotifDays)} onValueChange={v => setEditNotifDays(parseInt(v))}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">El mismo día</SelectItem>
+                      <SelectItem value="1">1 día antes</SelectItem>
+                      <SelectItem value="2">2 días antes</SelectItem>
+                      <SelectItem value="3">3 días antes</SelectItem>
+                      <SelectItem value="5">5 días antes</SelectItem>
+                      <SelectItem value="7">7 días antes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Hora</Label>
+                  <Input
+                    type="time"
+                    className="h-9"
+                    value={editNotifTime}
+                    onChange={e => setEditNotifTime(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -32,6 +32,8 @@ export interface PaymentPlan {
   totalPayments?: number | null; // null = indefinite
   // Notifications
   notificationsEnabled?: boolean;
+  notificationDaysBefore?: number;
+  notificationTime?: string; // HH:mm format
   // Computed
   instances: PaymentInstance[];
   status: 'active' | 'completed' | 'pending';

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { PaymentPlan, PlanType } from '@/types/paymentPlan';
 import { PaymentFrequency, PaymentMethod, CATEGORY_LABELS, FREQUENCY_LABELS, Payee, PaymentMethodEntry, METHOD_TYPE_LABELS } from '@/types/payment';
+import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,8 @@ const defaultForm = {
   totalPayments: 12 as number | null,
   isIndefinite: false,
   notificationsEnabled: true,
+  notificationDaysBefore: 1,
+  notificationTime: '09:00',
 };
 
 function computeEndDate(startDate: string, frequency: PaymentFrequency, totalPayments: number): Date {
@@ -55,6 +58,7 @@ function computeEndDate(startDate: string, frequency: PaymentFrequency, totalPay
 }
 
 export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubmit }: PaymentPlanFormProps) {
+  const { settings: notifDefaults } = useNotificationSettings();
   const [form, setForm] = useState(defaultForm);
   const [dateOpen, setDateOpen] = useState(false);
   const [startDateOpen, setStartDateOpen] = useState(false);
@@ -69,12 +73,16 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
 
   useEffect(() => {
     if (open) {
-      setForm(defaultForm);
+      setForm({
+        ...defaultForm,
+        notificationDaysBefore: notifDefaults.defaultDaysBefore,
+        notificationTime: notifDefaults.defaultTime,
+      });
       setShowNewCategory(false);
       setShowNewPayee(false);
       setShowNewMethod(false);
     }
-  }, [open]);
+  }, [open, notifDefaults]);
 
   const allCategories: Record<string, string> = {
     ...CATEGORY_LABELS,
@@ -115,6 +123,8 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       frequency: form.type === 'recurring' ? form.frequency : undefined,
       totalPayments: form.type === 'recurring' ? (form.isIndefinite ? null : form.totalPayments) : undefined,
       notificationsEnabled: form.notificationsEnabled,
+      notificationDaysBefore: form.notificationsEnabled ? form.notificationDaysBefore : undefined,
+      notificationTime: form.notificationsEnabled ? form.notificationTime : undefined,
     });
     onOpenChange(false);
   };
@@ -421,15 +431,46 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
             )}
 
             {/* Notifications */}
-            <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-medium cursor-pointer">Recordatorio</Label>
-                <p className="text-[11px] text-muted-foreground">Recibir notificación push antes del vencimiento</p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium cursor-pointer">Recordatorio</Label>
+                  <p className="text-[11px] text-muted-foreground">Recibir notificación push antes del vencimiento</p>
+                </div>
+                <Switch
+                  checked={form.notificationsEnabled}
+                  onCheckedChange={v => setForm({ ...form, notificationsEnabled: v })}
+                />
               </div>
-              <Switch
-                checked={form.notificationsEnabled}
-                onCheckedChange={v => setForm({ ...form, notificationsEnabled: v })}
-              />
+              {form.notificationsEnabled && (
+                <div className="grid grid-cols-2 gap-3 pl-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Días antes</Label>
+                    <Select value={String(form.notificationDaysBefore)} onValueChange={v => setForm({ ...form, notificationDaysBefore: parseInt(v) })}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">El mismo día</SelectItem>
+                        <SelectItem value="1">1 día antes</SelectItem>
+                        <SelectItem value="2">2 días antes</SelectItem>
+                        <SelectItem value="3">3 días antes</SelectItem>
+                        <SelectItem value="5">5 días antes</SelectItem>
+                        <SelectItem value="7">7 días antes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Hora</Label>
+                    <Input
+                      type="time"
+                      className="h-9"
+                      value={form.notificationTime}
+                      onChange={e => setForm({ ...form, notificationTime: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Notes */}

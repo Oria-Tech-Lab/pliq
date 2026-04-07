@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
@@ -9,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { PaymentPlan, PaymentInstance, PLAN_TYPE_LABELS } from '@/types/paymentPlan';
 import { PaymentFrequency, FREQUENCY_LABELS, METHOD_LABELS, METHOD_TYPE_LABELS } from '@/types/payment';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
+import { Switch } from '@/components/ui/switch';
 import { SwipeableRow } from '@/components/payments/SwipeableRow';
 import { PaymentPlanForm } from '@/components/payments/PaymentPlanForm';
 import { Button } from '@/components/ui/button';
@@ -22,13 +24,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical, CalendarCheck, X, Upload } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical, CalendarCheck, X, Upload, Bell } from 'lucide-react';
 import { format, differenceInCalendarDays, addWeeks, addMonths, addYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function PaymentPlansPage() {
+  const { settings: notifDefaults } = useNotificationSettings();
   const { plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
   const { payees, addPayee } = usePayees([], () => {});
   const { methods: paymentMethods, addMethod: addPaymentMethod } = usePaymentMethods();
@@ -58,6 +61,9 @@ export default function PaymentPlansPage() {
   const [editNewPayeeName, setEditNewPayeeName] = useState('');
   const [editShowNewMethod, setEditShowNewMethod] = useState(false);
   const [editNewMethodName, setEditNewMethodName] = useState('');
+  const [editNotificationsEnabled, setEditNotificationsEnabled] = useState(true);
+  const [editNotificationDaysBefore, setEditNotificationDaysBefore] = useState(1);
+  const [editNotificationTime, setEditNotificationTime] = useState('09:00');
 
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
@@ -100,6 +106,9 @@ export default function PaymentPlansPage() {
     setEditDueDate(plan.dueDate || '');
     const matchedMethod = paymentMethods.find(m => m.id === plan.paymentMethod);
     setEditPaymentMethodId(matchedMethod ? plan.paymentMethod : (plan.paymentMethod || ''));
+    setEditNotificationsEnabled(plan.notificationsEnabled ?? true);
+    setEditNotificationDaysBefore(plan.notificationDaysBefore ?? notifDefaults.defaultDaysBefore);
+    setEditNotificationTime(plan.notificationTime ?? notifDefaults.defaultTime);
     setEditShowNewCategory(false);
     setEditShowNewPayee(false);
     setEditShowNewMethod(false);
@@ -159,6 +168,9 @@ export default function PaymentPlansPage() {
       payTo: payee?.name || editingPlan.payTo,
       amount: editAmount,
       paymentMethod: editPaymentMethodId as any || editingPlan.paymentMethod,
+      notificationsEnabled: editNotificationsEnabled,
+      notificationDaysBefore: editNotificationsEnabled ? editNotificationDaysBefore : undefined,
+      notificationTime: editNotificationsEnabled ? editNotificationTime : undefined,
       ...(editingPlan.type === 'recurring' ? {
         frequency: editFrequency as any,
         totalPayments: editTotalPayments,
@@ -673,6 +685,49 @@ export default function PaymentPlansPage() {
                 <Input type="date" value={editDueDate ? new Date(editDueDate).toISOString().split('T')[0] : ''} onChange={e => setEditDueDate(new Date(e.target.value).toISOString())} />
               </div>
             )}
+
+            {/* Notifications */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between bg-muted/30 rounded-xl px-4 py-3">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium cursor-pointer">Recordatorio</Label>
+                  <p className="text-[11px] text-muted-foreground">Notificación push antes del vencimiento</p>
+                </div>
+                <Switch
+                  checked={editNotificationsEnabled}
+                  onCheckedChange={setEditNotificationsEnabled}
+                />
+              </div>
+              {editNotificationsEnabled && (
+                <div className="grid grid-cols-2 gap-3 pl-1">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Días antes</Label>
+                    <Select value={String(editNotificationDaysBefore)} onValueChange={v => setEditNotificationDaysBefore(parseInt(v))}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">El mismo día</SelectItem>
+                        <SelectItem value="1">1 día antes</SelectItem>
+                        <SelectItem value="2">2 días antes</SelectItem>
+                        <SelectItem value="3">3 días antes</SelectItem>
+                        <SelectItem value="5">5 días antes</SelectItem>
+                        <SelectItem value="7">7 días antes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Hora</Label>
+                    <Input
+                      type="time"
+                      className="h-9"
+                      value={editNotificationTime}
+                      onChange={e => setEditNotificationTime(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Full-width sticky footer buttons */}
