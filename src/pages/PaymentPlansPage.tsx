@@ -106,6 +106,9 @@ export default function PaymentPlansPage() {
     setEditDueDate(plan.dueDate || '');
     const matchedMethod = paymentMethods.find(m => m.id === plan.paymentMethod);
     setEditPaymentMethodId(matchedMethod ? plan.paymentMethod : (plan.paymentMethod || ''));
+    setEditNotificationsEnabled(plan.notificationsEnabled ?? true);
+    setEditNotificationDaysBefore(plan.notificationDaysBefore ?? notifDefaults.defaultDaysBefore);
+    setEditNotificationTime(plan.notificationTime ?? notifDefaults.defaultTime);
     setEditShowNewCategory(false);
     setEditShowNewPayee(false);
     setEditShowNewMethod(false);
@@ -165,6 +168,9 @@ export default function PaymentPlansPage() {
       payTo: payee?.name || editingPlan.payTo,
       amount: editAmount,
       paymentMethod: editPaymentMethodId as any || editingPlan.paymentMethod,
+      notificationsEnabled: editNotificationsEnabled,
+      notificationDaysBefore: editNotificationsEnabled ? editNotificationDaysBefore : undefined,
+      notificationTime: editNotificationsEnabled ? editNotificationTime : undefined,
       ...(editingPlan.type === 'recurring' ? {
         frequency: editFrequency as any,
         totalPayments: editTotalPayments,
