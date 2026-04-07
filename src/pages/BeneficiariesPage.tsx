@@ -210,9 +210,11 @@ const BeneficiariesPage = () => {
                   <div key={account.id} className="space-y-2 p-3 bg-muted/30 rounded-lg relative">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium text-muted-foreground">Cuenta {idx + 1}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeBankAccount(account.id)} title="Eliminar cuenta">
-                        <X className="w-3 h-3" />
-                      </Button>
+                      <IconTooltip label="Eliminar cuenta">
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeBankAccount(account.id)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </IconTooltip>
                     </div>
                     <Input
                       placeholder="Banco"
