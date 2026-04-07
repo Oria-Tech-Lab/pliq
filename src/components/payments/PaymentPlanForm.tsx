@@ -293,10 +293,14 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                   </Button>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <Input autoFocus placeholder="Nombre del beneficiario" value={newPayeeName} onChange={e => setNewPayeeName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddPayee(); } if (e.key === 'Escape') setShowNewPayee(false); }} />
-                  <Button type="button" size="sm" onClick={handleAddPayee} disabled={!newPayeeName.trim()}>Agregar</Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowNewPayee(false)}>Cancelar</Button>
+                <div className="flex gap-2 items-center">
+                  <Input autoFocus placeholder="Nombre del beneficiario" className="flex-1" value={newPayeeName} onChange={e => setNewPayeeName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddPayee(); } if (e.key === 'Escape') setShowNewPayee(false); }} />
+                  <Button type="button" variant="outline" size="icon" onClick={handleAddPayee} disabled={!newPayeeName.trim()} title="Confirmar" className="shrink-0">
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => setShowNewPayee(false)} title="Cancelar" className="shrink-0">
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
             </div>
