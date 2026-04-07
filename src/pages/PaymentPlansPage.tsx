@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
+import { useCustomCategories } from '@/hooks/useCustomCategories';
 import { usePayees } from '@/hooks/usePayees';
 import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PaymentPlan, PaymentInstance, PLAN_TYPE_LABELS } from '@/types/paymentPlan';
-import { FREQUENCY_LABELS, METHOD_LABELS, METHOD_TYPE_LABELS } from '@/types/payment';
+import { PaymentFrequency, FREQUENCY_LABELS, METHOD_LABELS, METHOD_TYPE_LABELS } from '@/types/payment';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { SwipeableRow } from '@/components/payments/SwipeableRow';
 import { PaymentPlanForm } from '@/components/payments/PaymentPlanForm';
@@ -21,8 +22,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical } from 'lucide-react';
-import { format, differenceInCalendarDays } from 'date-fns';
+import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban, MoreVertical, CalendarCheck, X } from 'lucide-react';
+import { format, differenceInCalendarDays, addWeeks, addMonths, addYears } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -30,7 +31,8 @@ import { toast } from 'sonner';
 export default function PaymentPlansPage() {
   const { plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
   const { payees, addPayee } = usePayees([], () => {});
-  const { methods: paymentMethods } = usePaymentMethods();
+  const { methods: paymentMethods, addMethod: addPaymentMethod } = usePaymentMethods();
+  const { categories: customCategories, addCategory } = useCustomCategories();
   const allCategoryLabels = useCategoryLabels();
   const isMobile = useIsMobile();
   const [formOpen, setFormOpen] = useState(false);
@@ -49,6 +51,13 @@ export default function PaymentPlansPage() {
   const [editTotalPayments, setEditTotalPayments] = useState<number | null>(null);
   const [editDueDate, setEditDueDate] = useState('');
   const [editPaymentMethodId, setEditPaymentMethodId] = useState('');
+  // Inline creation states for edit dialog
+  const [editShowNewCategory, setEditShowNewCategory] = useState(false);
+  const [editNewCategoryName, setEditNewCategoryName] = useState('');
+  const [editShowNewPayee, setEditShowNewPayee] = useState(false);
+  const [editNewPayeeName, setEditNewPayeeName] = useState('');
+  const [editShowNewMethod, setEditShowNewMethod] = useState(false);
+  const [editNewMethodName, setEditNewMethodName] = useState('');
 
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
@@ -89,10 +98,56 @@ export default function PaymentPlansPage() {
     setEditFrequency(plan.frequency || 'monthly');
     setEditTotalPayments(plan.totalPayments ?? null);
     setEditDueDate(plan.dueDate || '');
-    // Find matching method from paymentMethods list, or fall back to legacy key
     const matchedMethod = paymentMethods.find(m => m.id === plan.paymentMethod);
     setEditPaymentMethodId(matchedMethod ? plan.paymentMethod : (plan.paymentMethod || ''));
+    setEditShowNewCategory(false);
+    setEditShowNewPayee(false);
+    setEditShowNewMethod(false);
+    setEditNewCategoryName('');
+    setEditNewPayeeName('');
+    setEditNewMethodName('');
   };
+
+  const handleEditAddCategory = () => {
+    if (!editNewCategoryName.trim()) return;
+    const cat = addCategory(editNewCategoryName);
+    setEditCategory(cat.id);
+    setEditShowNewCategory(false);
+    setEditNewCategoryName('');
+  };
+
+  const handleEditAddPayee = () => {
+    if (!editNewPayeeName.trim()) return;
+    const payee = addPayee(editNewPayeeName);
+    setEditPayeeId(payee.id);
+    setEditShowNewPayee(false);
+    setEditNewPayeeName('');
+  };
+
+  const handleEditAddMethod = () => {
+    if (!editNewMethodName.trim()) return;
+    const m = addPaymentMethod({ name: editNewMethodName.trim(), provider: '', type: 'bank_account', initialBalance: 0, remainingBalance: 0 });
+    setEditPaymentMethodId(m.id);
+    setEditShowNewMethod(false);
+    setEditNewMethodName('');
+  };
+
+  const editProjectedEndDate = useMemo(() => {
+    if (!editingPlan || editingPlan.type !== 'recurring' || !editTotalPayments || !editingPlan.startDate) return null;
+    const start = new Date(editingPlan.startDate);
+    const freq = editFrequency as PaymentFrequency;
+    switch (freq) {
+      case 'weekly': return addWeeks(start, editTotalPayments - 1);
+      case 'monthly': return addMonths(start, editTotalPayments - 1);
+      case 'yearly': return addYears(start, editTotalPayments - 1);
+      default: return start;
+    }
+  }, [editingPlan, editTotalPayments, editFrequency]);
+
+  const editProjectedTotal = useMemo(() => {
+    if (!editTotalPayments) return null;
+    return editAmount * editTotalPayments;
+  }, [editAmount, editTotalPayments]);
 
   const handleSaveEditPlan = () => {
     if (!editingPlan) return;
@@ -427,38 +482,91 @@ export default function PaymentPlansPage() {
       </AlertDialog>
 
       <Dialog open={!!editingPlan} onOpenChange={(open) => !open && setEditingPlan(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar plan de pago</DialogTitle>
+        <DialogContent className="sm:max-w-[540px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle className="font-display text-xl">Editar plan de pago</DialogTitle>
             <DialogDescription>Modifica los datos generales del plan.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
+          <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-5">
+            {/* Name */}
             <div className="space-y-2">
               <Label>Nombre</Label>
               <Input value={editName} onChange={e => setEditName(e.target.value)} />
             </div>
+
+            {/* Category with inline creation */}
             <div className="space-y-2">
               <Label>Categoría</Label>
-              <Select value={editCategory} onValueChange={setEditCategory}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(allCategoryLabels).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!editShowNewCategory ? (
+                <div className="flex gap-2">
+                  <Select value={editCategory} onValueChange={setEditCategory}>
+                    <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(allCategoryLabels).map(([k, v]) => (
+                        <SelectItem key={k} value={k}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <IconTooltip label="Nueva categoría">
+                    <Button type="button" variant="outline" size="icon" onClick={() => setEditShowNewCategory(true)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                </div>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <Input autoFocus placeholder="Nombre de categoría" className="flex-1" value={editNewCategoryName} onChange={e => setEditNewCategoryName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleEditAddCategory(); } if (e.key === 'Escape') setEditShowNewCategory(false); }} />
+                  <IconTooltip label="Confirmar">
+                    <Button type="button" variant="outline" size="icon" onClick={handleEditAddCategory} disabled={!editNewCategoryName.trim()} className="shrink-0 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary">
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                  <IconTooltip label="Cancelar">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setEditShowNewCategory(false)} className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                </div>
+              )}
             </div>
+
+            {/* Beneficiary with inline creation */}
             <div className="space-y-2">
               <Label>Beneficiario</Label>
-              <Select value={editPayeeId} onValueChange={setEditPayeeId}>
-                <SelectTrigger><SelectValue placeholder="Seleccionar beneficiario" /></SelectTrigger>
-                <SelectContent>
-                  {payees.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
-                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {!editShowNewPayee ? (
+                <div className="flex gap-2">
+                  <Select value={editPayeeId} onValueChange={setEditPayeeId}>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar beneficiario" /></SelectTrigger>
+                    <SelectContent>
+                      {payees.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <IconTooltip label="Nuevo beneficiario">
+                    <Button type="button" variant="outline" size="icon" onClick={() => setEditShowNewPayee(true)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                </div>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <Input autoFocus placeholder="Nombre del beneficiario" className="flex-1" value={editNewPayeeName} onChange={e => setEditNewPayeeName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleEditAddPayee(); } if (e.key === 'Escape') setEditShowNewPayee(false); }} />
+                  <IconTooltip label="Confirmar">
+                    <Button type="button" variant="outline" size="icon" onClick={handleEditAddPayee} disabled={!editNewPayeeName.trim()} className="shrink-0 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary">
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                  <IconTooltip label="Cancelar">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setEditShowNewPayee(false)} className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </IconTooltip>
+                </div>
+              )}
             </div>
+
+            {/* Amount & Payment method with inline creation */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Monto (S/)</Label>
@@ -466,18 +574,51 @@ export default function PaymentPlansPage() {
               </div>
               <div className="space-y-2">
                 <Label>Método de pago</Label>
-                <Select value={editPaymentMethodId} onValueChange={setEditPaymentMethodId}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
-                  <SelectContent>
-                    {paymentMethods.map(m => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.name} <span className="text-muted-foreground ml-1">({METHOD_TYPE_LABELS[m.type]})</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {!editShowNewMethod ? (
+                  <div className="flex gap-2">
+                    {paymentMethods.length > 0 ? (
+                      <Select value={editPaymentMethodId} onValueChange={setEditPaymentMethodId}>
+                        <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
+                        <SelectContent>
+                          {paymentMethods.map(m => (
+                            <SelectItem key={m.id} value={m.id}>
+                              {m.name} <span className="text-muted-foreground ml-1">({METHOD_TYPE_LABELS[m.type]})</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Button type="button" variant="outline" className="flex-1 text-muted-foreground" onClick={() => setEditShowNewMethod(true)}>
+                        <Plus className="h-4 w-4 mr-2" /> Agregar método
+                      </Button>
+                    )}
+                    {paymentMethods.length > 0 && (
+                      <IconTooltip label="Nuevo método">
+                        <Button type="button" variant="outline" size="icon" onClick={() => setEditShowNewMethod(true)}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </IconTooltip>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex gap-2 items-center">
+                    <Input autoFocus placeholder="Nombre del método" className="flex-1" value={editNewMethodName} onChange={e => setEditNewMethodName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleEditAddMethod(); } if (e.key === 'Escape') setEditShowNewMethod(false); }} />
+                    <IconTooltip label="Confirmar">
+                      <Button type="button" variant="outline" size="icon" onClick={handleEditAddMethod} disabled={!editNewMethodName.trim()} className="shrink-0 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary">
+                        <Check className="h-4 w-4" />
+                      </Button>
+                    </IconTooltip>
+                    <IconTooltip label="Cancelar">
+                      <Button type="button" variant="ghost" size="icon" onClick={() => setEditShowNewMethod(false)} className="shrink-0 text-destructive/70 hover:bg-destructive/10 hover:text-destructive">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </IconTooltip>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Recurring fields */}
             {editingPlan?.type === 'recurring' && (
               <>
                 <div className="space-y-2">
@@ -491,7 +632,7 @@ export default function PaymentPlansPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Label>Total de pagos</Label>
                   <div className="flex items-center gap-3">
                     <Input
@@ -504,9 +645,27 @@ export default function PaymentPlansPage() {
                       {editTotalPayments ? `${editTotalPayments} pagos` : 'Indefinido'}
                     </span>
                   </div>
+                  {editProjectedEndDate && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">
+                      <CalendarCheck className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span>
+                        Finaliza el <strong className="text-foreground">{format(editProjectedEndDate, "d 'de' MMMM yyyy", { locale: es })}</strong>
+                      </span>
+                    </div>
+                  )}
+                  {editProjectedTotal !== null && editTotalPayments && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">
+                      <Wallet className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span>
+                        Total proyectado: <strong className="text-foreground">{formatCurrency(editProjectedTotal)}</strong>
+                      </span>
+                    </div>
+                  )}
                 </div>
               </>
             )}
+
+            {/* Unique: due date */}
             {editingPlan?.type === 'unique' && (
               <div className="space-y-2">
                 <Label>Fecha de vencimiento</Label>
@@ -514,10 +673,16 @@ export default function PaymentPlansPage() {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingPlan(null)}>Cancelar</Button>
-            <Button onClick={handleSaveEditPlan}>Guardar cambios</Button>
-          </DialogFooter>
+
+          {/* Full-width sticky footer buttons */}
+          <div className="border-t border-border bg-card px-6 py-4 flex gap-3">
+            <Button variant="outline" onClick={() => setEditingPlan(null)} className="flex-1 h-12 text-base rounded-xl">
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEditPlan} className="flex-1 h-12 text-base rounded-xl font-semibold gap-2">
+              <Check className="w-4 h-4" /> Guardar cambios
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </AppLayout>

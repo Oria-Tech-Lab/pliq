@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import { addWeeks, addMonths, addYears, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Plus, Repeat, FileText, CalendarCheck, Check, X } from 'lucide-react';
+import { CalendarIcon, Plus, Repeat, FileText, CalendarCheck, Check, X, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 
@@ -84,6 +84,14 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
     if (form.type !== 'recurring' || form.isIndefinite || !form.totalPayments || !form.startDate) return null;
     return computeEndDate(form.startDate, form.frequency, form.totalPayments);
   }, [form.type, form.isIndefinite, form.totalPayments, form.startDate, form.frequency]);
+
+  const projectedTotal = useMemo(() => {
+    if (form.type !== 'recurring' || form.isIndefinite || !form.totalPayments || !form.amount) return null;
+    return form.amount * form.totalPayments;
+  }, [form.type, form.isIndefinite, form.totalPayments, form.amount]);
+
+  const formatCurrency = (n: number) =>
+    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
 
   const isRecurring = form.type === 'recurring';
   const modalTitle = isRecurring ? 'Nuevo pago recurrente' : 'Nuevo pago único';
@@ -393,6 +401,14 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                           <CalendarCheck className="w-4 h-4 text-primary flex-shrink-0" />
                           <span>
                             Finaliza el <strong className="text-foreground">{format(projectedEndDate, "d 'de' MMMM yyyy", { locale: es })}</strong>
+                          </span>
+                        </div>
+                      )}
+                      {projectedTotal !== null && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-xl px-3 py-2">
+                          <Wallet className="w-4 h-4 text-primary flex-shrink-0" />
+                          <span>
+                            Total proyectado: <strong className="text-foreground">{formatCurrency(projectedTotal)}</strong>
                           </span>
                         </div>
                       )}
