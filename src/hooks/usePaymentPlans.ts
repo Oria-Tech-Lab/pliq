@@ -176,7 +176,7 @@ export function usePaymentPlans() {
     }));
   }, []);
 
-  const updatePlan = useCallback((planId: string, data: Partial<Pick<PaymentPlan, 'name' | 'category' | 'amount' | 'payTo' | 'payeeId' | 'paymentMethod' | 'notes' | 'dueDate' | 'startDate' | 'frequency' | 'totalPayments'>>) => {
+  const updatePlan = useCallback((planId: string, data: Partial<Pick<PaymentPlan, 'name' | 'category' | 'amount' | 'payTo' | 'payeeId' | 'paymentMethod' | 'notes' | 'dueDate' | 'startDate' | 'frequency' | 'totalPayments' | 'notificationsEnabled' | 'notificationDaysBefore' | 'notificationTime'>>) => {
     setPlans(prev => prev.map(p => {
       if (p.id !== planId) return p;
       const updated = { ...p, ...data, updatedAt: new Date().toISOString() };
