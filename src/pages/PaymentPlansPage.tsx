@@ -747,7 +747,18 @@ function InstanceRow({
   const openConfirmPaid = () => {
     setEditAmount(instance.amount);
     setEditMethod(instance.paymentMethod || planPaymentMethod);
+    setReceiptFile(null);
+    setReceiptPreview(null);
     setConfirmPaidOpen(true);
+  };
+
+  const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setReceiptFile(file);
+      const url = URL.createObjectURL(file);
+      setReceiptPreview(url);
+    }
   };
 
   const openEdit = () => {
