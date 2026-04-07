@@ -51,6 +51,13 @@ export default function PaymentPlansPage() {
   const [editTotalPayments, setEditTotalPayments] = useState<number | null>(null);
   const [editDueDate, setEditDueDate] = useState('');
   const [editPaymentMethodId, setEditPaymentMethodId] = useState('');
+  // Inline creation states for edit dialog
+  const [editShowNewCategory, setEditShowNewCategory] = useState(false);
+  const [editNewCategoryName, setEditNewCategoryName] = useState('');
+  const [editShowNewPayee, setEditShowNewPayee] = useState(false);
+  const [editNewPayeeName, setEditNewPayeeName] = useState('');
+  const [editShowNewMethod, setEditShowNewMethod] = useState(false);
+  const [editNewMethodName, setEditNewMethodName] = useState('');
 
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
