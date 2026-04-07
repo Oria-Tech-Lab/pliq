@@ -43,9 +43,9 @@ const PaymentMethodsPage = () => {
     setRemainingBalance('');
   };
 
-  const handleAddProvider = () => {
+  const handleAddProvider = async () => {
     if (!newProvider.trim()) return;
-    const p = addProvider(newProvider);
+    const p = await addProvider(newProvider);
     setProvider(p.id);
     setNewProvider('');
     setShowNewProvider(false);
