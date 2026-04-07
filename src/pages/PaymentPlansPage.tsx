@@ -17,20 +17,31 @@ import { CategoryBadge } from '@/components/payments/CategoryBadge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function PaymentPlansPage() {
-  const { plans, isLoading, addPlan, deletePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
+  const { plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
   const { payees, addPayee } = usePayees([], () => {});
   const { methods: paymentMethods } = usePaymentMethods();
   const { categories } = useCustomCategories();
   const [formOpen, setFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
+  const [editingPlan, setEditingPlan] = useState<PaymentPlan | null>(null);
+  const [finalizingId, setFinalizingId] = useState<string | null>(null);
+
+  // Edit plan form state
+  const [editName, setEditName] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editPayeeId, setEditPayeeId] = useState('');
+  const [editAmount, setEditAmount] = useState(0);
+  const [editFrequency, setEditFrequency] = useState<string>('monthly');
+  const [editTotalPayments, setEditTotalPayments] = useState<number | null>(null);
+  const [editDueDate, setEditDueDate] = useState('');
 
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
@@ -54,6 +65,45 @@ export default function PaymentPlansPage() {
       deletePlan(deletingId);
       toast.success('Plan eliminado', { description: plan?.name });
       setDeletingId(null);
+    }
+  };
+
+  const openEditPlan = (plan: PaymentPlan) => {
+    setEditingPlan(plan);
+    setEditName(plan.name);
+    setEditCategory(plan.category);
+    setEditPayeeId(plan.payeeId || '');
+    setEditAmount(plan.amount);
+    setEditFrequency(plan.frequency || 'monthly');
+    setEditTotalPayments(plan.totalPayments ?? null);
+    setEditDueDate(plan.dueDate || '');
+  };
+
+  const handleSaveEditPlan = () => {
+    if (!editingPlan) return;
+    const payee = payees.find(p => p.id === editPayeeId);
+    updatePlan(editingPlan.id, {
+      name: editName,
+      category: editCategory,
+      payeeId: editPayeeId || undefined,
+      payTo: payee?.name || editingPlan.payTo,
+      amount: editAmount,
+      ...(editingPlan.type === 'recurring' ? {
+        frequency: editFrequency as any,
+        totalPayments: editTotalPayments,
+      } : {
+        dueDate: editDueDate,
+      }),
+    });
+    setEditingPlan(null);
+    toast.success('Plan actualizado');
+  };
+
+  const handleFinalize = () => {
+    if (finalizingId) {
+      finalizePlan(finalizingId);
+      toast.success('Plan finalizado', { description: 'No se generarán más pagos' });
+      setFinalizingId(null);
     }
   };
 
@@ -133,8 +183,8 @@ export default function PaymentPlansPage() {
               </button>
             </CollapsibleTrigger>
 
-            <div className="flex items-center gap-4">
-              <div className="text-right">
+            <div className="flex items-center gap-2">
+              <div className="text-right mr-2">
                 <p className="font-bold text-lg tracking-tight text-foreground">
                   {formatCurrency(plan.amount)}
                 </p>
@@ -147,6 +197,26 @@ export default function PaymentPlansPage() {
               <Button
                 size="icon"
                 variant="ghost"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={() => openEditPlan(plan)}
+                title="Editar plan"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              {plan.type === 'recurring' && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:text-amber-500"
+                  onClick={() => setFinalizingId(plan.id)}
+                  title="Finalizar plan"
+                >
+                  <Ban className="w-4 h-4" />
+                </Button>
+              )}
+              <Button
+                size="icon"
+                variant="ghost"
                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
                 onClick={() => setDeletingId(plan.id)}
               >
@@ -155,7 +225,7 @@ export default function PaymentPlansPage() {
             </div>
           </div>
 
-          {plan.type === 'recurring' && (
+          {plan.type === 'recurring' && plan.totalPayments && (
             <div className="mt-3">
               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
@@ -268,6 +338,104 @@ export default function PaymentPlansPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Finalize Plan Confirmation */}
+      <AlertDialog open={!!finalizingId} onOpenChange={(open) => !open && setFinalizingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Finalizar este plan recurrente?</AlertDialogTitle>
+            <AlertDialogDescription>Se eliminarán los pagos pendientes futuros y no se generarán más cuotas. Los pagos ya realizados se mantendrán.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleFinalize}>Finalizar plan</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Edit Plan Dialog */}
+      <Dialog open={!!editingPlan} onOpenChange={(open) => !open && setEditingPlan(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar plan de pago</DialogTitle>
+            <DialogDescription>Modifica los datos generales del plan.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>Nombre</Label>
+              <Input value={editName} onChange={e => setEditName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Categoría</Label>
+              <Select value={editCategory} onValueChange={setEditCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(allCategoryLabels).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Beneficiario</Label>
+              <Select value={editPayeeId} onValueChange={setEditPayeeId}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar beneficiario" /></SelectTrigger>
+                <SelectContent>
+                  {payees.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Monto (S/)</Label>
+              <Input type="number" step="0.01" min="0" value={editAmount || ''} onChange={e => setEditAmount(parseFloat(e.target.value) || 0)} />
+            </div>
+            {editingPlan?.type === 'recurring' && (
+              <>
+                <div className="space-y-2">
+                  <Label>Recurrencia</Label>
+                  <Select value={editFrequency} onValueChange={setEditFrequency}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(FREQUENCY_LABELS).filter(([k]) => k !== 'once').map(([k, v]) => (
+                        <SelectItem key={k} value={k}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Total de pagos</Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="number"
+                      min="1"
+                      max="360"
+                      value={editTotalPayments ?? ''}
+                      onChange={e => setEditTotalPayments(e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="Indefinido"
+                      className="flex-1"
+                    />
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      {editTotalPayments ? `${editTotalPayments} pagos` : 'Indefinido'}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+            {editingPlan?.type === 'unique' && (
+              <div className="space-y-2">
+                <Label>Fecha de vencimiento</Label>
+                <Input type="date" value={editDueDate ? new Date(editDueDate).toISOString().split('T')[0] : ''} onChange={e => setEditDueDate(new Date(e.target.value).toISOString())} />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingPlan(null)}>Cancelar</Button>
+            <Button onClick={handleSaveEditPlan}>Guardar cambios</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

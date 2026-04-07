@@ -176,6 +176,42 @@ export function usePaymentPlans() {
     }));
   }, []);
 
+  const updatePlan = useCallback((planId: string, data: Partial<Pick<PaymentPlan, 'name' | 'category' | 'amount' | 'payTo' | 'payeeId' | 'paymentMethod' | 'notes' | 'dueDate' | 'startDate' | 'frequency' | 'totalPayments'>>) => {
+    setPlans(prev => prev.map(p => {
+      if (p.id !== planId) return p;
+      const updated = { ...p, ...data, updatedAt: new Date().toISOString() };
+      // Regenerate instances if recurring fields changed
+      if (updated.type === 'recurring' && updated.startDate && updated.frequency) {
+        updated.instances = generateInstances(updated.id, updated.startDate, updated.frequency, updated.totalPayments ?? null, updated.amount, p.instances);
+      } else if (updated.type === 'unique' && updated.dueDate) {
+        updated.instances = p.instances.map(i => ({
+          ...i,
+          dueDate: updated.dueDate!,
+          amount: updated.amount,
+          periodLabel: format(new Date(updated.dueDate!), 'PPP', { locale: es }),
+        })).map(updateInstanceStatus);
+      }
+      updated.status = computePlanStatus(updated);
+      return updated;
+    }));
+  }, []);
+
+  const finalizePlan = useCallback((planId: string) => {
+    setPlans(prev => prev.map(p => {
+      if (p.id !== planId) return p;
+      // Remove unpaid future instances and set totalPayments to current count
+      const keptInstances = p.instances.filter(i => i.status === 'paid' || i.status === 'overdue');
+      const updated = {
+        ...p,
+        totalPayments: keptInstances.length || p.instances.length,
+        instances: keptInstances.length > 0 ? keptInstances : p.instances,
+        updatedAt: new Date().toISOString(),
+      };
+      updated.status = computePlanStatus(updated);
+      return updated;
+    }));
+  }, []);
+
   // Flatten all instances into Payment-compatible objects for backward compatibility
   const flattenedPayments: Payment[] = useMemo(() => {
     return plans.flatMap(plan =>
@@ -219,7 +255,7 @@ export function usePaymentPlans() {
   }, [plans, markInstancePending]);
 
   return {
-    plans, isLoading, addPlan, deletePlan,
+    plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan,
     markInstancePaid, markInstancePending, updateInstance,
     flattenedPayments, findPlanByInstanceId,
     markPaidByInstanceId, markPendingByInstanceId,
