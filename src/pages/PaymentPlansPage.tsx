@@ -209,7 +209,7 @@ export default function PaymentPlansPage() {
             <p className="text-sm text-muted-foreground mt-1">Gestiona tus pagos únicos y recurrentes</p>
           </div>
           <Button onClick={() => setFormOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" /> Nuevo plan
+            <Plus className="w-4 h-4" /> Nuevo Pago
           </Button>
         </div>
 
