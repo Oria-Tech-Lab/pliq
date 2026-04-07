@@ -172,30 +172,6 @@ export default function PaymentPlansPage() {
         <Collapsible open={isExpanded} onOpenChange={() => toggleExpand(plan.id)}>
           {/* Card header */}
           <div className="flex items-start gap-2">
-            {/* Options menu - mobile: top-left; desktop: hidden, use icon buttons */}
-            {isMobile && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 mt-0.5 text-muted-foreground">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-44">
-                  <DropdownMenuItem onClick={() => openEditPlan(plan)} className="gap-2">
-                    <Pencil className="w-3.5 h-3.5" /> Editar plan
-                  </DropdownMenuItem>
-                  {plan.type === 'recurring' && (
-                    <DropdownMenuItem onClick={() => setFinalizingId(plan.id)} className="gap-2 text-amber-600">
-                      <Ban className="w-3.5 h-3.5" /> Finalizar plan
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => setDeletingId(plan.id)} className="gap-2 text-destructive">
-                    <Trash2 className="w-3.5 h-3.5" /> Eliminar plan
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
             {/* Main content area */}
             <CollapsibleTrigger asChild>
               <button className="flex-1 min-w-0 text-left">
@@ -257,6 +233,30 @@ export default function PaymentPlansPage() {
                 </div>
               </button>
             </CollapsibleTrigger>
+
+            {/* Mobile: options menu on the right */}
+            {isMobile && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 mt-0.5 text-muted-foreground">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem onClick={() => openEditPlan(plan)} className="gap-2">
+                    <Pencil className="w-3.5 h-3.5" /> Editar plan
+                  </DropdownMenuItem>
+                  {plan.type === 'recurring' && (
+                    <DropdownMenuItem onClick={() => setFinalizingId(plan.id)} className="gap-2 text-amber-600">
+                      <Ban className="w-3.5 h-3.5" /> Finalizar plan
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => setDeletingId(plan.id)} className="gap-2 text-destructive">
+                    <Trash2 className="w-3.5 h-3.5" /> Eliminar plan
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {/* Desktop action buttons */}
             {!isMobile && (
