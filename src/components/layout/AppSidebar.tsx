@@ -39,6 +39,9 @@ export function AppSidebar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [userName, setUserName] = useState('');
   const [editName, setEditName] = useState('');
+  const { settings: notifSettings, updateSettings: updateNotifSettings } = useNotificationSettings();
+  const [editNotifTime, setEditNotifTime] = useState(notifSettings.defaultTime);
+  const [editNotifDays, setEditNotifDays] = useState(notifSettings.defaultDaysBefore);
 
   useEffect(() => {
     const stored = localStorage.getItem(USER_NAME_KEY);
