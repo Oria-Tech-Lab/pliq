@@ -20,15 +20,19 @@ export function useCustomCategories() {
     if (isLoaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
   }, [categories, isLoaded]);
 
-  const addCategory = useCallback((name: string): CustomCategory => {
-    const entry: CustomCategory = { id: generateId(), name: name.trim(), createdAt: new Date().toISOString() };
+  const addCategory = useCallback((name: string, extra?: { icon?: string; color?: string; description?: string }): CustomCategory => {
+    const entry: CustomCategory = { id: generateId(), name: name.trim(), ...extra, createdAt: new Date().toISOString() };
     setCategories(prev => [...prev, entry]);
     return entry;
+  }, []);
+
+  const updateCategory = useCallback((id: string, data: Partial<Pick<CustomCategory, 'name' | 'icon' | 'color' | 'description'>>) => {
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
   }, []);
 
   const deleteCategory = useCallback((id: string) => {
     setCategories(prev => prev.filter(c => c.id !== id));
   }, []);
 
-  return { categories, isLoaded, addCategory, deleteCategory };
+  return { categories, isLoaded, addCategory, updateCategory, deleteCategory };
 }

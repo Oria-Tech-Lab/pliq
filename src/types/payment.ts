@@ -38,6 +38,9 @@ export interface PaymentMethodEntry {
 export interface CustomCategory {
   id: string;
   name: string;
+  icon?: string;
+  color?: string;
+  description?: string;
   createdAt: string;
 }
 
