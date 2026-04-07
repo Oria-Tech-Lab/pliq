@@ -149,46 +149,50 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                   type="button"
                   onClick={() => setForm({ ...form, type: 'recurring' })}
                   className={cn(
-                    'relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all duration-200',
+                    'relative flex items-center gap-2.5 rounded-xl border-2 px-3 py-2.5 transition-all duration-200',
                     form.type === 'recurring'
                       ? 'border-primary bg-primary/5 shadow-sm'
                       : 'border-border bg-card hover:border-muted-foreground/30 hover:bg-muted/30'
                   )}
                 >
                   <div className={cn(
-                    'w-11 h-11 rounded-xl flex items-center justify-center transition-colors',
+                    'w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0',
                     form.type === 'recurring' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                   )}>
-                    <Repeat className="w-5 h-5" />
+                    <Repeat className="w-4 h-4" />
                   </div>
-                  <span className={cn(
-                    'text-sm font-semibold',
-                    form.type === 'recurring' ? 'text-primary' : 'text-muted-foreground'
-                  )}>Recurrente</span>
-                  <span className="text-[11px] text-muted-foreground leading-tight text-center">Pagos periódicos automáticos</span>
+                  <div className="text-left">
+                    <span className={cn(
+                      'text-sm font-semibold block',
+                      form.type === 'recurring' ? 'text-primary' : 'text-muted-foreground'
+                    )}>Recurrente</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Pagos periódicos</span>
+                  </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setForm({ ...form, type: 'unique' })}
                   className={cn(
-                    'relative flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all duration-200',
+                    'relative flex items-center gap-2.5 rounded-xl border-2 px-3 py-2.5 transition-all duration-200',
                     form.type === 'unique'
                       ? 'border-primary bg-primary/5 shadow-sm'
                       : 'border-border bg-card hover:border-muted-foreground/30 hover:bg-muted/30'
                   )}
                 >
                   <div className={cn(
-                    'w-11 h-11 rounded-xl flex items-center justify-center transition-colors',
+                    'w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0',
                     form.type === 'unique' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                   )}>
-                    <FileText className="w-5 h-5" />
+                    <FileText className="w-4 h-4" />
                   </div>
-                  <span className={cn(
-                    'text-sm font-semibold',
-                    form.type === 'unique' ? 'text-primary' : 'text-muted-foreground'
-                  )}>Único</span>
-                  <span className="text-[11px] text-muted-foreground leading-tight text-center">Pago puntual, una sola vez</span>
+                  <div className="text-left">
+                    <span className={cn(
+                      'text-sm font-semibold block',
+                      form.type === 'unique' ? 'text-primary' : 'text-muted-foreground'
+                    )}>Único</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Pago puntual</span>
+                  </div>
                 </button>
               </div>
             </div>
