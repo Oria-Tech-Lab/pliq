@@ -7,7 +7,7 @@ import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PaymentPlan, PaymentInstance, PLAN_TYPE_LABELS } from '@/types/paymentPlan';
-import { FREQUENCY_LABELS, METHOD_LABELS, METHOD_TYPE_LABELS } from '@/types/payment';
+import { PaymentFrequency, FREQUENCY_LABELS, METHOD_LABELS, METHOD_TYPE_LABELS } from '@/types/payment';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { SwipeableRow } from '@/components/payments/SwipeableRow';
 import { PaymentPlanForm } from '@/components/payments/PaymentPlanForm';
