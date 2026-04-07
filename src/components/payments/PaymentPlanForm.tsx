@@ -199,7 +199,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
 
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="plan-name">Nombre</Label>
+              <Label htmlFor="plan-name">Nombre <span className="text-destructive">*</span></Label>
               <Input id="plan-name" placeholder={isRecurring ? 'Ej: Préstamo auto, Netflix, Alquiler' : 'Ej: Reparación, Compra equipo'} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
             </div>
 
@@ -236,7 +236,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
             {/* Amount & Payment method */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="plan-amount">Monto (S/)</Label>
+                <Label htmlFor="plan-amount">Monto (S/) <span className="text-destructive">*</span></Label>
                 <Input id="plan-amount" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount || ''} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} required />
               </div>
               <div className="space-y-2">
@@ -281,7 +281,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
 
             {/* Beneficiary */}
             <div className="space-y-2">
-              <Label>A quién se paga</Label>
+              <Label>A quién se paga <span className="text-destructive">*</span></Label>
               {!showNewPayee ? (
                 <div className="flex gap-2">
                   <Select value={form.payeeId} onValueChange={v => { const p = payees.find(x => x.id === v); setForm({ ...form, payeeId: v, payTo: p?.name || '' }); }}>
@@ -312,7 +312,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
             {/* Unique: due date */}
             {form.type === 'unique' && (
               <div className="space-y-2">
-                <Label>Fecha de vencimiento</Label>
+                <Label>Fecha de vencimiento <span className="text-destructive">*</span></Label>
                 <Popover open={dateOpen} onOpenChange={setDateOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className={cn('w-full justify-start text-left font-normal')}>
@@ -332,7 +332,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Fecha de inicio</Label>
+                    <Label>Fecha de inicio <span className="text-destructive">*</span></Label>
                     <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                       <PopoverTrigger asChild>
                         <Button variant="outline" className={cn('w-full justify-start text-left font-normal')}>
@@ -346,7 +346,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                     </Popover>
                   </div>
                   <div className="space-y-2">
-                    <Label>Recurrencia</Label>
+                    <Label>Recurrencia <span className="text-destructive">*</span></Label>
                     <Select value={form.frequency} onValueChange={(v: PaymentFrequency) => setForm({ ...form, frequency: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
