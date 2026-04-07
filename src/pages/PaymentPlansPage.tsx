@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
-import { useCustomCategories } from '@/hooks/useCustomCategories';
+import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { PaymentPlan, PaymentInstance, PLAN_TYPE_LABELS } from '@/types/paymentPlan';
-import { CATEGORY_LABELS, FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
+import { FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { PaymentPlanForm } from '@/components/payments/PaymentPlanForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +28,7 @@ export default function PaymentPlansPage() {
   const { plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
   const { payees, addPayee } = usePayees([], () => {});
   const { methods: paymentMethods } = usePaymentMethods();
-  const { categories } = useCustomCategories();
+  const allCategoryLabels = useCategoryLabels();
   const [formOpen, setFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
@@ -46,10 +47,7 @@ export default function PaymentPlansPage() {
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
 
-  const allCategoryLabels: Record<string, string> = {
-    ...CATEGORY_LABELS,
-    ...Object.fromEntries(categories.map(c => [c.id, c.name])),
-  };
+  // allCategoryLabels already includes built-in + custom from useCategoryLabels
 
   const toggleExpand = (id: string) => {
     setExpandedPlans(prev => {
