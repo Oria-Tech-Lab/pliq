@@ -58,6 +58,7 @@ function computeEndDate(startDate: string, frequency: PaymentFrequency, totalPay
 }
 
 export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubmit }: PaymentPlanFormProps) {
+  const { settings: notifDefaults } = useNotificationSettings();
   const [form, setForm] = useState(defaultForm);
   const [dateOpen, setDateOpen] = useState(false);
   const [startDateOpen, setStartDateOpen] = useState(false);
