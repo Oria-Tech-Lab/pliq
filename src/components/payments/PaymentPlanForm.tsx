@@ -114,6 +114,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       startDate: form.type === 'recurring' ? form.startDate : undefined,
       frequency: form.type === 'recurring' ? form.frequency : undefined,
       totalPayments: form.type === 'recurring' ? (form.isIndefinite ? null : form.totalPayments) : undefined,
+      notificationsEnabled: form.notificationsEnabled,
     });
     onOpenChange(false);
   };
