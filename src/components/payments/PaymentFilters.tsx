@@ -1,8 +1,10 @@
-import { PaymentStatus, PaymentCategory, CATEGORY_LABELS, STATUS_LABELS } from '@/types/payment';
+import { PaymentStatus, PaymentCategory, STATUS_LABELS } from '@/types/payment';
+import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Search, X } from 'lucide-react';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 
 interface PaymentFiltersProps {
   searchQuery: string;
@@ -21,6 +23,7 @@ export function PaymentFilters({
   categoryFilter,
   onCategoryChange,
 }: PaymentFiltersProps) {
+  const allCategoryLabels = useCategoryLabels();
   const hasFilters = searchQuery || statusFilter !== 'all' || categoryFilter !== 'all';
 
   const clearFilters = () => {
@@ -31,7 +34,6 @@ export function PaymentFilters({
 
   return (
     <div className="space-y-2">
-      {/* Search row */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
@@ -42,7 +44,6 @@ export function PaymentFilters({
         />
       </div>
 
-      {/* Dropdowns row */}
       <div className="flex items-center gap-2">
         <Select value={statusFilter} onValueChange={(v) => onStatusChange(v as PaymentStatus | 'all')}>
           <SelectTrigger className="flex-1 h-9 text-xs">
@@ -62,16 +63,18 @@ export function PaymentFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas las categorías</SelectItem>
-            {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
+            {Object.entries(allCategoryLabels).map(([value, label]) => (
               <SelectItem key={value} value={value}>{label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
 
         {hasFilters && (
-          <Button variant="ghost" size="icon" onClick={clearFilters} className="shrink-0 h-9 w-9" title="Limpiar filtros">
-            <X className="w-4 h-4" />
-          </Button>
+          <IconTooltip label="Limpiar filtros">
+            <Button variant="ghost" size="icon" onClick={clearFilters} className="shrink-0 h-9 w-9">
+              <X className="w-4 h-4" />
+            </Button>
+          </IconTooltip>
         )}
       </div>
     </div>
