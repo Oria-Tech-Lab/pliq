@@ -185,11 +185,11 @@ const CategoriesPage = () => {
           </div>
         ) : (
           <div className="space-y-1.5">
-            {categoryStats.map(({ key, label, count, total, pending, isCustom, customData }) => {
-              const IconComp = isCustom ? getIconComponent(customData?.icon) : (CATEGORY_ICONS[key] || MoreHorizontal);
-              const colorClasses = isCustom ? getColorClasses(customData?.color) : 'bg-primary/10 text-primary';
+            {categoryStats.map(({ key, label, count, total, pending, isCustom, customData, isBuiltIn }) => {
+              const IconComp = customData?.icon ? getIconComponent(customData.icon) : (CATEGORY_ICONS[key] || MoreHorizontal);
+              const colorClasses = customData?.color ? getColorClasses(customData.color) : 'bg-primary/10 text-primary';
               const percentage = totalAmount > 0 ? (total / totalAmount) * 100 : 0;
-              const canDelete = isCustom && count === 0;
+              const canDelete = count === 0 && !isBuiltIn;
 
               return (
                 <div key={key} className="bg-card rounded-xl border border-border/40 px-4 py-3.5 group">
@@ -201,35 +201,31 @@ const CategoriesPage = () => {
                       <div className="flex items-center justify-between">
                         <div className="min-w-0">
                           <h3 className="font-medium text-sm text-foreground">{label}</h3>
-                          {isCustom && customData?.description && (
+                          {customData?.description && (
                             <p className="text-[11px] text-muted-foreground truncate">{customData.description}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-semibold text-foreground mr-1">{formatCurrency(total)}</span>
-                          {isCustom && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-                                onClick={() => openEdit(customData!)}
-                                title="Editar"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </Button>
-                              {canDelete && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                                  onClick={() => setDeletingId(key)}
-                                  title="Eliminar"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              )}
-                            </>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                            onClick={() => openEdit(key, label, customData)}
+                            title="Editar"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                              onClick={() => setDeletingId(key)}
+                              title="Eliminar"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           )}
                         </div>
                       </div>
