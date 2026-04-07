@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 
 const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
@@ -148,15 +149,16 @@ const BeneficiariesPage = () => {
                       {payee.pending}
                     </span>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-                    onClick={(e) => openEdit(payee, e)}
-                    title="Editar beneficiario"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </Button>
+                  <IconTooltip label="Editar beneficiario">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                      onClick={(e) => openEdit(payee, e)}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </Button>
+                  </IconTooltip>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
                 </div>
               </Link>
@@ -208,9 +210,11 @@ const BeneficiariesPage = () => {
                   <div key={account.id} className="space-y-2 p-3 bg-muted/30 rounded-lg relative">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium text-muted-foreground">Cuenta {idx + 1}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeBankAccount(account.id)} title="Eliminar cuenta">
-                        <X className="w-3 h-3" />
-                      </Button>
+                      <IconTooltip label="Eliminar cuenta">
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeBankAccount(account.id)}>
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </IconTooltip>
                     </div>
                     <Input
                       placeholder="Banco"

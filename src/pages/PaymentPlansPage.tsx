@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
-import { useCustomCategories } from '@/hooks/useCustomCategories';
+import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { PaymentPlan, PaymentInstance, PLAN_TYPE_LABELS } from '@/types/paymentPlan';
-import { CATEGORY_LABELS, FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
+import { FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { PaymentPlanForm } from '@/components/payments/PaymentPlanForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +28,7 @@ export default function PaymentPlansPage() {
   const { plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
   const { payees, addPayee } = usePayees([], () => {});
   const { methods: paymentMethods } = usePaymentMethods();
-  const { categories } = useCustomCategories();
+  const allCategoryLabels = useCategoryLabels();
   const [formOpen, setFormOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
@@ -46,10 +47,7 @@ export default function PaymentPlansPage() {
   const uniquePlans = plans.filter(p => p.type === 'unique');
   const recurringPlans = plans.filter(p => p.type === 'recurring');
 
-  const allCategoryLabels: Record<string, string> = {
-    ...CATEGORY_LABELS,
-    ...Object.fromEntries(categories.map(c => [c.id, c.name])),
-  };
+  // allCategoryLabels already includes built-in + custom from useCategoryLabels
 
   const toggleExpand = (id: string) => {
     setExpandedPlans(prev => {
@@ -194,35 +192,38 @@ export default function PaymentPlansPage() {
                   </p>
                 )}
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                onClick={() => openEditPlan(plan)}
-                title="Editar plan"
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-              {plan.type === 'recurring' && (
+              <IconTooltip label="Editar plan">
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-8 w-8 text-muted-foreground hover:text-amber-500"
-                  onClick={() => setFinalizingId(plan.id)}
-                  title="Finalizar plan"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  onClick={() => openEditPlan(plan)}
                 >
-                  <Ban className="w-4 h-4" />
+                  <Pencil className="w-4 h-4" />
                 </Button>
+              </IconTooltip>
+              {plan.type === 'recurring' && (
+                <IconTooltip label="Finalizar plan">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:text-amber-500"
+                    onClick={() => setFinalizingId(plan.id)}
+                  >
+                    <Ban className="w-4 h-4" />
+                  </Button>
+                </IconTooltip>
               )}
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                onClick={() => setDeletingId(plan.id)}
-                title="Eliminar plan"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <IconTooltip label="Eliminar plan">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={() => setDeletingId(plan.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </IconTooltip>
             </div>
           </div>
 
@@ -539,35 +540,38 @@ function InstanceRow({
           )}>
             {formatCurrency(instance.amount)}
           </span>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
-            onClick={openEdit}
-            title="Editar"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </Button>
-          {instance.status !== 'paid' ? (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 rounded-lg text-paid hover:text-paid hover:bg-paid/10"
-              onClick={openConfirmPaid}
-              title="Marcar como pagado"
-            >
-              <Check className="w-3.5 h-3.5" />
-            </Button>
-          ) : (
+          <IconTooltip label="Editar">
             <Button
               size="icon"
               variant="ghost"
               className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
-              onClick={() => onMarkPending(planId, instance.id)}
-              title="Marcar como pendiente"
+              onClick={openEdit}
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <Pencil className="w-3.5 h-3.5" />
             </Button>
+          </IconTooltip>
+          {instance.status !== 'paid' ? (
+            <IconTooltip label="Marcar como pagado">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 rounded-lg text-paid hover:text-paid hover:bg-paid/10"
+                onClick={openConfirmPaid}
+              >
+                <Check className="w-3.5 h-3.5" />
+              </Button>
+            </IconTooltip>
+          ) : (
+            <IconTooltip label="Marcar como pendiente">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
+                onClick={() => onMarkPending(planId, instance.id)}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </Button>
+            </IconTooltip>
           )}
         </div>
       </div>

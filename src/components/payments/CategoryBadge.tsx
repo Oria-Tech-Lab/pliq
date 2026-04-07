@@ -1,4 +1,5 @@
-import { PaymentCategory, CATEGORY_LABELS } from '@/types/payment';
+import { PaymentCategory } from '@/types/payment';
+import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { cn } from '@/lib/utils';
 import { Zap, CreditCard, RefreshCw, User, MoreHorizontal } from 'lucide-react';
 
@@ -16,8 +17,9 @@ const icons: Record<string, typeof Zap> = {
 };
 
 export function CategoryBadge({ category, className }: CategoryBadgeProps) {
+  const allLabels = useCategoryLabels();
   const Icon = icons[category] || MoreHorizontal;
-  const label = (CATEGORY_LABELS as Record<string, string>)[category] || category;
+  const label = allLabels[category] || category;
 
   return (
     <span

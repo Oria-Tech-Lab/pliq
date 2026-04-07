@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 
 const TYPE_ICONS: Record<PaymentMethodEntry['type'], typeof CreditCard> = {
   card: CreditCard,
@@ -110,9 +111,11 @@ const PaymentMethodsPage = () => {
                               <p className="text-[10px] text-muted-foreground">de {formatCurrency(method.initialBalance)}</p>
                             )}
                           </div>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteMethod(method.id)} title="Eliminar método">
-                            <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                          </Button>
+                          <IconTooltip label="Eliminar método">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteMethod(method.id)}>
+                              <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                            </Button>
+                          </IconTooltip>
                         </div>
                       </div>
                     </div>
