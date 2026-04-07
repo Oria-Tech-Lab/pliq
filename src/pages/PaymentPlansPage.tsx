@@ -89,6 +89,9 @@ export default function PaymentPlansPage() {
     setEditFrequency(plan.frequency || 'monthly');
     setEditTotalPayments(plan.totalPayments ?? null);
     setEditDueDate(plan.dueDate || '');
+    // Find matching method from paymentMethods list, or fall back to legacy key
+    const matchedMethod = paymentMethods.find(m => m.id === plan.paymentMethod);
+    setEditPaymentMethodId(matchedMethod ? plan.paymentMethod : (plan.paymentMethod || ''));
   };
 
   const handleSaveEditPlan = () => {
@@ -100,6 +103,7 @@ export default function PaymentPlansPage() {
       payeeId: editPayeeId || undefined,
       payTo: payee?.name || editingPlan.payTo,
       amount: editAmount,
+      paymentMethod: editPaymentMethodId as any || editingPlan.paymentMethod,
       ...(editingPlan.type === 'recurring' ? {
         frequency: editFrequency as any,
         totalPayments: editTotalPayments,
