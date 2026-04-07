@@ -2,6 +2,7 @@ import { Payment, Payee, FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment
 import { StatusBadge } from './StatusBadge';
 import { CategoryBadge } from './CategoryBadge';
 import { Button } from '@/components/ui/button';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Check, RotateCcw, Pencil, Trash2, Calendar, User, Wallet, Repeat } from 'lucide-react';
@@ -35,7 +36,6 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
       isOverdue && 'border-l-[3px] border-l-overdue',
       isPaid && 'border-l-[3px] border-l-paid',
     )}>
-      {/* Status indicator stripe at top */}
       <div className={cn(
         'absolute top-0 left-0 right-0 h-[2px]',
         isPaid && 'bg-paid/30',
@@ -44,7 +44,6 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
       )} />
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        {/* Left: Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 flex-wrap">
             <h3 className={cn(
@@ -90,7 +89,6 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
           )}
         </div>
 
-        {/* Right: Amount + Actions */}
         <div className="flex items-center gap-4 sm:gap-5">
           <div className="text-right">
             <p className={cn(
@@ -103,44 +101,48 @@ export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPendin
 
           <div className="flex items-center gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             {!isPaid ? (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 rounded-lg text-paid hover:text-paid hover:bg-paid/10"
-                onClick={() => onMarkAsPaid(payment.id)}
-                title="Marcar como pagado"
-              >
-                <Check className="w-4 h-4" />
-              </Button>
+              <IconTooltip label="Marcar como pagado">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 rounded-lg text-paid hover:text-paid hover:bg-paid/10"
+                  onClick={() => onMarkAsPaid(payment.id)}
+                >
+                  <Check className="w-4 h-4" />
+                </Button>
+              </IconTooltip>
             ) : (
+              <IconTooltip label="Marcar como pendiente">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
+                  onClick={() => onMarkAsPending(payment.id)}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              </IconTooltip>
+            )}
+            <IconTooltip label="Editar">
               <Button
                 size="icon"
                 variant="ghost"
                 className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
-                onClick={() => onMarkAsPending(payment.id)}
-                title="Marcar como pendiente"
+                onClick={() => onEdit(payment)}
               >
-                <RotateCcw className="w-4 h-4" />
+                <Pencil className="w-4 h-4" />
               </Button>
-            )}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground"
-              onClick={() => onEdit(payment)}
-              title="Editar"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive"
-              onClick={() => onDelete(payment.id)}
-              title="Eliminar"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            </IconTooltip>
+            <IconTooltip label="Eliminar">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive"
+                onClick={() => onDelete(payment.id)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </IconTooltip>
           </div>
         </div>
       </div>
