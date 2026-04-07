@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import { addWeeks, addMonths, addYears, format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Plus, Repeat, FileText, CalendarCheck, Check, X } from 'lucide-react';
+import { CalendarIcon, Plus, Repeat, FileText, CalendarCheck, Check, X, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 
