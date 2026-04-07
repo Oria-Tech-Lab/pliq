@@ -73,7 +73,7 @@ function getColorClasses(colorValue?: string) {
 
 const CategoriesPage = () => {
   const { flattenedPayments: payments } = usePaymentPlans();
-  const { categories: customCategories, addCategory, updateCategory, deleteCategory } = useCustomCategories();
+  const { categories: customCategories, addCategory, addCategoryWithId, updateCategory, deleteCategory } = useCustomCategories();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
@@ -84,6 +84,17 @@ const CategoriesPage = () => {
   const [formColor, setFormColor] = useState('primary');
   const [formDescription, setFormDescription] = useState('');
 
+  // Track built-in category overrides as custom categories
+  const builtInOverrides = useMemo(() => {
+    const map: Record<string, CustomCategory> = {};
+    customCategories.forEach(cc => {
+      if (Object.keys(CATEGORY_LABELS).includes(cc.id)) {
+        map[cc.id] = cc;
+      }
+    });
+    return map;
+  }, [customCategories]);
+
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
 
@@ -92,14 +103,15 @@ const CategoriesPage = () => {
       const catPayments = payments.filter(p => p.category === cat);
       const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
       const pending = catPayments.filter(p => p.status !== 'paid').length;
-      return { key: cat, label: CATEGORY_LABELS[cat], count: catPayments.length, total, pending, isCustom: false, customData: null as CustomCategory | null };
+      const override = builtInOverrides[cat];
+      return { key: cat, label: override?.name || CATEGORY_LABELS[cat], count: catPayments.length, total, pending, isCustom: false, customData: override || null, isBuiltIn: true };
     });
 
-    const custom = customCategories.map(cc => {
+    const custom = customCategories.filter(cc => !Object.keys(CATEGORY_LABELS).includes(cc.id)).map(cc => {
       const catPayments = payments.filter(p => p.category === cc.id);
       const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
       const pending = catPayments.filter(p => p.status !== 'paid').length;
-      return { key: cc.id, label: cc.name, count: catPayments.length, total, pending, isCustom: true, customData: cc };
+      return { key: cc.id, label: cc.name, count: catPayments.length, total, pending, isCustom: true, customData: cc, isBuiltIn: false };
     });
 
     return [...builtIn, ...custom].filter(c => c.count > 0 || c.isCustom).sort((a, b) => b.total - a.total);
@@ -116,22 +128,30 @@ const CategoriesPage = () => {
     setEditingCategory(null);
   };
 
-  const openEdit = (cat: CustomCategory) => {
-    setFormName(cat.name);
-    setFormIcon(cat.icon || 'tag');
-    setFormColor(cat.color || 'primary');
-    setFormDescription(cat.description || '');
-    setEditingCategory(cat);
+  const openEdit = (key: string, label: string, customData: CustomCategory | null) => {
+    setFormName(customData?.name || label);
+    setFormIcon(customData?.icon || (CATEGORY_ICONS[key] ? key : 'tag'));
+    setFormColor(customData?.color || 'primary');
+    setFormDescription(customData?.description || '');
+    // Use existing customData or create a virtual one for built-in
+    setEditingCategory(customData || { id: key, name: label, createdAt: new Date().toISOString() });
     setDialogOpen(true);
   };
 
   const handleSave = () => {
     if (!formName.trim()) return;
+    const extra = { icon: formIcon, color: formColor, description: formDescription.trim() || undefined };
     if (editingCategory) {
-      updateCategory(editingCategory.id, { name: formName.trim(), icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
+      const existsAsCustom = customCategories.some(c => c.id === editingCategory.id);
+      if (existsAsCustom) {
+        updateCategory(editingCategory.id, { name: formName.trim(), ...extra });
+      } else {
+        // Built-in category being edited for the first time — create override with same ID
+        addCategoryWithId(editingCategory.id, formName.trim(), extra);
+      }
       toast.success('Categoría actualizada');
     } else {
-      addCategory(formName.trim(), { icon: formIcon, color: formColor, description: formDescription.trim() || undefined });
+      addCategory(formName.trim(), extra);
       toast.success('Categoría creada');
     }
     setDialogOpen(false);
@@ -165,11 +185,11 @@ const CategoriesPage = () => {
           </div>
         ) : (
           <div className="space-y-1.5">
-            {categoryStats.map(({ key, label, count, total, pending, isCustom, customData }) => {
-              const IconComp = isCustom ? getIconComponent(customData?.icon) : (CATEGORY_ICONS[key] || MoreHorizontal);
-              const colorClasses = isCustom ? getColorClasses(customData?.color) : 'bg-primary/10 text-primary';
+            {categoryStats.map(({ key, label, count, total, pending, isCustom, customData, isBuiltIn }) => {
+              const IconComp = customData?.icon ? getIconComponent(customData.icon) : (CATEGORY_ICONS[key] || MoreHorizontal);
+              const colorClasses = customData?.color ? getColorClasses(customData.color) : 'bg-primary/10 text-primary';
               const percentage = totalAmount > 0 ? (total / totalAmount) * 100 : 0;
-              const canDelete = isCustom && count === 0;
+              const canDelete = count === 0 && !isBuiltIn;
 
               return (
                 <div key={key} className="bg-card rounded-xl border border-border/40 px-4 py-3.5 group">
@@ -181,35 +201,31 @@ const CategoriesPage = () => {
                       <div className="flex items-center justify-between">
                         <div className="min-w-0">
                           <h3 className="font-medium text-sm text-foreground">{label}</h3>
-                          {isCustom && customData?.description && (
+                          {customData?.description && (
                             <p className="text-[11px] text-muted-foreground truncate">{customData.description}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-semibold text-foreground mr-1">{formatCurrency(total)}</span>
-                          {isCustom && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-                                onClick={() => openEdit(customData!)}
-                                title="Editar"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </Button>
-                              {canDelete && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                                  onClick={() => setDeletingId(key)}
-                                  title="Eliminar"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </Button>
-                              )}
-                            </>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                            onClick={() => openEdit(key, label, customData)}
+                            title="Editar"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          {canDelete && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                              onClick={() => setDeletingId(key)}
+                              title="Eliminar"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
                           )}
                         </div>
                       </div>
