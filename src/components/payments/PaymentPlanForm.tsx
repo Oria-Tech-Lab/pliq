@@ -73,12 +73,16 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
 
   useEffect(() => {
     if (open) {
-      setForm(defaultForm);
+      setForm({
+        ...defaultForm,
+        notificationDaysBefore: notifDefaults.defaultDaysBefore,
+        notificationTime: notifDefaults.defaultTime,
+      });
       setShowNewCategory(false);
       setShowNewPayee(false);
       setShowNewMethod(false);
     }
-  }, [open]);
+  }, [open, notifDefaults]);
 
   const allCategories: Record<string, string> = {
     ...CATEGORY_LABELS,
