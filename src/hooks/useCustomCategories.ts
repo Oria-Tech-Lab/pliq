@@ -26,6 +26,12 @@ export function useCustomCategories() {
     return entry;
   }, []);
 
+  const addCategoryWithId = useCallback((id: string, name: string, extra?: { icon?: string; color?: string; description?: string }): CustomCategory => {
+    const entry: CustomCategory = { id, name: name.trim(), ...extra, createdAt: new Date().toISOString() };
+    setCategories(prev => [...prev, entry]);
+    return entry;
+  }, []);
+
   const updateCategory = useCallback((id: string, data: Partial<Pick<CustomCategory, 'name' | 'icon' | 'color' | 'description'>>) => {
     setCategories(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
   }, []);
