@@ -3,21 +3,23 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
 import { BeneficiaryType, BENEFICIARY_TYPE_LABELS, BankAccount, Payee } from '@/types/payment';
-import { Users, CreditCard, ChevronRight, Plus, X, Building2 } from 'lucide-react';
+import { Users, CreditCard, ChevronRight, Plus, X, Pencil } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
 const BeneficiariesPage = () => {
   const { flattenedPayments: payments } = usePaymentPlans();
-  const { payees, addPayee: addPayeeBase, deletePayee } = usePayees([], () => {});
+  const { payees, addPayee: addPayeeBase, deletePayee, updatePayee } = usePayees([], () => {});
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPayee, setEditingPayee] = useState<Payee | null>(null);
   const [name, setName] = useState('');
   const [type, setType] = useState<BeneficiaryType>('persona');
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -35,7 +37,7 @@ const BeneficiariesPage = () => {
   }, [payees, payments]);
 
   const addBankAccount = () => {
-    setBankAccounts(prev => [...prev, { id: generateId(), bank: '', accountNumber: '', interbankCode: '' }]);
+    setBankAccounts(prev => [...prev, { id: generateId(), bank: '', accountHolder: '', accountNumber: '', interbankCode: '' }]);
   };
 
   const updateBankAccount = (id: string, field: keyof Omit<BankAccount, 'id'>, value: string) => {
@@ -50,24 +52,44 @@ const BeneficiariesPage = () => {
     setName('');
     setType('persona');
     setBankAccounts([]);
+    setEditingPayee(null);
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setDialogOpen(true);
+  };
+
+  const openEdit = (payee: Payee, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingPayee(payee);
+    setName(payee.name);
+    setType(payee.type || 'otro');
+    setBankAccounts(payee.bankAccounts?.map(a => ({ ...a, accountHolder: a.accountHolder || '' })) || []);
+    setDialogOpen(true);
   };
 
   const handleSubmit = () => {
     if (!name.trim()) return;
-    // addPayeeBase only takes name, so we need to extend usePayees or handle locally
-    // For now we use the hook's addPayee and patch the extra fields via localStorage
-    const newPayee = addPayeeBase(name);
-    // Patch with extra data
-    const stored = localStorage.getItem('payees-app-data');
-    if (stored) {
-      try {
-        const all = JSON.parse(stored) as Payee[];
-        const idx = all.findIndex(p => p.id === newPayee.id);
-        if (idx >= 0) {
-          all[idx] = { ...all[idx], type, bankAccounts };
-          localStorage.setItem('payees-app-data', JSON.stringify(all));
-        }
-      } catch {}
+    if (editingPayee) {
+      updatePayee(editingPayee.id, { name: name.trim(), type, bankAccounts });
+      toast.success('Beneficiario actualizado');
+    } else {
+      const newPayee = addPayeeBase(name);
+      // Patch with extra data via localStorage
+      const stored = localStorage.getItem('payees-app-data');
+      if (stored) {
+        try {
+          const all = JSON.parse(stored) as Payee[];
+          const idx = all.findIndex(p => p.id === newPayee.id);
+          if (idx >= 0) {
+            all[idx] = { ...all[idx], type, bankAccounts };
+            localStorage.setItem('payees-app-data', JSON.stringify(all));
+          }
+        } catch {}
+      }
+      toast.success('Beneficiario creado');
     }
     resetForm();
     setDialogOpen(false);
@@ -80,7 +102,7 @@ const BeneficiariesPage = () => {
           <span className="text-sm text-muted-foreground">
             {payeeStats.length} {payeeStats.length === 1 ? 'beneficiario' : 'beneficiarios'}
           </span>
-          <Button size="sm" onClick={() => setDialogOpen(true)} className="gap-1.5">
+          <Button size="sm" onClick={openCreate} className="gap-1.5">
             <Plus className="w-4 h-4" />
             Nuevo
           </Button>
@@ -99,7 +121,7 @@ const BeneficiariesPage = () => {
               <Link
                 key={payee.id}
                 to={`/payee/${payee.id}`}
-                className="flex items-center gap-3 bg-card rounded-xl border border-border/40 px-4 py-3 hover:border-primary/30 transition-colors"
+                className="flex items-center gap-3 bg-card rounded-xl border border-border/40 px-4 py-3 hover:border-primary/30 transition-colors group"
               >
                 <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-sm font-bold text-primary">{payee.name.charAt(0).toUpperCase()}</span>
@@ -120,12 +142,21 @@ const BeneficiariesPage = () => {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1 flex-shrink-0">
                   {payee.pending > 0 && (
                     <span className="text-[10px] font-medium text-pending bg-pending/10 px-1.5 py-0.5 rounded-full">
                       {payee.pending}
                     </span>
                   )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                    onClick={(e) => openEdit(payee, e)}
+                    title="Editar"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
                   <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
                 </div>
               </Link>
@@ -133,14 +164,17 @@ const BeneficiariesPage = () => {
           </div>
         )}
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Nuevo beneficiario</DialogTitle>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { resetForm(); } setDialogOpen(open); }}>
+          <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <DialogHeader className="px-6 pt-6 pb-4">
+              <DialogTitle>{editingPayee ? 'Editar beneficiario' : 'Nuevo beneficiario'}</DialogTitle>
+              <DialogDescription>
+                {editingPayee ? 'Modifica los datos de este beneficiario.' : 'Agrega un nuevo beneficiario.'}
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-2">
+            <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-4">
               <div className="space-y-2">
-                <Label>Nombre</Label>
+                <Label>Nombre <span className="text-destructive">*</span></Label>
                 <Input value={name} onChange={e => setName(e.target.value)} placeholder="Nombre del beneficiario" />
               </div>
 
@@ -160,7 +194,7 @@ const BeneficiariesPage = () => {
                 <div className="flex items-center justify-between">
                   <Label>Cuentas bancarias</Label>
                   <Button variant="ghost" size="sm" onClick={addBankAccount} className="gap-1 text-xs h-7">
-                    <Plus className="w-3 h-3" /> Agregar
+                    <Plus className="w-3 h-3" /> Agregar cuenta
                   </Button>
                 </div>
 
@@ -174,7 +208,7 @@ const BeneficiariesPage = () => {
                   <div key={account.id} className="space-y-2 p-3 bg-muted/30 rounded-lg relative">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-medium text-muted-foreground">Cuenta {idx + 1}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeBankAccount(account.id)}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => removeBankAccount(account.id)}>
                         <X className="w-3 h-3" />
                       </Button>
                     </div>
@@ -185,13 +219,19 @@ const BeneficiariesPage = () => {
                       className="h-8 text-sm"
                     />
                     <Input
+                      placeholder="Titular de la cuenta"
+                      value={account.accountHolder}
+                      onChange={e => updateBankAccount(account.id, 'accountHolder', e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <Input
                       placeholder="Número de cuenta"
                       value={account.accountNumber}
                       onChange={e => updateBankAccount(account.id, 'accountNumber', e.target.value)}
                       className="h-8 text-sm"
                     />
                     <Input
-                      placeholder="Código de cuenta interbancario (CCI)"
+                      placeholder="Código interbancario (CCI)"
                       value={account.interbankCode}
                       onChange={e => updateBankAccount(account.id, 'interbankCode', e.target.value)}
                       className="h-8 text-sm"
@@ -200,10 +240,12 @@ const BeneficiariesPage = () => {
                 ))}
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => { resetForm(); setDialogOpen(false); }}>Cancelar</Button>
-              <Button onClick={handleSubmit} disabled={!name.trim()}>Guardar</Button>
-            </DialogFooter>
+            <div className="border-t border-border bg-card px-6 py-4 flex gap-3">
+              <Button variant="outline" onClick={() => { resetForm(); setDialogOpen(false); }} className="flex-1">Cancelar</Button>
+              <Button onClick={handleSubmit} disabled={!name.trim()} className="flex-1">
+                {editingPayee ? 'Guardar cambios' : 'Crear beneficiario'}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
