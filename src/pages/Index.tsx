@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Payment, PaymentStatus, PaymentCategory, QuickFilter } from '@/types/payment';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { isToday, isThisWeek, isThisMonth } from 'date-fns';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const QUICK_FILTER_TITLES: Record<NonNullable<QuickFilter>, string> = {
   overdue: 'Pagos vencidos',
@@ -22,15 +22,21 @@ const QUICK_FILTER_TITLES: Record<NonNullable<QuickFilter>, string> = {
   paid_month: 'Pagados este mes',
 };
 
+const VALID_FILTERS: QuickFilter[] = ['overdue', 'today', 'week', 'month', 'pending', 'paid_month'];
+
 const Index = () => {
   const { flattenedPayments, isLoading, markPaidByInstanceId, markPendingByInstanceId } = usePaymentPlans();
   const { payees } = usePayees([], () => {});
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
+  const initialFilter = searchParams.get('filter') as QuickFilter;
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<PaymentCategory | 'all'>('all');
-  const [quickFilter, setQuickFilter] = useState<QuickFilter>('month');
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>(
+    initialFilter && VALID_FILTERS.includes(initialFilter) ? initialFilter : 'month'
+  );
 
   const payments = flattenedPayments;
 
