@@ -362,6 +362,7 @@ export default function PaymentPlansPage() {
                   key={instance.id}
                   instance={instance}
                   planId={plan.id}
+                  planName={plan.name}
                   planPaymentMethod={plan.paymentMethod}
                   paymentMethods={paymentMethods}
                   isMobile={isMobile}
@@ -693,6 +694,7 @@ export default function PaymentPlansPage() {
 function InstanceRow({
   instance,
   planId,
+  planName,
   planPaymentMethod,
   paymentMethods,
   isMobile,
@@ -702,6 +704,7 @@ function InstanceRow({
 }: {
   instance: PaymentInstance;
   planId: string;
+  planName: string;
   planPaymentMethod: string;
   paymentMethods: import('@/types/payment').PaymentMethodEntry[];
   isMobile: boolean;
@@ -713,6 +716,8 @@ function InstanceRow({
   const [confirmPaidOpen, setConfirmPaidOpen] = useState(false);
   const [editAmount, setEditAmount] = useState(instance.amount);
   const [editMethod, setEditMethod] = useState(instance.paymentMethod || planPaymentMethod);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
 
   const effectiveMethod = instance.paymentMethod || planPaymentMethod;
 
