@@ -225,7 +225,7 @@ export default function PaymentPlansPage() {
             </div>
           </div>
 
-          {plan.type === 'recurring' && (
+          {plan.type === 'recurring' && plan.totalPayments && (
             <div className="mt-3">
               <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
