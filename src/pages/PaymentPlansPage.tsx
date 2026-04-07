@@ -17,7 +17,7 @@ import { CategoryBadge } from '@/components/payments/CategoryBadge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Check, RotateCcw, Repeat, FileText, Calendar, Infinity, Pencil, Wallet, User, Ban } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
