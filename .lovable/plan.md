@@ -1,41 +1,69 @@
 
 
-## Plan: Sistema de Receptores de Pago
+# Plan: Autenticación completa con Supabase Auth
 
-### Resumen
-Convertir el campo libre "A quién se paga" en un sistema de receptores (Payees) gestionado como base de datos local, con selector + creación inline en el formulario, y una página dedicada por receptor.
+## Resumen
 
-### Cambios principales
+Implementar login, registro, recuperación de contraseña, protección de rutas, cierre de sesión y saludo personalizado usando Supabase Auth, manteniendo el diseño visual actual.
 
-**1. Nuevo tipo `Payee` en `src/types/payment.ts`**
-- Interfaz `Payee` con `id`, `name`, `createdAt`
-- Agregar `payeeId` al tipo `Payment` (reemplaza `payTo` como string libre)
-- Mantener `payTo` por compatibilidad pero derivarlo del payee
+## Cambios en base de datos
 
-**2. Nuevo hook `src/hooks/usePayees.ts`**
-- CRUD de receptores en localStorage (key separada `payees-app-data`)
-- Funciones: `addPayee`, `deletePayee`, `getPayeeById`
-- Migración automática: al cargar, si un payment tiene `payTo` pero no `payeeId`, crear el payee correspondiente y asignar el ID
+**Migración SQL**: Crear tabla `profiles` con trigger para auto-creación al registrarse.
 
-**3. Modificar `PaymentForm.tsx`**
-- Reemplazar el `Input` de "A quién se paga" por un `Select` (combobox) con la lista de receptores
-- Agregar botón "+" al lado del selector que abre un mini-diálogo inline para crear un nuevo receptor (solo nombre) sin salir del formulario
-- Al crear receptor inline, seleccionarlo automáticamente
+```sql
+CREATE TABLE public.profiles (
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name text NOT NULL DEFAULT '',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own profile" ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
+CREATE POLICY "Users can insert own profile" ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
 
-**4. Nueva página `src/pages/PayeePage.tsx`**
-- Ruta: `/payee/:id`
-- Muestra nombre del receptor, resumen (total pagado, total pendiente, cantidad de pagos)
-- Lista de pagos filtrados por ese receptor, con filtros de estado
-- Reutiliza `PaymentCard`, `StatusBadge`
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.profiles (id, name)
+  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'name', ''));
+  RETURN NEW;
+END;
+$$;
 
-**5. Actualizar rutas en `App.tsx`**
-- Agregar ruta `/payee/:id` → `PayeePage`
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+```
 
-**6. Links al receptor desde `PaymentCard.tsx`**
-- El nombre del receptor será un link clickeable que navega a `/payee/:id`
+## Archivos nuevos
 
-### Detalles técnicos
-- Almacenamiento: localStorage con key `payees-app-data`
-- Migración: al inicializar `usePayees`, escanear payments existentes y crear payees a partir de strings `payTo` únicos
-- El `Payment` type tendrá `payeeId: string` como campo principal; `payTo` se mantiene como fallback de lectura
+1. **`src/pages/LoginPage.tsx`** — Formulario email/contraseña, links a registro y recuperación, logo Pliq centrado, fondo gris claro, sin sidebar.
+
+2. **`src/pages/RegisterPage.tsx`** — Campos nombre, email, contraseña, confirmar contraseña. Validación min 8 chars. Guarda nombre en `user_metadata.name`. Redirige a `/` post-registro.
+
+3. **`src/pages/ForgotPasswordPage.tsx`** — Campo email, botón enviar, mensaje de confirmación.
+
+4. **`src/pages/ResetPasswordPage.tsx`** — Formulario para nueva contraseña (requerido para que el reset funcione). Detecta `type=recovery` en URL hash.
+
+5. **`src/hooks/useAuth.ts`** — Hook con estado de sesión, `user`, `profile`, `loading`, funciones `signIn`, `signUp`, `signOut`, `resetPassword`. Usa `onAuthStateChange` + `getSession`.
+
+6. **`src/components/auth/ProtectedRoute.tsx`** — Wrapper que redirige a `/login` si no hay sesión. Muestra loading mientras verifica.
+
+## Archivos modificados
+
+7. **`src/App.tsx`** — Envolver rutas en `ProtectedRoute`. Rutas públicas: `/login`, `/register`, `/forgot-password`, `/reset-password`. Rutas protegidas: todas las demás.
+
+8. **`src/components/layout/AppSidebar.tsx`** — Reemplazar el nombre de localStorage por el nombre del perfil del usuario autenticado. Agregar botón "Cerrar sesión" con icono `LogOut` en el footer del sidebar, junto a Configuración.
+
+## Configuración
+
+9. **No habilitar auto-confirm de email** — Los usuarios deben verificar su email antes de poder iniciar sesión.
+
+## Detalles técnicos
+
+- Las páginas de auth (login, registro, forgot) usan layout simple centrado sin sidebar
+- `useAuth` consulta la tabla `profiles` para obtener el nombre del usuario
+- El `signUp` pasa `options: { data: { name } }` para que el trigger cree el perfil con nombre
+- `ProtectedRoute` envuelve las rutas en `App.tsx` y muestra spinner mientras `loading` es true
+- Se vinculan todos los datos existentes (payment_plans, payees, etc.) al usuario autenticado mediante RLS en una fase posterior si se desea
 
