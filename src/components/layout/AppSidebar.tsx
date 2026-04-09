@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard, ClipboardList, Settings, Bell } from 'lucide-react';
+import { useState } from 'react';
+import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard, ClipboardList, Settings, Bell, LogOut } from 'lucide-react';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
+import { useAuth } from '@/hooks/useAuth';
 import { NavLink } from '@/components/NavLink';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,37 +32,31 @@ const NAV_ITEMS = [
   { label: 'Reportes', path: '/reportes', icon: BarChart3 },
 ];
 
-const USER_NAME_KEY = 'app-user-name';
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const location = useLocation();
+  const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [userName, setUserName] = useState('');
-  const [editName, setEditName] = useState('');
+  const { userName, signOut } = useAuth();
   const { settings: notifSettings, updateSettings: updateNotifSettings } = useNotificationSettings();
   const [editNotifTime, setEditNotifTime] = useState(notifSettings.defaultTime);
   const [editNotifDays, setEditNotifDays] = useState(notifSettings.defaultDaysBefore);
 
-  useEffect(() => {
-    const stored = localStorage.getItem(USER_NAME_KEY);
-    if (stored) setUserName(stored);
-  }, []);
-
   const openSettings = () => {
-    setEditName(userName);
     setEditNotifTime(notifSettings.defaultTime);
     setEditNotifDays(notifSettings.defaultDaysBefore);
     setSettingsOpen(true);
   };
 
   const saveSettings = () => {
-    const trimmed = editName.trim();
-    setUserName(trimmed);
-    localStorage.setItem(USER_NAME_KEY, trimmed);
     updateNotifSettings({ defaultTime: editNotifTime, defaultDaysBefore: editNotifDays });
     setSettingsOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
   };
 
   const greeting = userName ? `Hola, ${userName}` : 'Hola 👋';
@@ -134,6 +129,18 @@ export function AppSidebar() {
                 )}
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Cerrar sesión"
+                onClick={handleSignOut}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-muted-foreground transition-all hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+              >
+                <LogOut className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && (
+                  <span className="text-sm font-medium">Cerrar sesión</span>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
@@ -145,17 +152,6 @@ export function AppSidebar() {
             <DialogDescription>Personaliza tu experiencia.</DialogDescription>
           </DialogHeader>
           <div className="space-y-5 py-2">
-            <div className="space-y-2">
-              <Label>Tu nombre</Label>
-              <Input
-                value={editName}
-                onChange={e => setEditName(e.target.value)}
-                placeholder="¿Cómo te llamas?"
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveSettings(); } }}
-              />
-              <p className="text-[11px] text-muted-foreground">Se mostrará como saludo en el menú lateral.</p>
-            </div>
-
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-primary" />
