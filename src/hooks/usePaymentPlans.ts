@@ -252,7 +252,6 @@ export function usePaymentPlans() {
         const existingIds = new Set(p.instances.map(i => i.id));
         const toInsert = newInstances.filter(i => !existingIds.has(i.id));
         if (toInsert.length > 0) {
-          const { data: { user: cu } } = await supabase.auth.getUser();
           supabase.from('payment_instances').insert(
             toInsert.map(i => ({ id: i.id, plan_id: i.planId, period_label: i.periodLabel, due_date: i.dueDate, amount: i.amount, status: i.status, user_id: cu?.id }))
           );
