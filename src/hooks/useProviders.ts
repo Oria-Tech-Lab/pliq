@@ -23,7 +23,9 @@ export function useProviders() {
   }, []);
 
   const addProvider = useCallback(async (name: string): Promise<Provider> => {
-    const { data, error } = await supabase.from('providers').insert({ name: name.trim() }).select().single();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const { data, error } = await supabase.from('providers').insert({ name: name.trim(), user_id: user.id }).select().single();
     if (error || !data) throw error;
     const entry: Provider = { id: data.id, name: data.name, createdAt: data.created_at };
     setProviders(prev => [...prev, entry]);

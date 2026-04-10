@@ -21,8 +21,10 @@ export function useCustomCategories() {
   }, []);
 
   const addCategory = useCallback(async (name: string, extra?: { icon?: string; color?: string; description?: string }): Promise<CustomCategory> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
     const { data, error } = await supabase.from('custom_categories').insert({
-      name: name.trim(), icon: extra?.icon, color: extra?.color, description: extra?.description,
+      name: name.trim(), icon: extra?.icon, color: extra?.color, description: extra?.description, user_id: user.id,
     }).select().single();
     if (error || !data) throw error;
     const entry: CustomCategory = { id: data.id, name: data.name, icon: data.icon ?? undefined, color: data.color ?? undefined, description: data.description ?? undefined, createdAt: data.created_at };
@@ -31,8 +33,10 @@ export function useCustomCategories() {
   }, []);
 
   const addCategoryWithId = useCallback(async (id: string, name: string, extra?: { icon?: string; color?: string; description?: string }): Promise<CustomCategory> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
     const { data, error } = await supabase.from('custom_categories').insert({
-      id, name: name.trim(), icon: extra?.icon, color: extra?.color, description: extra?.description,
+      id, name: name.trim(), icon: extra?.icon, color: extra?.color, description: extra?.description, user_id: user.id,
     }).select().single();
     if (error || !data) throw error;
     const entry: CustomCategory = { id: data.id, name: data.name, icon: data.icon ?? undefined, color: data.color ?? undefined, description: data.description ?? undefined, createdAt: data.created_at };

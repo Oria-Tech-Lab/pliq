@@ -118,8 +118,9 @@ export function usePaymentPlans() {
         const existingIds = new Set(allInstances.filter(i => i.planId === plan.id).map(i => i.id));
         const newInstances = plan.instances.filter(i => !existingIds.has(i.id));
         if (newInstances.length > 0) {
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
           await supabase.from('payment_instances').insert(
-            newInstances.map(i => ({ id: i.id, plan_id: i.planId, period_label: i.periodLabel, due_date: i.dueDate, amount: i.amount, status: i.status }))
+            newInstances.map(i => ({ id: i.id, plan_id: i.planId, period_label: i.periodLabel, due_date: i.dueDate, amount: i.amount, status: i.status, user_id: currentUser?.id }))
           );
         }
         // Update statuses of existing instances
@@ -139,6 +140,8 @@ export function usePaymentPlans() {
   }, []);
 
   const addPlan = useCallback(async (data: Omit<PaymentPlan, 'id' | 'instances' | 'status' | 'createdAt' | 'updatedAt'>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
     const { data: row, error } = await supabase.from('payment_plans').insert({
       name: data.name, type: data.type, category: data.category, amount: data.amount,
       pay_to: data.payTo, payee_id: data.payeeId || null, payment_method: data.paymentMethod,
@@ -147,7 +150,7 @@ export function usePaymentPlans() {
       notifications_enabled: data.notificationsEnabled ?? true,
       notification_days_before: data.notificationDaysBefore ?? 1,
       notification_time: data.notificationTime ?? '09:00',
-      status: 'active',
+      status: 'active', user_id: user.id,
     }).select().single();
     if (error || !row) throw error;
 
@@ -166,7 +169,7 @@ export function usePaymentPlans() {
     // Save instances to DB
     if (instances.length > 0) {
       await supabase.from('payment_instances').insert(
-        instances.map(i => ({ id: i.id, plan_id: i.planId, period_label: i.periodLabel, due_date: i.dueDate, amount: i.amount, status: i.status }))
+        instances.map(i => ({ id: i.id, plan_id: i.planId, period_label: i.periodLabel, due_date: i.dueDate, amount: i.amount, status: i.status, user_id: user.id }))
       );
     }
 
@@ -222,6 +225,7 @@ export function usePaymentPlans() {
   }, []);
 
   const updatePlan = useCallback(async (planId: string, data: Partial<Pick<PaymentPlan, 'name' | 'category' | 'amount' | 'payTo' | 'payeeId' | 'paymentMethod' | 'notes' | 'dueDate' | 'startDate' | 'frequency' | 'totalPayments' | 'notificationsEnabled' | 'notificationDaysBefore' | 'notificationTime'>>) => {
+    const { data: { user: cu } } = await supabase.auth.getUser();
     await supabase.from('payment_plans').update({
       ...(data.name !== undefined && { name: data.name }),
       ...(data.category !== undefined && { category: data.category }),
@@ -249,7 +253,7 @@ export function usePaymentPlans() {
         const toInsert = newInstances.filter(i => !existingIds.has(i.id));
         if (toInsert.length > 0) {
           supabase.from('payment_instances').insert(
-            toInsert.map(i => ({ id: i.id, plan_id: i.planId, period_label: i.periodLabel, due_date: i.dueDate, amount: i.amount, status: i.status }))
+            toInsert.map(i => ({ id: i.id, plan_id: i.planId, period_label: i.periodLabel, due_date: i.dueDate, amount: i.amount, status: i.status, user_id: cu?.id }))
           );
         }
         updated.instances = newInstances;

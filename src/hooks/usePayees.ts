@@ -28,7 +28,9 @@ export function usePayees(payments: Payment[], updatePaymentPayeeId?: (paymentId
   }, []);
 
   const addPayee = useCallback(async (name: string): Promise<Payee> => {
-    const { data, error } = await supabase.from('payees').insert({ name: name.trim(), type: 'otro' }).select().single();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    const { data, error } = await supabase.from('payees').insert({ name: name.trim(), type: 'otro', user_id: user.id }).select().single();
     if (error || !data) throw error;
     const newPayee: Payee = { id: data.id, name: data.name, type: data.type as Payee['type'], bankAccounts: [], createdAt: data.created_at };
     setPayees(prev => [...prev, newPayee]);
@@ -51,10 +53,11 @@ export function usePayees(payments: Payment[], updatePaymentPayeeId?: (paymentId
       // Delete existing and re-insert
       await supabase.from('bank_accounts').delete().eq('payee_id', id);
       if (bankAccounts.length > 0) {
+        const { data: { user } } = await supabase.auth.getUser();
         await supabase.from('bank_accounts').insert(
           bankAccounts.map(b => ({
             id: b.id, payee_id: id, bank: b.bank, account_holder: b.accountHolder,
-            account_number: b.accountNumber, interbank_code: b.interbankCode,
+            account_number: b.accountNumber, interbank_code: b.interbankCode, user_id: user?.id,
           }))
         );
       }
