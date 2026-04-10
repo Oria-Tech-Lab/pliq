@@ -1,14 +1,7 @@
-import { useState } from 'react';
-import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard, ClipboardList, Settings, Bell, LogOut } from 'lucide-react';
-import { useNotificationSettings } from '@/hooks/useNotificationSettings';
+import { Home, BarChart3, Users, CalendarDays, Receipt, CreditCard, ClipboardList, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { NavLink } from '@/components/NavLink';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Sidebar,
   SidebarContent,
