@@ -23,6 +23,7 @@ export type Database = {
           id: string
           interbank_code: string
           payee_id: string
+          user_id: string | null
         }
         Insert: {
           account_holder?: string
@@ -32,6 +33,7 @@ export type Database = {
           id?: string
           interbank_code?: string
           payee_id: string
+          user_id?: string | null
         }
         Update: {
           account_holder?: string
@@ -41,6 +43,7 @@ export type Database = {
           id?: string
           interbank_code?: string
           payee_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -60,6 +63,7 @@ export type Database = {
           icon: string | null
           id: string
           name: string
+          user_id: string | null
         }
         Insert: {
           color?: string | null
@@ -68,6 +72,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name: string
+          user_id?: string | null
         }
         Update: {
           color?: string | null
@@ -76,6 +81,7 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -86,6 +92,7 @@ export type Database = {
           default_time: string
           id: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -93,6 +100,7 @@ export type Database = {
           default_time?: string
           id?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -100,6 +108,7 @@ export type Database = {
           default_time?: string
           id?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -109,18 +118,21 @@ export type Database = {
           id: string
           name: string
           type: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
           type?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
           type?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -136,6 +148,7 @@ export type Database = {
           period_label: string
           plan_id: string
           status: string
+          user_id: string | null
         }
         Insert: {
           amount?: number
@@ -148,6 +161,7 @@ export type Database = {
           period_label?: string
           plan_id: string
           status?: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -160,6 +174,7 @@ export type Database = {
           period_label?: string
           plan_id?: string
           status?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -180,6 +195,7 @@ export type Database = {
           provider: string
           remaining_balance: number
           type: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -189,6 +205,7 @@ export type Database = {
           provider?: string
           remaining_balance?: number
           type?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -198,6 +215,7 @@ export type Database = {
           provider?: string
           remaining_balance?: number
           type?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -222,6 +240,7 @@ export type Database = {
           total_payments: number | null
           type: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           amount?: number
@@ -243,6 +262,7 @@ export type Database = {
           total_payments?: number | null
           type?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -264,6 +284,7 @@ export type Database = {
           total_payments?: number | null
           type?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -298,16 +319,19 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          user_id?: string | null
         }
         Relationships: []
       }
