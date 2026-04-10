@@ -225,6 +225,7 @@ export function usePaymentPlans() {
   }, []);
 
   const updatePlan = useCallback(async (planId: string, data: Partial<Pick<PaymentPlan, 'name' | 'category' | 'amount' | 'payTo' | 'payeeId' | 'paymentMethod' | 'notes' | 'dueDate' | 'startDate' | 'frequency' | 'totalPayments' | 'notificationsEnabled' | 'notificationDaysBefore' | 'notificationTime'>>) => {
+    const { data: { user: cu } } = await supabase.auth.getUser();
     await supabase.from('payment_plans').update({
       ...(data.name !== undefined && { name: data.name }),
       ...(data.category !== undefined && { category: data.category }),
