@@ -21,9 +21,11 @@ export function usePaymentMethods() {
   }, []);
 
   const addMethod = useCallback(async (d: Omit<PaymentMethodEntry, 'id' | 'createdAt'>): Promise<PaymentMethodEntry> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
     const { data, error } = await supabase.from('payment_methods').insert({
       name: d.name, provider: d.provider, type: d.type,
-      initial_balance: d.initialBalance, remaining_balance: d.remainingBalance,
+      initial_balance: d.initialBalance, remaining_balance: d.remainingBalance, user_id: user.id,
     }).select().single();
     if (error || !data) throw error;
     const entry: PaymentMethodEntry = {
