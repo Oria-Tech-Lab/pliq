@@ -75,6 +75,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
     if (open) {
       setForm({
         ...defaultForm,
+        category: categories.length > 0 ? categories[0].id : '',
         notificationDaysBefore: notifDefaults.defaultDaysBefore,
         notificationTime: notifDefaults.defaultTime,
       });
