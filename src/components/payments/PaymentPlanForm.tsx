@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { PaymentPlan, PlanType } from '@/types/paymentPlan';
-import { PaymentFrequency, PaymentMethod, CATEGORY_LABELS, FREQUENCY_LABELS, Payee, PaymentMethodEntry, METHOD_TYPE_LABELS } from '@/types/payment';
+import { PaymentFrequency, PaymentMethod, FREQUENCY_LABELS, Payee, PaymentMethodEntry, METHOD_TYPE_LABELS } from '@/types/payment';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
