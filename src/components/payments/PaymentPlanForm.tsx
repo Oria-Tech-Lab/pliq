@@ -30,7 +30,7 @@ interface PaymentPlanFormProps {
 const defaultForm = {
   name: '',
   type: 'recurring' as PlanType,
-  category: 'services',
+  category: '',
   amount: 0,
   payTo: '',
   payeeId: '',
