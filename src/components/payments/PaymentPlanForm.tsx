@@ -228,14 +228,20 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
               <Label>Categoría</Label>
               {!showNewCategory ? (
                 <div className="flex gap-2">
-                  <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
-                    <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(allCategories).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {Object.keys(allCategories).length > 0 ? (
+                    <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar categoría" /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(allCategories).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>{v}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Button type="button" variant="outline" className="flex-1 text-muted-foreground text-xs" onClick={() => setShowNewCategory(true)}>
+                      <Plus className="h-4 w-4 mr-2" /> Sin categorías — crea una
+                    </Button>
+                  )}
                   <IconTooltip label="Nueva categoría">
                     <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)}>
                       <Plus className="h-4 w-4" />
@@ -316,14 +322,21 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
               <Label>A quién se paga <span className="text-destructive">*</span></Label>
               {!showNewPayee ? (
                 <div className="flex gap-2">
-                  <Select value={form.payeeId} onValueChange={v => { const p = payees.find(x => x.id === v); setForm({ ...form, payeeId: v, payTo: p?.name || '' }); }}>
-                    <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar beneficiario" /></SelectTrigger>
-                    <SelectContent>
-                      {payees.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {payees.length > 0 ? (
+                    <Select value={form.payeeId} onValueChange={v => { const p = payees.find(x => x.id === v); setForm({ ...form, payeeId: v, payTo: p?.name || '' }); }}>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar beneficiario" /></SelectTrigger>
+                      <SelectContent>
+                        {payees.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Button type="button" variant="outline" className="flex-1 text-muted-foreground text-xs" onClick={() => setShowNewPayee(true)}>
+                      <Plus className="h-4 w-4 mr-2" /> Sin beneficiarios — crea uno
+                    </Button>
+                  )}
+                  {payees.length > 0 && (
                   <IconTooltip label="Nuevo beneficiario">
                     <Button type="button" variant="outline" size="icon" onClick={() => setShowNewPayee(true)}>
                       <Plus className="h-4 w-4" />
