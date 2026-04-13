@@ -84,10 +84,9 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
     }
   }, [open, notifDefaults]);
 
-  const allCategories: Record<string, string> = {
-    ...CATEGORY_LABELS,
-    ...Object.fromEntries(categories.map(c => [c.id, c.name])),
-  };
+  const allCategories: Record<string, string> = Object.fromEntries(
+    categories.map(c => [c.id, c.name])
+  );
 
   const projectedEndDate = useMemo(() => {
     if (form.type !== 'recurring' || form.isIndefinite || !form.totalPayments || !form.startDate) return null;
