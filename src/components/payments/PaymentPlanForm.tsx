@@ -337,11 +337,12 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                     </Button>
                   )}
                   {payees.length > 0 && (
-                  <IconTooltip label="Nuevo beneficiario">
-                    <Button type="button" variant="outline" size="icon" onClick={() => setShowNewPayee(true)}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </IconTooltip>
+                    <IconTooltip label="Nuevo beneficiario">
+                      <Button type="button" variant="outline" size="icon" onClick={() => setShowNewPayee(true)}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </IconTooltip>
+                  )}
                 </div>
               ) : (
                 <div className="flex gap-2 items-center">
