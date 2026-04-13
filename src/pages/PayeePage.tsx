@@ -5,7 +5,7 @@ import { usePayees } from '@/hooks/usePayees';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, TrendingUp, Clock, AlertTriangle, Calendar, Repeat, FileText, Wallet, Copy, Building2, CreditCard, User, ChevronRight } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { FREQUENCY_LABELS, METHOD_LABELS, CATEGORY_LABELS, BENEFICIARY_TYPE_LABELS } from '@/types/payment';
+import { FREQUENCY_LABELS, METHOD_LABELS, BENEFICIARY_TYPE_LABELS } from '@/types/payment';
 import { CategoryBadge } from '@/components/payments/CategoryBadge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';

@@ -1,4 +1,4 @@
-import { Payment, Payee, PaymentStatus, PaymentCategory } from '@/types/payment';
+import { Payment, Payee, PaymentStatus } from '@/types/payment';
 import { PaymentCard } from './PaymentCard';
 import { EmptyState } from './EmptyState';
 import { useMemo, useState } from 'react';
@@ -10,7 +10,7 @@ interface PaymentListProps {
   payees?: Payee[];
   searchQuery: string;
   statusFilter: PaymentStatus | 'all';
-  categoryFilter: PaymentCategory | 'all';
+  categoryFilter: string | 'all';
   onMarkAsPaid: (id: string) => void;
   onMarkAsPending: (id: string) => void;
   onEdit: (payment: Payment) => void;

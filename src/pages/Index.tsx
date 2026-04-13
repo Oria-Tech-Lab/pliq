@@ -34,7 +34,7 @@ const Index = () => {
   const initialFilter = searchParams.get('filter') as QuickFilter;
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | 'all'>('all');
-  const [categoryFilter, setCategoryFilter] = useState<PaymentCategory | 'all'>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string | 'all'>('all');
   const [quickFilter, setQuickFilter] = useState<QuickFilter>(
     initialFilter && VALID_FILTERS.includes(initialFilter) ? initialFilter : 'pending'
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { PaymentPlan, PlanType } from '@/types/paymentPlan';
-import { PaymentFrequency, PaymentMethod, CATEGORY_LABELS, FREQUENCY_LABELS, Payee, PaymentMethodEntry, METHOD_TYPE_LABELS } from '@/types/payment';
+import { PaymentFrequency, PaymentMethod, FREQUENCY_LABELS, Payee, PaymentMethodEntry, METHOD_TYPE_LABELS } from '@/types/payment';
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
@@ -30,7 +30,7 @@ interface PaymentPlanFormProps {
 const defaultForm = {
   name: '',
   type: 'recurring' as PlanType,
-  category: 'services',
+  category: '',
   amount: 0,
   payTo: '',
   payeeId: '',
@@ -75,6 +75,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
     if (open) {
       setForm({
         ...defaultForm,
+        category: categories.length > 0 ? categories[0].id : '',
         notificationDaysBefore: notifDefaults.defaultDaysBefore,
         notificationTime: notifDefaults.defaultTime,
       });
@@ -84,10 +85,9 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
     }
   }, [open, notifDefaults]);
 
-  const allCategories: Record<string, string> = {
-    ...CATEGORY_LABELS,
-    ...Object.fromEntries(categories.map(c => [c.id, c.name])),
-  };
+  const allCategories: Record<string, string> = Object.fromEntries(
+    categories.map(c => [c.id, c.name])
+  );
 
   const projectedEndDate = useMemo(() => {
     if (form.type !== 'recurring' || form.isIndefinite || !form.totalPayments || !form.startDate) return null;
@@ -229,19 +229,27 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
               <Label>Categoría</Label>
               {!showNewCategory ? (
                 <div className="flex gap-2">
-                  <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
-                    <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(allCategories).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <IconTooltip label="Nueva categoría">
-                    <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)}>
-                      <Plus className="h-4 w-4" />
+                  {Object.keys(allCategories).length > 0 ? (
+                    <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar categoría" /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(allCategories).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>{v}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Button type="button" variant="outline" className="flex-1 text-muted-foreground text-xs" onClick={() => setShowNewCategory(true)}>
+                      <Plus className="h-4 w-4 mr-2" /> Sin categorías — crea una
                     </Button>
-                  </IconTooltip>
+                  )}
+                  {Object.keys(allCategories).length > 0 && (
+                    <IconTooltip label="Nueva categoría">
+                      <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </IconTooltip>
+                  )}
                 </div>
               ) : (
                 <div className="flex gap-2 items-center">
@@ -317,19 +325,27 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
               <Label>A quién se paga <span className="text-destructive">*</span></Label>
               {!showNewPayee ? (
                 <div className="flex gap-2">
-                  <Select value={form.payeeId} onValueChange={v => { const p = payees.find(x => x.id === v); setForm({ ...form, payeeId: v, payTo: p?.name || '' }); }}>
-                    <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar beneficiario" /></SelectTrigger>
-                    <SelectContent>
-                      {payees.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <IconTooltip label="Nuevo beneficiario">
-                    <Button type="button" variant="outline" size="icon" onClick={() => setShowNewPayee(true)}>
-                      <Plus className="h-4 w-4" />
+                  {payees.length > 0 ? (
+                    <Select value={form.payeeId} onValueChange={v => { const p = payees.find(x => x.id === v); setForm({ ...form, payeeId: v, payTo: p?.name || '' }); }}>
+                      <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar beneficiario" /></SelectTrigger>
+                      <SelectContent>
+                        {payees.sort((a, b) => a.name.localeCompare(b.name)).map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Button type="button" variant="outline" className="flex-1 text-muted-foreground text-xs" onClick={() => setShowNewPayee(true)}>
+                      <Plus className="h-4 w-4 mr-2" /> Sin beneficiarios — crea uno
                     </Button>
-                  </IconTooltip>
+                  )}
+                  {payees.length > 0 && (
+                    <IconTooltip label="Nuevo beneficiario">
+                      <Button type="button" variant="outline" size="icon" onClick={() => setShowNewPayee(true)}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </IconTooltip>
+                  )}
                 </div>
               ) : (
                 <div className="flex gap-2 items-center">
