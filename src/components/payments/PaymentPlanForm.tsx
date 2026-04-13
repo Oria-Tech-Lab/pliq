@@ -242,11 +242,13 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                       <Plus className="h-4 w-4 mr-2" /> Sin categorías — crea una
                     </Button>
                   )}
-                  <IconTooltip label="Nueva categoría">
-                    <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)}>
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </IconTooltip>
+                  {Object.keys(allCategories).length > 0 && (
+                    <IconTooltip label="Nueva categoría">
+                      <Button type="button" variant="outline" size="icon" onClick={() => setShowNewCategory(true)}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </IconTooltip>
+                  )}
                 </div>
               ) : (
                 <div className="flex gap-2 items-center">

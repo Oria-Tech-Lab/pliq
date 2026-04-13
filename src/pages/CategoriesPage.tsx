@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
-import { PaymentCategory, CATEGORY_LABELS, CustomCategory } from '@/types/payment';
+import { CustomCategory } from '@/types/payment';
 import { Zap, CreditCard, RefreshCw, User, MoreHorizontal, Plus, Trash2, Pencil, Tag, Wallet, Heart, Home, Car, Utensils, GraduationCap, Briefcase, ShoppingBag, Plane, Smartphone, Music, Dumbbell, Baby } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,14 +13,6 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
-
-const CATEGORY_ICONS: Record<string, typeof Zap> = {
-  services: Zap,
-  debts: CreditCard,
-  subscriptions: RefreshCw,
-  personal: User,
-  other: MoreHorizontal,
-};
 
 const ICON_OPTIONS = [
   { value: 'tag', label: 'Etiqueta', Icon: Tag },
@@ -40,6 +32,8 @@ const ICON_OPTIONS = [
   { value: 'dumbbell', label: 'Gym', Icon: Dumbbell },
   { value: 'baby', label: 'Familia', Icon: Baby },
 ];
+
+const ICON_MAP: Record<string, typeof Tag> = Object.fromEntries(ICON_OPTIONS.map(i => [i.value, i.Icon]));
 
 const COLOR_OPTIONS = [
   { value: 'primary', label: 'Azul', class: 'bg-primary' },
@@ -64,8 +58,7 @@ const COLOR_BG_MAP: Record<string, string> = {
 };
 
 function getIconComponent(iconValue?: string) {
-  const found = ICON_OPTIONS.find(i => i.value === iconValue);
-  return found?.Icon || Tag;
+  return ICON_MAP[iconValue || ''] || Tag;
 }
 
 function getColorClasses(colorValue?: string) {
@@ -74,48 +67,26 @@ function getColorClasses(colorValue?: string) {
 
 const CategoriesPage = () => {
   const { flattenedPayments: payments } = usePaymentPlans();
-  const { categories: customCategories, addCategory, addCategoryWithId, updateCategory, deleteCategory } = useCustomCategories();
+  const { categories: customCategories, addCategory, updateCategory, deleteCategory } = useCustomCategories();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<CustomCategory | null>(null);
 
-  // Form state for create/edit
   const [formName, setFormName] = useState('');
   const [formIcon, setFormIcon] = useState('tag');
   const [formColor, setFormColor] = useState('primary');
   const [formDescription, setFormDescription] = useState('');
 
-  // Track built-in category overrides as custom categories
-  const builtInOverrides = useMemo(() => {
-    const map: Record<string, CustomCategory> = {};
-    customCategories.forEach(cc => {
-      if (Object.keys(CATEGORY_LABELS).includes(cc.id)) {
-        map[cc.id] = cc;
-      }
-    });
-    return map;
-  }, [customCategories]);
-
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
 
   const categoryStats = useMemo(() => {
-    const builtIn = (Object.keys(CATEGORY_LABELS) as PaymentCategory[]).map(cat => {
-      const catPayments = payments.filter(p => p.category === cat);
-      const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
-      const pending = catPayments.filter(p => p.status !== 'paid').length;
-      const override = builtInOverrides[cat];
-      return { key: cat, label: override?.name || CATEGORY_LABELS[cat], count: catPayments.length, total, pending, isCustom: false, customData: override || null, isBuiltIn: true };
-    });
-
-    const custom = customCategories.filter(cc => !Object.keys(CATEGORY_LABELS).includes(cc.id)).map(cc => {
+    return customCategories.map(cc => {
       const catPayments = payments.filter(p => p.category === cc.id);
       const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
       const pending = catPayments.filter(p => p.status !== 'paid').length;
-      return { key: cc.id, label: cc.name, count: catPayments.length, total, pending, isCustom: true, customData: cc, isBuiltIn: false };
-    });
-
-    return [...builtIn, ...custom].filter(c => c.count > 0 || c.isCustom).sort((a, b) => b.total - a.total);
+      return { key: cc.id, label: cc.name, count: catPayments.length, total, pending, customData: cc };
+    }).sort((a, b) => b.total - a.total);
   }, [payments, customCategories]);
 
   const totalAmount = categoryStats.reduce((s, c) => s + c.total, 0);
@@ -129,13 +100,12 @@ const CategoriesPage = () => {
     setEditingCategory(null);
   };
 
-  const openEdit = (key: string, label: string, customData: CustomCategory | null) => {
-    setFormName(customData?.name || label);
-    setFormIcon(customData?.icon || (CATEGORY_ICONS[key] ? key : 'tag'));
-    setFormColor(customData?.color || 'primary');
-    setFormDescription(customData?.description || '');
-    // Use existing customData or create a virtual one for built-in
-    setEditingCategory(customData || { id: key, name: label, createdAt: new Date().toISOString() });
+  const openEdit = (cc: CustomCategory) => {
+    setFormName(cc.name);
+    setFormIcon(cc.icon || 'tag');
+    setFormColor(cc.color || 'primary');
+    setFormDescription(cc.description || '');
+    setEditingCategory(cc);
     setDialogOpen(true);
   };
 
@@ -143,13 +113,7 @@ const CategoriesPage = () => {
     if (!formName.trim()) return;
     const extra = { icon: formIcon, color: formColor, description: formDescription.trim() || undefined };
     if (editingCategory) {
-      const existsAsCustom = customCategories.some(c => c.id === editingCategory.id);
-      if (existsAsCustom) {
-        updateCategory(editingCategory.id, { name: formName.trim(), ...extra });
-      } else {
-        // Built-in category being edited for the first time — create override with same ID
-        addCategoryWithId(editingCategory.id, formName.trim(), extra);
-      }
+      updateCategory(editingCategory.id, { name: formName.trim(), ...extra });
       toast.success('Categoría actualizada');
     } else {
       addCategory(formName.trim(), extra);
@@ -172,7 +136,7 @@ const CategoriesPage = () => {
       <div className="container py-6 space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">
-            {categoryStats.length} {categoryStats.length === 1 ? 'categoría' : 'categorías'}
+            {customCategories.length} {customCategories.length === 1 ? 'categoría' : 'categorías'}
           </span>
           <Button size="sm" onClick={openCreate} className="gap-1.5">
             <Plus className="w-4 h-4" />
@@ -180,17 +144,17 @@ const CategoriesPage = () => {
           </Button>
         </div>
 
-        {categoryStats.length === 0 ? (
+        {customCategories.length === 0 ? (
           <div className="bg-card rounded-2xl border border-border/60 p-12 text-center shadow-sm">
-            <p className="text-sm text-muted-foreground">Las categorías aparecerán aquí cuando crees pagos</p>
+            <p className="text-sm text-muted-foreground">Sin categorías aún — crea una con el botón de arriba</p>
           </div>
         ) : (
           <div className="space-y-1.5">
-            {categoryStats.map(({ key, label, count, total, pending, isCustom, customData, isBuiltIn }) => {
-              const IconComp = customData?.icon ? getIconComponent(customData.icon) : (CATEGORY_ICONS[key] || MoreHorizontal);
-              const colorClasses = customData?.color ? getColorClasses(customData.color) : 'bg-primary/10 text-primary';
+            {categoryStats.map(({ key, label, count, total, pending, customData }) => {
+              const IconComp = getIconComponent(customData.icon);
+              const colorClasses = getColorClasses(customData.color);
               const percentage = totalAmount > 0 ? (total / totalAmount) * 100 : 0;
-              const canDelete = count === 0 && !isBuiltIn;
+              const canDelete = count === 0;
 
               return (
                 <div key={key} className="bg-card rounded-xl border border-border/40 px-4 py-3.5 group">
@@ -202,7 +166,7 @@ const CategoriesPage = () => {
                       <div className="flex items-center justify-between">
                         <div className="min-w-0">
                           <h3 className="font-medium text-sm text-foreground">{label}</h3>
-                          {customData?.description && (
+                          {customData.description && (
                             <p className="text-[11px] text-muted-foreground truncate">{customData.description}</p>
                           )}
                         </div>
@@ -213,7 +177,7 @@ const CategoriesPage = () => {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-                              onClick={() => openEdit(key, label, customData)}
+                              onClick={() => openEdit(customData)}
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
