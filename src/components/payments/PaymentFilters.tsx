@@ -1,4 +1,4 @@
-import { PaymentStatus, PaymentCategory, STATUS_LABELS } from '@/types/payment';
+import { PaymentStatus, STATUS_LABELS } from '@/types/payment';
 import { useCategoryLabels } from '@/hooks/useCategoryLabels';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,8 +11,8 @@ interface PaymentFiltersProps {
   onSearchChange: (query: string) => void;
   statusFilter: PaymentStatus | 'all';
   onStatusChange: (status: PaymentStatus | 'all') => void;
-  categoryFilter: PaymentCategory | 'all';
-  onCategoryChange: (category: PaymentCategory | 'all') => void;
+  categoryFilter: string | 'all';
+  onCategoryChange: (category: string | 'all') => void;
 }
 
 export function PaymentFilters({
@@ -25,6 +25,7 @@ export function PaymentFilters({
 }: PaymentFiltersProps) {
   const allCategoryLabels = useCategoryLabels();
   const hasFilters = searchQuery || statusFilter !== 'all' || categoryFilter !== 'all';
+  const hasCategories = Object.keys(allCategoryLabels).length > 0;
 
   const clearFilters = () => {
     onSearchChange('');
@@ -57,9 +58,9 @@ export function PaymentFilters({
           </SelectContent>
         </Select>
 
-        <Select value={categoryFilter} onValueChange={(v) => onCategoryChange(v as PaymentCategory | 'all')}>
+        <Select value={categoryFilter} onValueChange={(v) => onCategoryChange(v)} disabled={!hasCategories}>
           <SelectTrigger className="flex-1 h-9 text-xs">
-            <SelectValue placeholder="Categoría" />
+            <SelectValue placeholder={hasCategories ? "Categoría" : "Sin categorías"} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas las categorías</SelectItem>
