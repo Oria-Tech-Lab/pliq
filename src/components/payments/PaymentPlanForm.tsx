@@ -149,7 +149,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
 
   const handleAddMethod = async () => {
     if (!newMethodName.trim()) return;
-    const m = await addMethod({ name: newMethodName.trim(), provider: '', type: 'bank_account', initialBalance: 0, remainingBalance: 0, isDefault: false });
+    const m = await addMethod({ name: newMethodName.trim(), provider: '', type: 'bank_account', initialBalance: 0, remainingBalance: 0 });
     setForm({ ...form, paymentMethodId: m.id });
     setShowNewMethod(false);
     setNewMethodName('');
