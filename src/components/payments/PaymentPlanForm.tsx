@@ -118,7 +118,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       amount: form.amount,
       payTo: payee?.name || form.payTo,
       payeeId: form.payeeId || undefined,
-      paymentMethod: form.paymentMethod,
+      paymentMethod: form.paymentMethodId || form.paymentMethod,
       notes: form.notes || undefined,
       dueDate: form.type === 'unique' ? form.dueDate : undefined,
       startDate: form.type === 'recurring' ? form.startDate : undefined,
