@@ -56,9 +56,6 @@ export function usePaymentMethods() {
     await supabase.from('payment_methods').update({ remaining_balance: remaining }).eq('id', id);
     setMethods(prev => prev.map(m => m.id === id ? { ...m, remainingBalance: remaining } : m));
   }, []);
-    await supabase.from('payment_methods').update({ remaining_balance: remaining }).eq('id', id);
-    setMethods(prev => prev.map(m => m.id === id ? { ...m, remainingBalance: remaining } : m));
-  }, []);
 
   const setDefaultMethod = useCallback(async (id: string) => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -68,5 +65,5 @@ export function usePaymentMethods() {
     setMethods(prev => prev.map(m => ({ ...m, isDefault: m.id === id })));
   }, []);
 
-  return { methods, isLoaded, addMethod, deleteMethod, updateBalance, setDefaultMethod };
+  return { methods, isLoaded, addMethod, updateMethod, deleteMethod, updateBalance, setDefaultMethod };
 }
