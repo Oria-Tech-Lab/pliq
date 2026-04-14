@@ -55,7 +55,7 @@ export interface Payment {
   dueDate: string;
   payTo: string;
   payeeId?: string;
-  paymentMethod: PaymentMethod;
+  paymentMethod: string;
   reminderDays: number;
   notes?: string;
   status: PaymentStatus;
