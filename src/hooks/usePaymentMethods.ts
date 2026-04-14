@@ -12,7 +12,8 @@ export function usePaymentMethods() {
       if (data) {
         setMethods(data.map(r => ({
           id: r.id, name: r.name, provider: r.provider, type: r.type as PaymentMethodEntry['type'],
-          initialBalance: r.initial_balance, remainingBalance: r.remaining_balance, createdAt: r.created_at,
+          initialBalance: r.initial_balance, remainingBalance: r.remaining_balance,
+          isDefault: r.is_default, createdAt: r.created_at,
         })));
       }
       setIsLoaded(true);
@@ -20,7 +21,7 @@ export function usePaymentMethods() {
     load();
   }, []);
 
-  const addMethod = useCallback(async (d: Omit<PaymentMethodEntry, 'id' | 'createdAt'>): Promise<PaymentMethodEntry> => {
+  const addMethod = useCallback(async (d: Omit<PaymentMethodEntry, 'id' | 'createdAt' | 'isDefault'>): Promise<PaymentMethodEntry> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
     const { data, error } = await supabase.from('payment_methods').insert({
@@ -30,7 +31,8 @@ export function usePaymentMethods() {
     if (error || !data) throw error;
     const entry: PaymentMethodEntry = {
       id: data.id, name: data.name, provider: data.provider, type: data.type as PaymentMethodEntry['type'],
-      initialBalance: data.initial_balance, remainingBalance: data.remaining_balance, createdAt: data.created_at,
+      initialBalance: data.initial_balance, remainingBalance: data.remaining_balance,
+      isDefault: data.is_default, createdAt: data.created_at,
     };
     setMethods(prev => [...prev, entry]);
     return entry;
@@ -46,5 +48,13 @@ export function usePaymentMethods() {
     setMethods(prev => prev.map(m => m.id === id ? { ...m, remainingBalance: remaining } : m));
   }, []);
 
-  return { methods, isLoaded, addMethod, deleteMethod, updateBalance };
+  const setDefaultMethod = useCallback(async (id: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from('payment_methods').update({ is_default: false }).eq('user_id', user.id);
+    await supabase.from('payment_methods').update({ is_default: true }).eq('id', id);
+    setMethods(prev => prev.map(m => ({ ...m, isDefault: m.id === id })));
+  }, []);
+
+  return { methods, isLoaded, addMethod, deleteMethod, updateBalance, setDefaultMethod };
 }

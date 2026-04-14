@@ -1,15 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
-import { useProviders } from '@/hooks/useProviders';
 import { PaymentMethodEntry, METHOD_TYPE_LABELS } from '@/types/payment';
-import { Building2, CreditCard, Wallet, Banknote, Plus, Trash2 } from 'lucide-react';
+import { Building2, CreditCard, Wallet, Banknote, Plus, Trash2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const TYPE_ICONS: Record<string, typeof CreditCard> = {
   card: CreditCard,
@@ -19,45 +19,29 @@ const TYPE_ICONS: Record<string, typeof CreditCard> = {
 };
 
 const PaymentMethodsPage = () => {
-  const { methods, addMethod, deleteMethod } = usePaymentMethods();
-  const { providers, addProvider } = useProviders();
+  const { methods, addMethod, deleteMethod, setDefaultMethod } = usePaymentMethods();
+  const { formatAmount } = useCurrency();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState('');
   const [provider, setProvider] = useState('');
-  const [newProvider, setNewProvider] = useState('');
-  const [showNewProvider, setShowNewProvider] = useState(false);
   const [methodType, setMethodType] = useState<PaymentMethodEntry['type']>('bank_account');
   const [initialBalance, setInitialBalance] = useState('');
   const [remainingBalance, setRemainingBalance] = useState('');
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
-
   const resetForm = () => {
     setName('');
     setProvider('');
-    setNewProvider('');
-    setShowNewProvider(false);
     setMethodType('bank_account');
     setInitialBalance('');
     setRemainingBalance('');
-  };
-
-  const handleAddProvider = async () => {
-    if (!newProvider.trim()) return;
-    const p = await addProvider(newProvider);
-    setProvider(p.id);
-    setNewProvider('');
-    setShowNewProvider(false);
   };
 
   const handleSubmit = () => {
     if (!name.trim()) return;
     const ib = parseFloat(initialBalance) || 0;
     const rb = remainingBalance ? parseFloat(remainingBalance) : ib;
-    const providerName = providers.find(p => p.id === provider)?.name || '';
-    addMethod({ name, provider: providerName, type: methodType, initialBalance: ib, remainingBalance: rb });
+    addMethod({ name, provider, type: methodType, initialBalance: ib, remainingBalance: rb });
     resetForm();
     setDialogOpen(false);
   };
@@ -107,11 +91,23 @@ const PaymentMethodsPage = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="text-right">
-                            <p className="text-sm font-semibold text-foreground">{formatCurrency(method.remainingBalance)}</p>
+                            <p className="text-sm font-semibold text-foreground">{formatAmount(method.remainingBalance)}</p>
                             {method.initialBalance !== method.remainingBalance && (
-                              <p className="text-[10px] text-muted-foreground">de {formatCurrency(method.initialBalance)}</p>
+                              <p className="text-[10px] text-muted-foreground">Saldo inicial: {formatAmount(method.initialBalance)}</p>
                             )}
                           </div>
+                          <IconTooltip label={method.isDefault ? 'Método predeterminado' : 'Marcar como predeterminado'}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => setDefaultMethod(method.id)}
+                            >
+                              <Star
+                                className={`w-3.5 h-3.5 ${method.isDefault ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
+                              />
+                            </Button>
+                          </IconTooltip>
                           <IconTooltip label="Eliminar método">
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteMethod(method.id)}>
                               <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
@@ -151,36 +147,12 @@ const PaymentMethodsPage = () => {
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Proveedor</Label>
-                  <Button variant="ghost" size="sm" className="text-xs h-6 gap-1" onClick={() => setShowNewProvider(!showNewProvider)}>
-                    <Plus className="w-3 h-3" /> Crear
-                  </Button>
-                </div>
-                {showNewProvider && (
-                  <div className="flex gap-2">
-                    <Input
-                      value={newProvider}
-                      onChange={e => setNewProvider(e.target.value)}
-                      placeholder="Nombre del proveedor"
-                      className="h-8 text-sm"
-                    />
-                    <Button size="sm" className="h-8" onClick={handleAddProvider} disabled={!newProvider.trim()}>
-                      Agregar
-                    </Button>
-                  </div>
-                )}
-                <Select value={provider} onValueChange={setProvider}>
-                  <SelectTrigger><SelectValue placeholder="Seleccionar proveedor" /></SelectTrigger>
-                  <SelectContent>
-                    {providers.map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                    ))}
-                    {providers.length === 0 && (
-                      <div className="px-2 py-1.5 text-xs text-muted-foreground">Crea un proveedor primero</div>
-                    )}
-                  </SelectContent>
-                </Select>
+                <Label>Proveedor</Label>
+                <Input
+                  value={provider}
+                  onChange={e => setProvider(e.target.value)}
+                  placeholder="Ej: BCP, Interbank, Yape"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
