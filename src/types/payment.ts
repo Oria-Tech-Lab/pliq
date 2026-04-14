@@ -33,6 +33,7 @@ export interface PaymentMethodEntry {
   type: 'card' | 'bank_account' | 'cash';
   initialBalance: number;
   remainingBalance: number;
+  isDefault: boolean;
   createdAt: string;
 }
 
@@ -54,7 +55,7 @@ export interface Payment {
   dueDate: string;
   payTo: string;
   payeeId?: string;
-  paymentMethod: PaymentMethod;
+  paymentMethod: string;
   reminderDays: number;
   notes?: string;
   status: PaymentStatus;

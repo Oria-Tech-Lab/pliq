@@ -73,9 +73,11 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
 
   useEffect(() => {
     if (open) {
+      const defaultMethod = methods.find(m => m.isDefault);
       setForm({
         ...defaultForm,
         category: categories.length > 0 ? categories[0].id : '',
+        paymentMethodId: defaultMethod?.id || '',
         notificationDaysBefore: notifDefaults.defaultDaysBefore,
         notificationTime: notifDefaults.defaultTime,
       });
@@ -83,7 +85,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       setShowNewPayee(false);
       setShowNewMethod(false);
     }
-  }, [open, notifDefaults]);
+  }, [open, notifDefaults, methods]);
 
   const allCategories: Record<string, string> = Object.fromEntries(
     categories.map(c => [c.id, c.name])
@@ -116,7 +118,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       amount: form.amount,
       payTo: payee?.name || form.payTo,
       payeeId: form.payeeId || undefined,
-      paymentMethod: form.paymentMethod,
+      paymentMethod: form.paymentMethodId || form.paymentMethod,
       notes: form.notes || undefined,
       dueDate: form.type === 'unique' ? form.dueDate : undefined,
       startDate: form.type === 'recurring' ? form.startDate : undefined,
@@ -283,9 +285,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
                         <SelectTrigger className="flex-1"><SelectValue placeholder="Seleccionar método" /></SelectTrigger>
                         <SelectContent>
                           {methods.map(m => (
-                            <SelectItem key={m.id} value={m.id}>
-                              {m.name} <span className="text-muted-foreground ml-1">({METHOD_TYPE_LABELS[m.type]})</span>
-                            </SelectItem>
+                            <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

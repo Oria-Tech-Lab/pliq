@@ -1,4 +1,4 @@
-import { PaymentFrequency, PaymentMethod } from './payment';
+import { PaymentFrequency } from './payment';
 
 export type PlanType = 'unique' | 'recurring';
 
@@ -22,7 +22,7 @@ export interface PaymentPlan {
   amount: number;
   payTo: string;
   payeeId?: string;
-  paymentMethod: PaymentMethod;
+  paymentMethod: string;
   notes?: string;
   // Unique payment fields
   dueDate?: string;

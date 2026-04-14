@@ -191,6 +191,7 @@ export type Database = {
           created_at: string
           id: string
           initial_balance: number
+          is_default: boolean
           name: string
           provider: string
           remaining_balance: number
@@ -201,6 +202,7 @@ export type Database = {
           created_at?: string
           id?: string
           initial_balance?: number
+          is_default?: boolean
           name: string
           provider?: string
           remaining_balance?: number
@@ -211,6 +213,7 @@ export type Database = {
           created_at?: string
           id?: string
           initial_balance?: number
+          is_default?: boolean
           name?: string
           provider?: string
           remaining_balance?: number
