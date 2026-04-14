@@ -1,0 +1,1 @@
+ALTER TABLE public.payment_methods ADD COLUMN is_default boolean NOT NULL DEFAULT false;
