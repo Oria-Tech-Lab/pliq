@@ -33,6 +33,7 @@ export interface PaymentMethodEntry {
   type: 'card' | 'bank_account' | 'cash';
   initialBalance: number;
   remainingBalance: number;
+  isDefault: boolean;
   createdAt: string;
 }
 
