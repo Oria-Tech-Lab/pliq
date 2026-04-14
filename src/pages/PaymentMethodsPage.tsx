@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 
-const TYPE_ICONS: Record<PaymentMethodEntry['type'], typeof CreditCard> = {
+const TYPE_ICONS: Record<string, typeof CreditCard> = {
   card: CreditCard,
   bank_account: Building2,
   cash: Banknote,
+  wallet: Wallet,
 };
 
 const PaymentMethodsPage = () => {
@@ -84,7 +85,7 @@ const PaymentMethodsPage = () => {
         ) : (
           <div className="space-y-1.5">
             {methods.map((method) => {
-              const Icon = TYPE_ICONS[method.type];
+              const Icon = TYPE_ICONS[method.type] ?? CreditCard;
               return (
                 <div key={method.id} className="bg-card rounded-xl border border-border/40 px-4 py-3.5">
                   <div className="flex items-center gap-3">
