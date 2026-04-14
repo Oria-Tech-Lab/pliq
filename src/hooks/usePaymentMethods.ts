@@ -43,6 +43,15 @@ export function usePaymentMethods() {
     setMethods(prev => prev.filter(m => m.id !== id));
   }, []);
 
+  const updateMethod = useCallback(async (id: string, d: Omit<PaymentMethodEntry, 'id' | 'createdAt' | 'isDefault'>) => {
+    const { error } = await supabase.from('payment_methods').update({
+      name: d.name, provider: d.provider, type: d.type,
+      initial_balance: d.initialBalance, remaining_balance: d.remainingBalance,
+    }).eq('id', id);
+    if (error) throw error;
+    setMethods(prev => prev.map(m => m.id === id ? { ...m, ...d } : m));
+  }, []);
+
   const updateBalance = useCallback(async (id: string, remaining: number) => {
     await supabase.from('payment_methods').update({ remaining_balance: remaining }).eq('id', id);
     setMethods(prev => prev.map(m => m.id === id ? { ...m, remainingBalance: remaining } : m));
@@ -56,5 +65,5 @@ export function usePaymentMethods() {
     setMethods(prev => prev.map(m => ({ ...m, isDefault: m.id === id })));
   }, []);
 
-  return { methods, isLoaded, addMethod, deleteMethod, updateBalance, setDefaultMethod };
+  return { methods, isLoaded, addMethod, updateMethod, deleteMethod, updateBalance, setDefaultMethod };
 }
