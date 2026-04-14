@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { PaymentMethodEntry, METHOD_TYPE_LABELS } from '@/types/payment';
-import { Building2, CreditCard, Wallet, Banknote, Plus, Trash2, Star } from 'lucide-react';
+import { Building2, CreditCard, Wallet, Banknote, Plus, Trash2, Star, Pencil, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
@@ -19,10 +20,11 @@ const TYPE_ICONS: Record<string, typeof CreditCard> = {
 };
 
 const PaymentMethodsPage = () => {
-  const { methods, addMethod, deleteMethod, setDefaultMethod } = usePaymentMethods();
+  const { methods, addMethod, updateMethod, deleteMethod, setDefaultMethod } = usePaymentMethods();
   const { formatAmount } = useCurrency();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [provider, setProvider] = useState('');
   const [methodType, setMethodType] = useState<PaymentMethodEntry['type']>('bank_account');
@@ -35,13 +37,33 @@ const PaymentMethodsPage = () => {
     setMethodType('bank_account');
     setInitialBalance('');
     setRemainingBalance('');
+    setEditingId(null);
   };
 
-  const handleSubmit = () => {
+  const openCreate = () => {
+    resetForm();
+    setDialogOpen(true);
+  };
+
+  const openEdit = (method: PaymentMethodEntry) => {
+    setEditingId(method.id);
+    setName(method.name);
+    setProvider(method.provider);
+    setMethodType(method.type);
+    setInitialBalance(String(method.initialBalance));
+    setRemainingBalance(String(method.remainingBalance));
+    setDialogOpen(true);
+  };
+
+  const handleSubmit = async () => {
     if (!name.trim()) return;
     const ib = parseFloat(initialBalance) || 0;
     const rb = remainingBalance ? parseFloat(remainingBalance) : ib;
-    addMethod({ name, provider, type: methodType, initialBalance: ib, remainingBalance: rb });
+    if (editingId) {
+      await updateMethod(editingId, { name, provider, type: methodType, initialBalance: ib, remainingBalance: rb });
+    } else {
+      await addMethod({ name, provider, type: methodType, initialBalance: ib, remainingBalance: rb });
+    }
     resetForm();
     setDialogOpen(false);
   };
@@ -53,7 +75,7 @@ const PaymentMethodsPage = () => {
           <span className="text-sm text-muted-foreground">
             {methods.length} {methods.length === 1 ? 'método' : 'métodos'}
           </span>
-          <Button size="sm" onClick={() => setDialogOpen(true)} className="gap-1.5">
+          <Button size="sm" onClick={openCreate} className="gap-1.5">
             <Plus className="w-4 h-4" />
             Nuevo
           </Button>
@@ -108,11 +130,27 @@ const PaymentMethodsPage = () => {
                               />
                             </Button>
                           </IconTooltip>
-                          <IconTooltip label="Eliminar método">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteMethod(method.id)}>
-                              <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                          <IconTooltip label="Editar método">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(method)}>
+                              <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                             </Button>
                           </IconTooltip>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <MoreHorizontal className="w-3.5 h-3.5 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => deleteMethod(method.id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     </div>
@@ -123,10 +161,10 @@ const PaymentMethodsPage = () => {
           </div>
         )}
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); setDialogOpen(open); }}>
           <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Nuevo método de pago</DialogTitle>
+              <DialogTitle>{editingId ? 'Editar método de pago' : 'Nuevo método de pago'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
@@ -178,7 +216,9 @@ const PaymentMethodsPage = () => {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => { resetForm(); setDialogOpen(false); }}>Cancelar</Button>
-              <Button onClick={handleSubmit} disabled={!name.trim()}>Guardar</Button>
+              <Button onClick={handleSubmit} disabled={!name.trim()}>
+                {editingId ? 'Guardar cambios' : 'Guardar'}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
