@@ -100,7 +100,7 @@ const PaymentMethodsPage = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <h3 className="font-medium text-sm text-foreground">{method.name}</h3>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded-md text-muted-foreground">
@@ -110,14 +110,16 @@ const PaymentMethodsPage = () => {
                               <span className="text-xs text-muted-foreground">{method.provider}</span>
                             )}
                           </div>
+                          {(method.initialBalance !== 0 || method.remainingBalance !== 0) && (
+                            <div className="mt-1.5 space-y-0.5">
+                              <p className="text-sm font-semibold text-foreground">{formatAmount(method.remainingBalance)}</p>
+                              {method.initialBalance !== method.remainingBalance && (
+                                <p className="text-[10px] text-muted-foreground">Saldo inicial: {formatAmount(method.initialBalance)}</p>
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="text-right">
-                            <p className="text-sm font-semibold text-foreground">{formatAmount(method.remainingBalance)}</p>
-                            {method.initialBalance !== method.remainingBalance && (
-                              <p className="text-[10px] text-muted-foreground">Saldo inicial: {formatAmount(method.initialBalance)}</p>
-                            )}
-                          </div>
                           <IconTooltip label={method.isDefault ? 'Método predeterminado' : 'Marcar como predeterminado'}>
                             <Button
                               variant="ghost"

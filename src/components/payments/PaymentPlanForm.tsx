@@ -85,7 +85,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       setShowNewPayee(false);
       setShowNewMethod(false);
     }
-  }, [open, notifDefaults, methods]);
+  }, [open, notifDefaults, methods, categories]);
 
   const allCategories: Record<string, string> = Object.fromEntries(
     categories.map(c => [c.id, c.name])
