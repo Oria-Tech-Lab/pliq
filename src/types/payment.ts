@@ -51,6 +51,7 @@ export interface Payment {
   name: string;
   category: PaymentCategory | string;
   amount: number;
+  currency?: string;
   frequency: PaymentFrequency;
   dueDate: string;
   payTo: string;

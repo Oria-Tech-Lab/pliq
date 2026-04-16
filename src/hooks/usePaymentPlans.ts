@@ -299,6 +299,7 @@ export function usePaymentPlans() {
     return plans.flatMap(plan =>
       plan.instances.map(inst => ({
         id: inst.id, name: plan.name, category: plan.category, amount: inst.amount,
+        currency: plan.currency,
         frequency: plan.type === 'recurring' ? (plan.frequency || 'monthly' as PaymentFrequency) : 'once' as PaymentFrequency,
         dueDate: inst.dueDate, payTo: plan.payTo, payeeId: plan.payeeId,
         paymentMethod: plan.paymentMethod, reminderDays: 3,
