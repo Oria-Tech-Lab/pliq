@@ -163,6 +163,13 @@ const Index = () => {
       </div>
 
       <Toaster position="bottom-right" />
+
+      <OnboardingModal
+        open={showOnboarding}
+        userName={userName}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+      />
     </AppLayout>
   );
 };
