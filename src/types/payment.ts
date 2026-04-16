@@ -31,6 +31,7 @@ export interface PaymentMethodEntry {
   name: string;
   provider: string;
   type: 'card' | 'bank_account' | 'cash';
+  currency?: string;
   initialBalance: number;
   remainingBalance: number;
   isDefault: boolean;
