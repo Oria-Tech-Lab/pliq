@@ -344,6 +344,7 @@ export type Database = {
           currency: string
           id: string
           language: string
+          onboarding_completed: boolean
           reminder_days: number
           reminder_time: string
           updated_at: string
@@ -354,6 +355,7 @@ export type Database = {
           currency?: string
           id?: string
           language?: string
+          onboarding_completed?: boolean
           reminder_days?: number
           reminder_time?: string
           updated_at?: string
@@ -364,6 +366,7 @@ export type Database = {
           currency?: string
           id?: string
           language?: string
+          onboarding_completed?: boolean
           reminder_days?: number
           reminder_time?: string
           updated_at?: string
