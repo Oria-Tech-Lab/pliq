@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Payment, PaymentStatus, PaymentCategory, QuickFilter } from '@/types/payment';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
@@ -7,6 +7,9 @@ import { SummaryCards } from '@/components/payments/SummaryCards';
 import { PaymentFilters } from '@/components/payments/PaymentFilters';
 import { PaymentList } from '@/components/payments/PaymentList';
 import { NotificationBar } from '@/components/payments/NotificationBar';
+import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useAuth } from '@/hooks/useAuth';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { isToday, isThisWeek, isThisMonth } from 'date-fns';
@@ -26,8 +29,10 @@ const QUICK_FILTER_TITLES: Record<NonNullable<QuickFilter>, string> = {
 const VALID_FILTERS: QuickFilter[] = ['overdue', 'today', 'week', 'month', 'pending', 'paid_month'];
 
 const Index = () => {
-  const { flattenedPayments, isLoading, markPaidByInstanceId, markPendingByInstanceId } = usePaymentPlans();
+  const { flattenedPayments, isLoading, markPaidByInstanceId, markPendingByInstanceId, addPlan } = usePaymentPlans();
   const { payees } = usePayees([], () => {});
+  const { prefs, loading: prefsLoading, updatePrefs } = useUserPreferences();
+  const { userName } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
