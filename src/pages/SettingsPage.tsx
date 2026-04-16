@@ -6,10 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserPreferences, CURRENCIES, LANGUAGES } from '@/hooks/useUserPreferences';
+import { useUserPreferences, CURRENCIES, LANGUAGES, getCurrencySymbol } from '@/hooks/useUserPreferences';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Bell, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
+import { User, Mail, Lock, Bell, Settings2, ChevronDown, ChevronUp, Coins } from 'lucide-react';
+
+const BICURRENCY_OPTIONS = CURRENCIES.filter(c =>
+  ['PEN', 'USD', 'EUR', 'COP', 'MXN', 'CLP', 'ARS', 'BRL'].includes(c.code)
+);
 
 export default function SettingsPage() {
   const { user, userName, profile } = useAuth();
@@ -36,6 +40,12 @@ export default function SettingsPage() {
   const [language, setLanguage] = useState(prefs.language);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
+  // Currencies
+  const [primaryCurrency, setPrimaryCurrency] = useState(prefs.primaryCurrency);
+  const [secondaryCurrency, setSecondaryCurrency] = useState(prefs.secondaryCurrency);
+  const [exchangeRate, setExchangeRate] = useState(prefs.exchangeRate);
+  const [savingCurrencies, setSavingCurrencies] = useState(false);
+
   // Reminders
   const [reminderDays, setReminderDays] = useState(prefs.reminderDays);
   const [reminderTime, setReminderTime] = useState(prefs.reminderTime);
@@ -47,6 +57,9 @@ export default function SettingsPage() {
     setLanguage(prefs.language);
     setReminderDays(prefs.reminderDays);
     setReminderTime(prefs.reminderTime);
+    setPrimaryCurrency(prefs.primaryCurrency);
+    setSecondaryCurrency(prefs.secondaryCurrency);
+    setExchangeRate(prefs.exchangeRate);
   }, [prefs]);
 
   const handleSaveProfile = async () => {
@@ -99,6 +112,13 @@ export default function SettingsPage() {
     setSavingPrefs(false);
   };
 
+  const handleSaveCurrencies = async () => {
+    setSavingCurrencies(true);
+    await updatePrefs({ primaryCurrency, secondaryCurrency, exchangeRate });
+    toast.success('Monedas actualizadas');
+    setSavingCurrencies(false);
+  };
+
   const handleSaveReminders = async () => {
     setSavingReminders(true);
     await updatePrefs({ reminderDays, reminderTime });
@@ -108,9 +128,12 @@ export default function SettingsPage() {
 
   const passwordValid = newPassword.length >= 8 && newPassword === confirmPassword;
 
+  const secondaryLabel = BICURRENCY_OPTIONS.find(c => c.code === secondaryCurrency)?.code ?? secondaryCurrency;
+  const primaryLabel = BICURRENCY_OPTIONS.find(c => c.code === primaryCurrency)?.code ?? primaryCurrency;
+
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-6 py-6 px-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
           <p className="text-sm text-muted-foreground mt-1">Gestiona tu perfil y preferencias</p>
@@ -200,7 +223,68 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Section 4: Preferences */}
+        {/* Section 4: Currencies */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-2">
+              <Coins className="w-5 h-5 text-primary" />
+              <CardTitle className="text-lg">Monedas</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Moneda principal</Label>
+              <Select value={primaryCurrency} onValueChange={setPrimaryCurrency}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {BICURRENCY_OPTIONS.map(c => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.code} — {c.label} ({c.symbol})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Moneda secundaria</Label>
+              <Select value={secondaryCurrency} onValueChange={setSecondaryCurrency}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {BICURRENCY_OPTIONS.map(c => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.code} — {c.label} ({c.symbol})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">
+                Tipo de cambio referencial
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                1 {secondaryLabel} = X {primaryLabel}
+              </p>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                className="h-9"
+                value={exchangeRate || ''}
+                onChange={e => setExchangeRate(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+            <Button onClick={handleSaveCurrencies} disabled={savingCurrencies}>
+              {savingCurrencies ? 'Guardando...' : 'Guardar'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Section 5: Preferences */}
         <Card>
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
@@ -245,7 +329,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Section 5: Reminders */}
+        {/* Section 6: Reminders */}
         <Card>
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
@@ -281,21 +365,6 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
-
-        {/* Primeros pasos */}
-        <div className="pt-4 border-t border-border/40">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Primeros pasos</h3>
-          <Button
-            variant="link"
-            className="text-xs text-muted-foreground px-0 h-auto"
-            onClick={async () => {
-              await updatePrefs({ onboardingCompleted: false });
-              toast('El tutorial se activará la próxima vez que entres al inicio');
-            }}
-          >
-            ↩ Repetir tutorial de bienvenida
-          </Button>
-        </div>
       </div>
     </AppLayout>
   );
