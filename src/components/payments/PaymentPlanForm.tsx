@@ -123,6 +123,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       type: form.type,
       category: form.category,
       amount: form.amount,
+      currency: form.currency,
       payTo: payee?.name || form.payTo,
       payeeId: form.payeeId || undefined,
       paymentMethod: form.paymentMethodId || form.paymentMethod,
@@ -134,7 +135,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       notificationsEnabled: form.notificationsEnabled,
       notificationDaysBefore: form.notificationsEnabled ? form.notificationDaysBefore : undefined,
       notificationTime: form.notificationsEnabled ? form.notificationTime : undefined,
-    });
+    } as any);
     onOpenChange(false);
   };
 
