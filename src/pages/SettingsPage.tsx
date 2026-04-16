@@ -281,6 +281,21 @@ export default function SettingsPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Primeros pasos */}
+        <div className="pt-4 border-t border-border/40">
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">Primeros pasos</h3>
+          <Button
+            variant="link"
+            className="text-xs text-muted-foreground px-0 h-auto"
+            onClick={async () => {
+              await updatePrefs({ onboardingCompleted: false });
+              toast('El tutorial se activará la próxima vez que entres al inicio');
+            }}
+          >
+            ↩ Repetir tutorial de bienvenida
+          </Button>
+        </div>
       </div>
     </AppLayout>
   );
