@@ -10,9 +10,10 @@ interface AppLayoutProps {
   onAddPayment?: () => void;
   title?: string;
   backTo?: string;
+  headerRight?: ReactNode;
 }
 
-export function AppLayout({ children, onAddPayment, title, backTo }: AppLayoutProps) {
+export function AppLayout({ children, onAddPayment, title, backTo, headerRight }: AppLayoutProps) {
   const navigate = useNavigate();
 
   return (
@@ -40,16 +41,19 @@ export function AppLayout({ children, onAddPayment, title, backTo }: AppLayoutPr
               )}
             </div>
 
-            {onAddPayment && (
-              <Button
-                onClick={onAddPayment}
-                size="sm"
-                className="gap-1.5 rounded-xl shadow-sm bg-primary hover:bg-primary/90 h-9 px-4"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline text-sm font-medium">Nuevo pago</span>
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {headerRight}
+              {onAddPayment && (
+                <Button
+                  onClick={onAddPayment}
+                  size="sm"
+                  className="gap-1.5 rounded-xl shadow-sm bg-primary hover:bg-primary/90 h-9 px-4"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline text-sm font-medium">Nuevo pago</span>
+                </Button>
+              )}
+            </div>
           </header>
 
           <main className="flex-1">

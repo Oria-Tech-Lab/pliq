@@ -14,6 +14,7 @@ export function usePaymentMethods() {
           id: r.id, name: r.name, provider: r.provider, type: r.type as PaymentMethodEntry['type'],
           initialBalance: r.initial_balance, remainingBalance: r.remaining_balance,
           isDefault: r.is_default, createdAt: r.created_at,
+          currency: (r as any).currency ?? undefined,
         })));
       }
       setIsLoaded(true);
@@ -26,13 +27,16 @@ export function usePaymentMethods() {
     if (!user) throw new Error('Not authenticated');
     const { data, error } = await supabase.from('payment_methods').insert({
       name: d.name, provider: d.provider, type: d.type,
-      initial_balance: d.initialBalance, remaining_balance: d.remainingBalance, user_id: user.id,
-    }).select().single();
+      initial_balance: d.initialBalance, remaining_balance: d.remainingBalance,
+      currency: d.currency || 'PEN',
+      user_id: user.id,
+    } as any).select().single();
     if (error || !data) throw error;
     const entry: PaymentMethodEntry = {
       id: data.id, name: data.name, provider: data.provider, type: data.type as PaymentMethodEntry['type'],
       initialBalance: data.initial_balance, remainingBalance: data.remaining_balance,
       isDefault: data.is_default, createdAt: data.created_at,
+      currency: (data as any).currency ?? undefined,
     };
     setMethods(prev => [...prev, entry]);
     return entry;
@@ -47,7 +51,8 @@ export function usePaymentMethods() {
     const { error } = await supabase.from('payment_methods').update({
       name: d.name, provider: d.provider, type: d.type,
       initial_balance: d.initialBalance, remaining_balance: d.remainingBalance,
-    }).eq('id', id);
+      currency: d.currency || 'PEN',
+    } as any).eq('id', id);
     if (error) throw error;
     setMethods(prev => prev.map(m => m.id === id ? { ...m, ...d } : m));
   }, []);

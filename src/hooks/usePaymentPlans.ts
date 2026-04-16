@@ -74,6 +74,7 @@ function mapPlanRow(r: any): Omit<PaymentPlan, 'instances'> {
     notificationsEnabled: r.notifications_enabled ?? undefined,
     notificationDaysBefore: r.notification_days_before ?? undefined,
     notificationTime: r.notification_time ?? undefined,
+    currency: r.currency ?? undefined,
     status: r.status as any, createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -150,6 +151,7 @@ export function usePaymentPlans() {
       notifications_enabled: data.notificationsEnabled ?? true,
       notification_days_before: data.notificationDaysBefore ?? 1,
       notification_time: data.notificationTime ?? '09:00',
+      currency: (data as any).currency || 'PEN',
       status: 'active', user_id: user.id,
     }).select().single();
     if (error || !row) throw error;
@@ -297,6 +299,7 @@ export function usePaymentPlans() {
     return plans.flatMap(plan =>
       plan.instances.map(inst => ({
         id: inst.id, name: plan.name, category: plan.category, amount: inst.amount,
+        currency: plan.currency,
         frequency: plan.type === 'recurring' ? (plan.frequency || 'monthly' as PaymentFrequency) : 'once' as PaymentFrequency,
         dueDate: inst.dueDate, payTo: plan.payTo, payeeId: plan.payeeId,
         paymentMethod: plan.paymentMethod, reminderDays: 3,

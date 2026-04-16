@@ -4,6 +4,8 @@ import { PaymentFrequency, PaymentMethod, FREQUENCY_LABELS, Payee, PaymentMethod
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { getCurrencySymbol } from '@/hooks/useUserPreferences';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +34,7 @@ const defaultForm = {
   type: 'recurring' as PlanType,
   category: '',
   amount: 0,
+  currency: '',
   payTo: '',
   payeeId: '',
   paymentMethodId: '',
@@ -70,12 +73,14 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
   const [newMethodName, setNewMethodName] = useState('');
   const { categories, addCategory } = useCustomCategories();
   const { methods, addMethod } = usePaymentMethods();
+  const { primaryCurrency, secondaryCurrency, primarySymbol, secondarySymbol } = useCurrency();
 
   useEffect(() => {
     if (open) {
       const defaultMethod = methods.find(m => m.isDefault);
       setForm({
         ...defaultForm,
+        currency: primaryCurrency,
         category: categories.length > 0 ? categories[0].id : '',
         paymentMethodId: defaultMethod?.id || '',
         notificationDaysBefore: notifDefaults.defaultDaysBefore,
@@ -85,7 +90,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       setShowNewPayee(false);
       setShowNewMethod(false);
     }
-  }, [open, notifDefaults, methods, categories]);
+  }, [open, notifDefaults, methods, categories, primaryCurrency]);
 
   const allCategories: Record<string, string> = Object.fromEntries(
     categories.map(c => [c.id, c.name])
@@ -101,8 +106,10 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
     return form.amount * form.totalPayments;
   }, [form.type, form.isIndefinite, form.totalPayments, form.amount]);
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
+  const formatCurrency = (n: number) => {
+    const sym = getCurrencySymbol(form.currency || primaryCurrency);
+    return `${sym} ${n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   const isRecurring = form.type === 'recurring';
   const modalTitle = isRecurring ? 'Nuevo pago recurrente' : 'Nuevo pago único';
@@ -116,6 +123,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       type: form.type,
       category: form.category,
       amount: form.amount,
+      currency: form.currency,
       payTo: payee?.name || form.payTo,
       payeeId: form.payeeId || undefined,
       paymentMethod: form.paymentMethodId || form.paymentMethod,
@@ -127,7 +135,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       notificationsEnabled: form.notificationsEnabled,
       notificationDaysBefore: form.notificationsEnabled ? form.notificationDaysBefore : undefined,
       notificationTime: form.notificationsEnabled ? form.notificationTime : undefined,
-    });
+    } as any);
     onOpenChange(false);
   };
 
@@ -273,8 +281,19 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
             {/* Amount & Payment method */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="plan-amount">Monto (S/) <span className="text-destructive">*</span></Label>
-                <Input id="plan-amount" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount || ''} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} required />
+                <Label htmlFor="plan-amount">Monto <span className="text-destructive">*</span></Label>
+                <div className="flex gap-2">
+                  <Select value={form.currency} onValueChange={v => setForm({ ...form, currency: v })}>
+                    <SelectTrigger className="w-24 shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={primaryCurrency}>{getCurrencySymbol(primaryCurrency)} {primaryCurrency}</SelectItem>
+                      <SelectItem value={secondaryCurrency}>{getCurrencySymbol(secondaryCurrency)} {secondaryCurrency}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input id="plan-amount" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount || ''} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} required />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Método de pago</Label>

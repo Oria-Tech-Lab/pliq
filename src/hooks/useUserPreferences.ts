@@ -7,6 +7,9 @@ export interface UserPreferences {
   reminderDays: number;
   reminderTime: string;
   onboardingCompleted: boolean;
+  primaryCurrency: string;
+  secondaryCurrency: string;
+  exchangeRate: number;
 }
 
 const DEFAULTS: UserPreferences = {
@@ -15,15 +18,19 @@ const DEFAULTS: UserPreferences = {
   reminderDays: 1,
   reminderTime: '09:00',
   onboardingCompleted: false,
+  primaryCurrency: 'PEN',
+  secondaryCurrency: 'USD',
+  exchangeRate: 3.75,
 };
 
 export const CURRENCIES = [
   { code: 'PEN', label: 'Sol peruano', symbol: 'S/' },
   { code: 'USD', label: 'Dólar estadounidense', symbol: '$' },
-  { code: 'ARS', label: 'Peso argentino', symbol: '$' },
-  { code: 'CLP', label: 'Peso chileno', symbol: '$' },
+  { code: 'EUR', label: 'Euro', symbol: '€' },
   { code: 'COP', label: 'Peso colombiano', symbol: '$' },
   { code: 'MXN', label: 'Peso mexicano', symbol: '$' },
+  { code: 'CLP', label: 'Peso chileno', symbol: '$' },
+  { code: 'ARS', label: 'Peso argentino', symbol: '$' },
   { code: 'BRL', label: 'Real brasileño', symbol: 'R$' },
   { code: 'BOB', label: 'Boliviano', symbol: 'Bs' },
   { code: 'PYG', label: 'Guaraní paraguayo', symbol: '₲' },
@@ -34,7 +41,6 @@ export const CURRENCIES = [
   { code: 'NIO', label: 'Córdoba nicaragüense', symbol: 'C$' },
   { code: 'CRC', label: 'Colón costarricense', symbol: '₡' },
   { code: 'DOP', label: 'Peso dominicano', symbol: 'RD$' },
-  { code: 'EUR', label: 'Euro', symbol: '€' },
   { code: 'GBP', label: 'Libra esterlina', symbol: '£' },
 ] as const;
 
@@ -67,6 +73,9 @@ export function useUserPreferences() {
           reminderDays: data.reminder_days,
           reminderTime: data.reminder_time,
           onboardingCompleted: (data as any).onboarding_completed ?? false,
+          primaryCurrency: (data as any).primary_currency ?? 'PEN',
+          secondaryCurrency: (data as any).secondary_currency ?? 'USD',
+          exchangeRate: Number((data as any).exchange_rate) || 3.75,
         });
       }
       setLoading(false);
@@ -85,6 +94,9 @@ export function useUserPreferences() {
       reminder_days: next.reminderDays,
       reminder_time: next.reminderTime,
       onboarding_completed: next.onboardingCompleted,
+      primary_currency: next.primaryCurrency,
+      secondary_currency: next.secondaryCurrency,
+      exchange_rate: next.exchangeRate,
     } as any).eq('user_id', user.id);
   }, [prefs]);
 

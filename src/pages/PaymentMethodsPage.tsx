@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { getCurrencySymbol } from '@/hooks/useUserPreferences';
 
 const TYPE_ICONS: Record<string, typeof CreditCard> = {
   card: CreditCard,
@@ -21,7 +22,7 @@ const TYPE_ICONS: Record<string, typeof CreditCard> = {
 
 const PaymentMethodsPage = () => {
   const { methods, addMethod, updateMethod, deleteMethod, setDefaultMethod } = usePaymentMethods();
-  const { formatAmount } = useCurrency();
+  const { primaryCurrency, secondaryCurrency, formatAmount } = useCurrency();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -30,6 +31,7 @@ const PaymentMethodsPage = () => {
   const [methodType, setMethodType] = useState<PaymentMethodEntry['type']>('bank_account');
   const [initialBalance, setInitialBalance] = useState('');
   const [remainingBalance, setRemainingBalance] = useState('');
+  const [currency, setCurrency] = useState(primaryCurrency);
 
   const resetForm = () => {
     setName('');
@@ -37,6 +39,7 @@ const PaymentMethodsPage = () => {
     setMethodType('bank_account');
     setInitialBalance('');
     setRemainingBalance('');
+    setCurrency(primaryCurrency);
     setEditingId(null);
   };
 
@@ -52,6 +55,7 @@ const PaymentMethodsPage = () => {
     setMethodType(method.type);
     setInitialBalance(String(method.initialBalance));
     setRemainingBalance(String(method.remainingBalance));
+    setCurrency(method.currency || primaryCurrency);
     setDialogOpen(true);
   };
 
@@ -60,12 +64,17 @@ const PaymentMethodsPage = () => {
     const ib = parseFloat(initialBalance) || 0;
     const rb = remainingBalance ? parseFloat(remainingBalance) : ib;
     if (editingId) {
-      await updateMethod(editingId, { name, provider, type: methodType, initialBalance: ib, remainingBalance: rb });
+      await updateMethod(editingId, { name, provider, type: methodType, initialBalance: ib, remainingBalance: rb, currency });
     } else {
-      await addMethod({ name, provider, type: methodType, initialBalance: ib, remainingBalance: rb });
+      await addMethod({ name, provider, type: methodType, initialBalance: ib, remainingBalance: rb, currency });
     }
     resetForm();
     setDialogOpen(false);
+  };
+
+  const formatMethodAmount = (amount: number, methodCurrency?: string) => {
+    const sym = getCurrencySymbol(methodCurrency || primaryCurrency);
+    return `${sym} ${amount.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   return (
@@ -112,9 +121,9 @@ const PaymentMethodsPage = () => {
                           </div>
                           {(method.initialBalance !== 0 || method.remainingBalance !== 0) && (
                             <div className="mt-1.5 space-y-0.5">
-                              <p className="text-sm font-semibold text-foreground">{formatAmount(method.remainingBalance)}</p>
+                              <p className="text-sm font-semibold text-foreground">{formatMethodAmount(method.remainingBalance, method.currency)}</p>
                               {method.initialBalance !== method.remainingBalance && (
-                                <p className="text-[10px] text-muted-foreground">Saldo inicial: {formatAmount(method.initialBalance)}</p>
+                                <p className="text-[10px] text-muted-foreground">Saldo inicial: {formatMethodAmount(method.initialBalance, method.currency)}</p>
                               )}
                             </div>
                           )}
@@ -193,6 +202,17 @@ const PaymentMethodsPage = () => {
                   onChange={e => setProvider(e.target.value)}
                   placeholder="Ej: BCP, Interbank, Yape"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Moneda</Label>
+                <Select value={currency} onValueChange={setCurrency}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={primaryCurrency}>{getCurrencySymbol(primaryCurrency)} {primaryCurrency}</SelectItem>
+                    <SelectItem value={secondaryCurrency}>{getCurrencySymbol(secondaryCurrency)} {secondaryCurrency}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

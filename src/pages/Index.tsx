@@ -13,8 +13,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { isToday, isThisWeek, isThisMonth } from 'date-fns';
-import { X } from 'lucide-react';
+import { X, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { IconTooltip } from '@/components/ui/icon-tooltip';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const QUICK_FILTER_TITLES: Record<NonNullable<QuickFilter>, string> = {
@@ -43,6 +44,7 @@ const Index = () => {
   const [quickFilter, setQuickFilter] = useState<QuickFilter>(
     initialFilter && VALID_FILTERS.includes(initialFilter) ? initialFilter : 'pending'
   );
+  const [showOnboardingManual, setShowOnboardingManual] = useState(false);
 
   const payments = flattenedPayments;
 
@@ -73,7 +75,7 @@ const Index = () => {
     });
   };
 
-  const showOnboarding = !prefsLoading && !prefs.onboardingCompleted;
+  const showOnboarding = (!prefsLoading && !prefs.onboardingCompleted) || showOnboardingManual;
 
   const handleOnboardingComplete = useCallback(async (paymentData?: {
     name: string; amount: number; startDate: string; frequency: any;
@@ -102,7 +104,13 @@ const Index = () => {
 
   const handleOnboardingSkip = useCallback(() => {
     updatePrefs({ onboardingCompleted: true });
+    setShowOnboardingManual(false);
   }, [updatePrefs]);
+
+  const handleReactivateOnboarding = async () => {
+    await updatePrefs({ onboardingCompleted: false });
+    setShowOnboardingManual(true);
+  };
 
   const handleQuickFilter = (filter: QuickFilter) => {
     setQuickFilter(filter);
@@ -120,7 +128,22 @@ const Index = () => {
   }
 
   return (
-    <AppLayout onAddPayment={handleAddPayment} title="Inicio">
+    <AppLayout
+      onAddPayment={handleAddPayment}
+      title="Inicio"
+      headerRight={
+        <IconTooltip label="Repetir tutorial">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+            onClick={handleReactivateOnboarding}
+          >
+            <HelpCircle className="w-4 h-4" />
+          </Button>
+        </IconTooltip>
+      }
+    >
       <div className="container py-4 space-y-4">
         {/* Notification bar */}
         <NotificationBar payments={payments} />

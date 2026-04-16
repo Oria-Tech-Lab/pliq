@@ -31,6 +31,7 @@ export interface PaymentMethodEntry {
   name: string;
   provider: string;
   type: 'card' | 'bank_account' | 'cash';
+  currency?: string;
   initialBalance: number;
   remainingBalance: number;
   isDefault: boolean;
@@ -51,6 +52,7 @@ export interface Payment {
   name: string;
   category: PaymentCategory | string;
   amount: number;
+  currency?: string;
   frequency: PaymentFrequency;
   dueDate: string;
   payTo: string;
