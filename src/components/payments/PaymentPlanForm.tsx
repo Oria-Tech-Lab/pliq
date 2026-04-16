@@ -106,8 +106,10 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
     return form.amount * form.totalPayments;
   }, [form.type, form.isIndefinite, form.totalPayments, form.amount]);
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
+  const formatCurrency = (n: number) => {
+    const sym = getCurrencySymbol(form.currency || primaryCurrency);
+    return `${sym} ${n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   const isRecurring = form.type === 'recurring';
   const modalTitle = isRecurring ? 'Nuevo pago recurrente' : 'Nuevo pago único';
