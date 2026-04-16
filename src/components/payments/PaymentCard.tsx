@@ -1,4 +1,5 @@
 import { Payment, Payee, FREQUENCY_LABELS, METHOD_LABELS } from '@/types/payment';
+import { getCurrencySymbol } from '@/hooks/useUserPreferences';
 import { StatusBadge } from './StatusBadge';
 import { CategoryBadge } from './CategoryBadge';
 import { Button } from '@/components/ui/button';
@@ -31,10 +32,10 @@ function getDueAlert(payment: Payment): { label: string; variant: 'today' | 'soo
 
 export function PaymentCard({ payment, payees = [], onMarkAsPaid, onMarkAsPending, onEdit, onDelete }: PaymentCardProps) {
   const formattedDate = format(new Date(payment.dueDate), "d 'de' MMMM", { locale: es });
-  const formattedAmount = new Intl.NumberFormat('es-PE', {
-    style: 'currency',
-    currency: 'PEN',
-  }).format(payment.amount);
+  const formattedAmount = (() => {
+    const sym = getCurrencySymbol(payment.currency || 'PEN');
+    return `${sym} ${payment.amount.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  })();
 
   const payee = payees.find(p => p.id === payment.payeeId);
   const payeeName = payee?.name || payment.payTo;
