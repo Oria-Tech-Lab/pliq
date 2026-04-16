@@ -189,6 +189,7 @@ export type Database = {
       payment_methods: {
         Row: {
           created_at: string
+          currency: string
           id: string
           initial_balance: number
           is_default: boolean
@@ -200,6 +201,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          currency?: string
           id?: string
           initial_balance?: number
           is_default?: boolean
@@ -211,6 +213,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          currency?: string
           id?: string
           initial_balance?: number
           is_default?: boolean
@@ -227,6 +230,7 @@ export type Database = {
           amount: number
           category: string
           created_at: string
+          currency: string
           due_date: string | null
           frequency: string | null
           id: string
@@ -249,6 +253,7 @@ export type Database = {
           amount?: number
           category?: string
           created_at?: string
+          currency?: string
           due_date?: string | null
           frequency?: string | null
           id?: string
@@ -271,6 +276,7 @@ export type Database = {
           amount?: number
           category?: string
           created_at?: string
+          currency?: string
           due_date?: string | null
           frequency?: string | null
           id?: string
@@ -342,33 +348,42 @@ export type Database = {
         Row: {
           created_at: string
           currency: string
+          exchange_rate: number
           id: string
           language: string
           onboarding_completed: boolean
+          primary_currency: string
           reminder_days: number
           reminder_time: string
+          secondary_currency: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           currency?: string
+          exchange_rate?: number
           id?: string
           language?: string
           onboarding_completed?: boolean
+          primary_currency?: string
           reminder_days?: number
           reminder_time?: string
+          secondary_currency?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           currency?: string
+          exchange_rate?: number
           id?: string
           language?: string
           onboarding_completed?: boolean
+          primary_currency?: string
           reminder_days?: number
           reminder_time?: string
+          secondary_currency?: string
           updated_at?: string
           user_id?: string
         }
