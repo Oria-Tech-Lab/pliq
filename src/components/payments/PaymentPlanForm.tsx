@@ -4,6 +4,8 @@ import { PaymentFrequency, PaymentMethod, FREQUENCY_LABELS, Payee, PaymentMethod
 import { useNotificationSettings } from '@/hooks/useNotificationSettings';
 import { useCustomCategories } from '@/hooks/useCustomCategories';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { getCurrencySymbol } from '@/hooks/useUserPreferences';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +34,7 @@ const defaultForm = {
   type: 'recurring' as PlanType,
   category: '',
   amount: 0,
+  currency: '',
   payTo: '',
   payeeId: '',
   paymentMethodId: '',
