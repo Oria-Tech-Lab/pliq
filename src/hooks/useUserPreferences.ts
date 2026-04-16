@@ -6,6 +6,7 @@ export interface UserPreferences {
   language: string;
   reminderDays: number;
   reminderTime: string;
+  onboardingCompleted: boolean;
 }
 
 const DEFAULTS: UserPreferences = {
@@ -13,6 +14,7 @@ const DEFAULTS: UserPreferences = {
   language: 'es',
   reminderDays: 1,
   reminderTime: '09:00',
+  onboardingCompleted: false,
 };
 
 export const CURRENCIES = [
@@ -64,6 +66,7 @@ export function useUserPreferences() {
           language: data.language,
           reminderDays: data.reminder_days,
           reminderTime: data.reminder_time,
+          onboardingCompleted: (data as any).onboarding_completed ?? false,
         });
       }
       setLoading(false);
@@ -81,7 +84,8 @@ export function useUserPreferences() {
       language: next.language,
       reminder_days: next.reminderDays,
       reminder_time: next.reminderTime,
-    }).eq('user_id', user.id);
+      onboarding_completed: next.onboardingCompleted,
+    } as any).eq('user_id', user.id);
   }, [prefs]);
 
   return { prefs, loading, updatePrefs };
