@@ -73,6 +73,37 @@ const Index = () => {
     });
   };
 
+  const showOnboarding = !prefsLoading && !prefs.onboardingCompleted;
+
+  const handleOnboardingComplete = useCallback(async (paymentData?: {
+    name: string; amount: number; startDate: string; frequency: any;
+    categoryId: string; methodId: string; payeeId?: string;
+  }) => {
+    if (paymentData) {
+      const payee = payees.find(p => p.id === paymentData.payeeId);
+      await addPlan({
+        name: paymentData.name,
+        type: 'recurring',
+        category: paymentData.categoryId,
+        amount: paymentData.amount,
+        payTo: payee?.name || '',
+        payeeId: paymentData.payeeId,
+        paymentMethod: paymentData.methodId,
+        notes: '',
+        startDate: paymentData.startDate,
+        frequency: paymentData.frequency,
+        totalPayments: 12,
+        notificationsEnabled: true,
+        notificationDaysBefore: 1,
+        notificationTime: '09:00',
+      });
+    }
+  }, [addPlan, payees]);
+
+  const handleOnboardingSkip = useCallback(() => {
+    updatePrefs({ onboardingCompleted: true });
+  }, [updatePrefs]);
+
   const handleQuickFilter = (filter: QuickFilter) => {
     setQuickFilter(filter);
     if (filter) { setSearchQuery(''); setStatusFilter('all'); setCategoryFilter('all'); }
