@@ -280,8 +280,19 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
             {/* Amount & Payment method */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="plan-amount">Monto (S/) <span className="text-destructive">*</span></Label>
-                <Input id="plan-amount" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount || ''} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} required />
+                <Label htmlFor="plan-amount">Monto <span className="text-destructive">*</span></Label>
+                <div className="flex gap-2">
+                  <Select value={form.currency} onValueChange={v => setForm({ ...form, currency: v })}>
+                    <SelectTrigger className="w-24 shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={primaryCurrency}>{getCurrencySymbol(primaryCurrency)} {primaryCurrency}</SelectItem>
+                      <SelectItem value={secondaryCurrency}>{getCurrencySymbol(secondaryCurrency)} {secondaryCurrency}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input id="plan-amount" type="number" step="0.01" min="0" placeholder="0.00" value={form.amount || ''} onChange={e => setForm({ ...form, amount: parseFloat(e.target.value) || 0 })} required />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Método de pago</Label>
