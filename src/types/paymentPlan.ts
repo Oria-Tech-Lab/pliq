@@ -24,6 +24,7 @@ export interface PaymentPlan {
   payeeId?: string;
   paymentMethod: string;
   notes?: string;
+  currency?: string;
   // Unique payment fields
   dueDate?: string;
   // Recurring fields

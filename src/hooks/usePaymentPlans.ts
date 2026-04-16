@@ -74,6 +74,7 @@ function mapPlanRow(r: any): Omit<PaymentPlan, 'instances'> {
     notificationsEnabled: r.notifications_enabled ?? undefined,
     notificationDaysBefore: r.notification_days_before ?? undefined,
     notificationTime: r.notification_time ?? undefined,
+    currency: r.currency ?? undefined,
     status: r.status as any, createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -150,6 +151,7 @@ export function usePaymentPlans() {
       notifications_enabled: data.notificationsEnabled ?? true,
       notification_days_before: data.notificationDaysBefore ?? 1,
       notification_time: data.notificationTime ?? '09:00',
+      currency: (data as any).currency || 'PEN',
       status: 'active', user_id: user.id,
     }).select().single();
     if (error || !row) throw error;
