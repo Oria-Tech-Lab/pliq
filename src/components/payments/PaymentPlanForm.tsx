@@ -73,12 +73,14 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
   const [newMethodName, setNewMethodName] = useState('');
   const { categories, addCategory } = useCustomCategories();
   const { methods, addMethod } = usePaymentMethods();
+  const { primaryCurrency, secondaryCurrency, primarySymbol, secondarySymbol } = useCurrency();
 
   useEffect(() => {
     if (open) {
       const defaultMethod = methods.find(m => m.isDefault);
       setForm({
         ...defaultForm,
+        currency: primaryCurrency,
         category: categories.length > 0 ? categories[0].id : '',
         paymentMethodId: defaultMethod?.id || '',
         notificationDaysBefore: notifDefaults.defaultDaysBefore,
@@ -88,7 +90,7 @@ export function PaymentPlanForm({ open, onOpenChange, payees, onAddPayee, onSubm
       setShowNewPayee(false);
       setShowNewMethod(false);
     }
-  }, [open, notifDefaults, methods, categories]);
+  }, [open, notifDefaults, methods, categories, primaryCurrency]);
 
   const allCategories: Record<string, string> = Object.fromEntries(
     categories.map(c => [c.id, c.name])
