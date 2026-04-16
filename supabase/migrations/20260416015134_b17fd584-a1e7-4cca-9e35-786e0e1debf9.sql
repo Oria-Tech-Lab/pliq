@@ -1,0 +1,1 @@
+ALTER TABLE public.user_preferences ADD COLUMN onboarding_completed boolean NOT NULL DEFAULT false;

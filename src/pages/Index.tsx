@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Payment, PaymentStatus, PaymentCategory, QuickFilter } from '@/types/payment';
 import { usePaymentPlans } from '@/hooks/usePaymentPlans';
 import { usePayees } from '@/hooks/usePayees';
@@ -7,6 +7,9 @@ import { SummaryCards } from '@/components/payments/SummaryCards';
 import { PaymentFilters } from '@/components/payments/PaymentFilters';
 import { PaymentList } from '@/components/payments/PaymentList';
 import { NotificationBar } from '@/components/payments/NotificationBar';
+import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
+import { useUserPreferences } from '@/hooks/useUserPreferences';
+import { useAuth } from '@/hooks/useAuth';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { isToday, isThisWeek, isThisMonth } from 'date-fns';
@@ -26,8 +29,10 @@ const QUICK_FILTER_TITLES: Record<NonNullable<QuickFilter>, string> = {
 const VALID_FILTERS: QuickFilter[] = ['overdue', 'today', 'week', 'month', 'pending', 'paid_month'];
 
 const Index = () => {
-  const { flattenedPayments, isLoading, markPaidByInstanceId, markPendingByInstanceId } = usePaymentPlans();
+  const { flattenedPayments, isLoading, markPaidByInstanceId, markPendingByInstanceId, addPlan } = usePaymentPlans();
   const { payees } = usePayees([], () => {});
+  const { prefs, loading: prefsLoading, updatePrefs } = useUserPreferences();
+  const { userName } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -67,6 +72,37 @@ const Index = () => {
       action: { label: 'Deshacer', onClick: () => markPendingByInstanceId(id) },
     });
   };
+
+  const showOnboarding = !prefsLoading && !prefs.onboardingCompleted;
+
+  const handleOnboardingComplete = useCallback(async (paymentData?: {
+    name: string; amount: number; startDate: string; frequency: any;
+    categoryId: string; methodId: string; payeeId?: string;
+  }) => {
+    if (paymentData) {
+      const payee = payees.find(p => p.id === paymentData.payeeId);
+      await addPlan({
+        name: paymentData.name,
+        type: 'recurring',
+        category: paymentData.categoryId,
+        amount: paymentData.amount,
+        payTo: payee?.name || '',
+        payeeId: paymentData.payeeId,
+        paymentMethod: paymentData.methodId,
+        notes: '',
+        startDate: paymentData.startDate,
+        frequency: paymentData.frequency,
+        totalPayments: 12,
+        notificationsEnabled: true,
+        notificationDaysBefore: 1,
+        notificationTime: '09:00',
+      });
+    }
+  }, [addPlan, payees]);
+
+  const handleOnboardingSkip = useCallback(() => {
+    updatePrefs({ onboardingCompleted: true });
+  }, [updatePrefs]);
 
   const handleQuickFilter = (filter: QuickFilter) => {
     setQuickFilter(filter);
@@ -127,6 +163,13 @@ const Index = () => {
       </div>
 
       <Toaster position="bottom-right" />
+
+      <OnboardingModal
+        open={showOnboarding}
+        userName={userName}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+      />
     </AppLayout>
   );
 };
