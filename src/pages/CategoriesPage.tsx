@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/lib/currency';
 
 const ICON_OPTIONS = [
   { value: 'tag', label: 'Etiqueta', Icon: Tag },
