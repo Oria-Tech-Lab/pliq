@@ -163,7 +163,7 @@ const CategoriesPage = () => {
           </div>
         ) : (
           <div className="space-y-1.5">
-            {categoryStats.map(({ key, label, count, total, pending, customData }) => {
+            {categoryStats.map(({ key, label, count, total, totalsByCurrency, pending, customData }) => {
               const IconComp = getIconComponent(customData.icon);
               const colorClasses = getColorClasses(customData.color);
               const percentage = totalAmount > 0 ? (total / totalAmount) * 100 : 0;
@@ -184,7 +184,7 @@ const CategoriesPage = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="text-sm font-semibold text-foreground mr-1">{formatCurrency(total)}</span>
+                          <span className="text-sm font-semibold text-foreground mr-1">{renderTotals(totalsByCurrency)}</span>
                           <IconTooltip label="Editar categoría">
                             <Button
                               variant="ghost"
