@@ -77,17 +77,28 @@ const CategoriesPage = () => {
   const [formColor, setFormColor] = useState('primary');
   const [formDescription, setFormDescription] = useState('');
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
+  const { primaryCurrency } = useCurrency();
+
+  const renderTotals = (map: Record<string, number>) => {
+    const entries = Object.entries(map).filter(([, v]) => v > 0);
+    if (entries.length === 0) return formatCurrency(0, primaryCurrency);
+    return entries.map(([c, v]) => formatCurrency(v, c)).join(' · ');
+  };
 
   const categoryStats = useMemo(() => {
     return customCategories.map(cc => {
       const catPayments = payments.filter(p => p.category === cc.id);
-      const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
+      const paid = catPayments.filter(p => p.status === 'paid');
+      const totalsByCurrency = paid.reduce<Record<string, number>>((acc, p) => {
+        const c = p.currency || primaryCurrency;
+        acc[c] = (acc[c] || 0) + p.amount;
+        return acc;
+      }, {});
+      const total = paid.reduce((s, p) => s + p.amount, 0); // for percent only
       const pending = catPayments.filter(p => p.status !== 'paid').length;
-      return { key: cc.id, label: cc.name, count: catPayments.length, total, pending, customData: cc };
+      return { key: cc.id, label: cc.name, count: catPayments.length, total, totalsByCurrency, pending, customData: cc };
     }).sort((a, b) => b.total - a.total);
-  }, [payments, customCategories]);
+  }, [payments, customCategories, primaryCurrency]);
 
   const totalAmount = categoryStats.reduce((s, c) => s + c.total, 0);
 

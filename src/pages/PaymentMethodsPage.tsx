@@ -218,21 +218,33 @@ const PaymentMethodsPage = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>Saldo inicial</Label>
-                  <Input
-                    type="number"
-                    value={initialBalance}
-                    onChange={e => setInitialBalance(e.target.value)}
-                    placeholder="0.00"
-                  />
+                  <div className="flex gap-2">
+                    <div className="flex items-center justify-center px-2 rounded-md border border-input bg-muted/30 text-sm font-medium text-muted-foreground min-w-[3rem]">
+                      {getCurrencySymbol(currency)}
+                    </div>
+                    <Input
+                      type="number"
+                      value={initialBalance}
+                      onChange={e => setInitialBalance(e.target.value)}
+                      placeholder="0.00"
+                      className="flex-1"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Saldo restante</Label>
-                  <Input
-                    type="number"
-                    value={remainingBalance}
-                    onChange={e => setRemainingBalance(e.target.value)}
-                    placeholder="0.00"
-                  />
+                  <div className="flex gap-2">
+                    <div className="flex items-center justify-center px-2 rounded-md border border-input bg-muted/30 text-sm font-medium text-muted-foreground min-w-[3rem]">
+                      {getCurrencySymbol(currency)}
+                    </div>
+                    <Input
+                      type="number"
+                      value={remainingBalance}
+                      onChange={e => setRemainingBalance(e.target.value)}
+                      placeholder="0.00"
+                      className="flex-1"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
