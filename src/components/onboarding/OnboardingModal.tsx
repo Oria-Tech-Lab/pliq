@@ -46,9 +46,12 @@ export function OnboardingModal({ open, userName, onComplete, onSkip }: Onboardi
   const [screen, setScreen] = useState<Screen>('welcome');
   const [dateOpen, setDateOpen] = useState(false);
 
+  const { primaryCurrency, secondaryCurrency } = useCurrency();
+
   // Form state
   const [name, setName] = useState('');
   const [amount, setAmount] = useState(0);
+  const [currency, setCurrency] = useState(primaryCurrency);
   const [startDate, setStartDate] = useState(new Date().toISOString());
   const [frequency, setFrequency] = useState<PaymentFrequency>('monthly');
   const [categoryId, setCategoryId] = useState('');
@@ -58,11 +61,17 @@ export function OnboardingModal({ open, userName, onComplete, onSkip }: Onboardi
   // Created payment info for done screen
   const [createdName, setCreatedName] = useState('');
   const [createdAmount, setCreatedAmount] = useState(0);
+  const [createdCurrency, setCreatedCurrency] = useState(primaryCurrency);
   const [createdFreq, setCreatedFreq] = useState('');
 
   const { categories } = useCustomCategories();
   const { methods } = usePaymentMethods();
   const { payees } = usePayees([], () => {});
+
+  // Keep currency in sync with primary if user hasn't picked anything else
+  if (!currency && primaryCurrency) {
+    setCurrency(primaryCurrency);
+  }
 
   // Pre-select default method
   const defaultMethod = methods.find(m => m.isDefault);
@@ -80,8 +89,9 @@ export function OnboardingModal({ open, userName, onComplete, onSkip }: Onboardi
   const handleCreate = () => {
     setCreatedName(name);
     setCreatedAmount(amount);
+    setCreatedCurrency(currency || primaryCurrency);
     setCreatedFreq(freqLabel);
-    onComplete({ name, amount, startDate, frequency, categoryId, methodId, payeeId: payeeId || undefined });
+    onComplete({ name, amount, currency: currency || primaryCurrency, startDate, frequency, categoryId, methodId, payeeId: payeeId || undefined });
     setScreen('done');
   };
 
