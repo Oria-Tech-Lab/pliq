@@ -98,7 +98,7 @@ const PayeePage = () => {
               </div>
               Total pagado
             </div>
-            <p className="text-2xl font-bold text-foreground tracking-tight">{formatCurrency(stats.totalPaid)}</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight">{renderTotals(stats.totalPaidByCurrency)}</p>
             <p className="text-xs text-muted-foreground">{stats.paidCount} pagos</p>
           </div>
           <div className="rounded-2xl bg-card border border-border/60 p-5 space-y-2 shadow-sm">
@@ -108,7 +108,7 @@ const PayeePage = () => {
               </div>
               Por pagar
             </div>
-            <p className="text-2xl font-bold text-foreground tracking-tight">{formatCurrency(stats.totalPending)}</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight">{renderTotals(stats.totalPendingByCurrency)}</p>
             <p className="text-xs text-muted-foreground">{stats.pendingCount} pendientes</p>
           </div>
           <div className="rounded-2xl bg-card border border-border/60 p-5 space-y-2 shadow-sm">
@@ -225,10 +225,10 @@ const PayeePage = () => {
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="font-bold text-lg tracking-tight text-foreground">
-                            {formatCurrency(plan.amount)}
+                            {formatCurrency(plan.amount, plan.currency || primaryCurrency)}
                           </p>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {paidCount}/{totalInstances} · {formatCurrency(paidAmount)}
+                            {paidCount}/{totalInstances} · {formatCurrency(paidAmount, plan.currency || primaryCurrency)}
                           </p>
                         </div>
                       </div>
@@ -287,7 +287,7 @@ const PayeePage = () => {
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className={cn('font-bold text-lg tracking-tight', isPaid ? 'text-muted-foreground' : 'text-foreground')}>
-                            {formatCurrency(plan.amount)}
+                            {formatCurrency(plan.amount, plan.currency || primaryCurrency)}
                           </p>
                           {isPaid && (
                             <span className="text-[10px] font-medium text-paid bg-paid/10 px-1.5 py-0.5 rounded-md">Pagado</span>
