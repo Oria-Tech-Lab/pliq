@@ -13,6 +13,8 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/lib/currency';
 
 const ICON_OPTIONS = [
   { value: 'tag', label: 'Etiqueta', Icon: Tag },
@@ -77,17 +79,28 @@ const CategoriesPage = () => {
   const [formColor, setFormColor] = useState('primary');
   const [formDescription, setFormDescription] = useState('');
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
+  const { primaryCurrency } = useCurrency();
+
+  const renderTotals = (map: Record<string, number>) => {
+    const entries = Object.entries(map).filter(([, v]) => v > 0);
+    if (entries.length === 0) return formatCurrency(0, primaryCurrency);
+    return entries.map(([c, v]) => formatCurrency(v, c)).join(' · ');
+  };
 
   const categoryStats = useMemo(() => {
     return customCategories.map(cc => {
       const catPayments = payments.filter(p => p.category === cc.id);
-      const total = catPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0);
+      const paid = catPayments.filter(p => p.status === 'paid');
+      const totalsByCurrency = paid.reduce<Record<string, number>>((acc, p) => {
+        const c = p.currency || primaryCurrency;
+        acc[c] = (acc[c] || 0) + p.amount;
+        return acc;
+      }, {});
+      const total = paid.reduce((s, p) => s + p.amount, 0); // for percent only
       const pending = catPayments.filter(p => p.status !== 'paid').length;
-      return { key: cc.id, label: cc.name, count: catPayments.length, total, pending, customData: cc };
+      return { key: cc.id, label: cc.name, count: catPayments.length, total, totalsByCurrency, pending, customData: cc };
     }).sort((a, b) => b.total - a.total);
-  }, [payments, customCategories]);
+  }, [payments, customCategories, primaryCurrency]);
 
   const totalAmount = categoryStats.reduce((s, c) => s + c.total, 0);
 
@@ -150,7 +163,7 @@ const CategoriesPage = () => {
           </div>
         ) : (
           <div className="space-y-1.5">
-            {categoryStats.map(({ key, label, count, total, pending, customData }) => {
+            {categoryStats.map(({ key, label, count, total, totalsByCurrency, pending, customData }) => {
               const IconComp = getIconComponent(customData.icon);
               const colorClasses = getColorClasses(customData.color);
               const percentage = totalAmount > 0 ? (total / totalAmount) * 100 : 0;
@@ -171,7 +184,7 @@ const CategoriesPage = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="text-sm font-semibold text-foreground mr-1">{formatCurrency(total)}</span>
+                          <span className="text-sm font-semibold text-foreground mr-1">{renderTotals(totalsByCurrency)}</span>
                           <IconTooltip label="Editar categoría">
                             <Button
                               variant="ghost"

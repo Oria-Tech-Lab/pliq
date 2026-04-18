@@ -11,6 +11,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/lib/currency';
 
 const PayeePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,18 +29,33 @@ const PayeePage = () => {
   const recurringPlans = useMemo(() => payeePlans.filter(p => p.type === 'recurring'), [payeePlans]);
   const uniquePlans = useMemo(() => payeePlans.filter(p => p.type === 'unique'), [payeePlans]);
 
+  const { primaryCurrency } = useCurrency();
+
+  const renderTotals = (map: Record<string, number>) => {
+    const entries = Object.entries(map).filter(([, v]) => v > 0);
+    if (entries.length === 0) return formatCurrency(0, primaryCurrency);
+    return entries.map(([c, v]) => formatCurrency(v, c)).join(' · ');
+  };
+
   const stats = useMemo(() => {
-    const allInstances = payeePlans.flatMap(p => p.instances);
+    const allInstances = payeePlans.flatMap(p =>
+      p.instances.map(i => ({ ...i, currency: p.currency || primaryCurrency }))
+    );
+    const sumByCurrency = (list: typeof allInstances) =>
+      list.reduce<Record<string, number>>((acc, i) => {
+        acc[i.currency] = (acc[i.currency] || 0) + i.amount;
+        return acc;
+      }, {});
     const paid = allInstances.filter(i => i.status === 'paid');
     const pending = allInstances.filter(i => i.status === 'pending');
     const overdue = allInstances.filter(i => i.status === 'overdue');
-    const totalPaid = paid.reduce((s, i) => s + i.amount, 0);
-    const totalPending = [...pending, ...overdue].reduce((s, i) => s + i.amount, 0);
-    return { totalPaid, totalPending, paidCount: paid.length, pendingCount: pending.length, overdueCount: overdue.length };
-  }, [payeePlans]);
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
+    const totalPaidByCurrency = sumByCurrency(paid);
+    const totalPendingByCurrency = sumByCurrency([...pending, ...overdue]);
+    return {
+      totalPaidByCurrency, totalPendingByCurrency,
+      paidCount: paid.length, pendingCount: pending.length, overdueCount: overdue.length,
+    };
+  }, [payeePlans, primaryCurrency]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -81,7 +98,7 @@ const PayeePage = () => {
               </div>
               Total pagado
             </div>
-            <p className="text-2xl font-bold text-foreground tracking-tight">{formatCurrency(stats.totalPaid)}</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight">{renderTotals(stats.totalPaidByCurrency)}</p>
             <p className="text-xs text-muted-foreground">{stats.paidCount} pagos</p>
           </div>
           <div className="rounded-2xl bg-card border border-border/60 p-5 space-y-2 shadow-sm">
@@ -91,7 +108,7 @@ const PayeePage = () => {
               </div>
               Por pagar
             </div>
-            <p className="text-2xl font-bold text-foreground tracking-tight">{formatCurrency(stats.totalPending)}</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight">{renderTotals(stats.totalPendingByCurrency)}</p>
             <p className="text-xs text-muted-foreground">{stats.pendingCount} pendientes</p>
           </div>
           <div className="rounded-2xl bg-card border border-border/60 p-5 space-y-2 shadow-sm">
@@ -208,10 +225,10 @@ const PayeePage = () => {
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="font-bold text-lg tracking-tight text-foreground">
-                            {formatCurrency(plan.amount)}
+                            {formatCurrency(plan.amount, plan.currency || primaryCurrency)}
                           </p>
                           <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {paidCount}/{totalInstances} · {formatCurrency(paidAmount)}
+                            {paidCount}/{totalInstances} · {formatCurrency(paidAmount, plan.currency || primaryCurrency)}
                           </p>
                         </div>
                       </div>
@@ -270,7 +287,7 @@ const PayeePage = () => {
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className={cn('font-bold text-lg tracking-tight', isPaid ? 'text-muted-foreground' : 'text-foreground')}>
-                            {formatCurrency(plan.amount)}
+                            {formatCurrency(plan.amount, plan.currency || primaryCurrency)}
                           </p>
                           {isPaid && (
                             <span className="text-[10px] font-medium text-paid bg-paid/10 px-1.5 py-0.5 rounded-md">Pagado</span>

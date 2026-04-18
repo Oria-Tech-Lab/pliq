@@ -29,7 +29,8 @@ import { format, differenceInCalendarDays, addWeeks, addMonths, addYears } from 
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency as fmtCurrency } from '@/lib/currency';
 export default function PaymentPlansPage() {
   const { settings: notifDefaults } = useNotificationSettings();
   const { plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
@@ -190,8 +191,8 @@ export default function PaymentPlansPage() {
     }
   };
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
+  const { primaryCurrency } = useCurrency();
+  const formatCurrency = (n: number, currency?: string) => fmtCurrency(n, currency || primaryCurrency);
 
   const getPaidCount = (plan: PaymentPlan) => plan.instances.filter(i => i.status === 'paid').length;
   const getPaidAmount = (plan: PaymentPlan) => plan.instances.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
@@ -262,11 +263,11 @@ export default function PaymentPlansPage() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-bold text-lg tracking-tight text-foreground leading-tight">
-                      {formatCurrency(plan.amount)}
+                      {formatCurrency(plan.amount, plan.currency)}
                     </p>
                     {plan.type === 'recurring' && (
                       <p className="text-[10px] text-muted-foreground mt-0.5">
-                        {formatCurrency(getPaidAmount(plan))} pagado
+                        {formatCurrency(getPaidAmount(plan), plan.currency)} pagado
                       </p>
                     )}
                   </div>
@@ -376,6 +377,7 @@ export default function PaymentPlansPage() {
                   planId={plan.id}
                   planName={plan.name}
                   planPaymentMethod={plan.paymentMethod}
+                  planCurrency={plan.currency}
                   paymentMethods={paymentMethods}
                   isMobile={isMobile}
                   onMarkPaid={markInstancePaid}
@@ -751,6 +753,7 @@ function InstanceRow({
   planId,
   planName,
   planPaymentMethod,
+  planCurrency,
   paymentMethods,
   isMobile,
   onMarkPaid,
@@ -761,6 +764,7 @@ function InstanceRow({
   planId: string;
   planName: string;
   planPaymentMethod: string;
+  planCurrency?: string;
   paymentMethods: import('@/types/payment').PaymentMethodEntry[];
   isMobile: boolean;
   onMarkPaid: (planId: string, instanceId: string) => void;
@@ -776,8 +780,7 @@ function InstanceRow({
 
   const effectiveMethod = instance.paymentMethod || planPaymentMethod;
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
+  const formatCurrency = (n: number) => fmtCurrency(n, planCurrency || 'PEN');
 
   const allMethodOptions = [
     ...Object.entries(METHOD_LABELS).map(([k, v]) => ({ value: k, label: v })),

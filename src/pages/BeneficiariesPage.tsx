@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { IconTooltip } from '@/components/ui/icon-tooltip';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/lib/currency';
 
 const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36);
 
@@ -25,17 +27,27 @@ const BeneficiariesPage = () => {
   const [type, setType] = useState<BeneficiaryType>('persona');
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
+  const { primaryCurrency } = useCurrency();
+
+  const renderTotals = (map: Record<string, number>) => {
+    const entries = Object.entries(map).filter(([, v]) => v > 0);
+    if (entries.length === 0) return formatCurrency(0, primaryCurrency);
+    return entries.map(([c, v]) => formatCurrency(v, c)).join(' · ');
+  };
 
   const payeeStats = useMemo(() => {
     return payees.map(payee => {
       const payeePayments = payments.filter(p => p.payeeId === payee.id);
-      const total = payeePayments.reduce((s, p) => s + p.amount, 0);
+      const totalsByCurrency = payeePayments.reduce<Record<string, number>>((acc, p) => {
+        const c = p.currency || primaryCurrency;
+        acc[c] = (acc[c] || 0) + p.amount;
+        return acc;
+      }, {});
+      const total = payeePayments.reduce((s, p) => s + p.amount, 0); // for sort only
       const pending = payeePayments.filter(p => p.status !== 'paid').length;
-      return { ...payee, total, count: payeePayments.length, pending };
+      return { ...payee, total, totalsByCurrency, count: payeePayments.length, pending };
     }).sort((a, b) => b.total - a.total);
-  }, [payees, payments]);
+  }, [payees, payments, primaryCurrency]);
 
   const addBankAccount = () => {
     setBankAccounts(prev => [...prev, { id: generateId(), bank: '', accountHolder: '', accountNumber: '', interbankCode: '' }]);
@@ -129,7 +141,7 @@ const BeneficiariesPage = () => {
                   <div className="flex items-center gap-1 mt-0.5">
                     <CreditCard className="w-3 h-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
-                      {payee.count} pago{payee.count !== 1 ? 's' : ''} · {formatCurrency(payee.total)}
+                      {payee.count} pago{payee.count !== 1 ? 's' : ''} · {renderTotals(payee.totalsByCurrency)}
                     </span>
                   </div>
                 </div>
