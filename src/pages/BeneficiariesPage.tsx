@@ -141,7 +141,7 @@ const BeneficiariesPage = () => {
                   <div className="flex items-center gap-1 mt-0.5">
                     <CreditCard className="w-3 h-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
-                      {payee.count} pago{payee.count !== 1 ? 's' : ''} · {formatCurrency(payee.total)}
+                      {payee.count} pago{payee.count !== 1 ? 's' : ''} · {renderTotals(payee.totalsByCurrency)}
                     </span>
                   </div>
                 </div>
