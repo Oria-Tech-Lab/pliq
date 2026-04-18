@@ -13,6 +13,9 @@ import { MonthlyBarChart } from '@/components/reports/MonthlyBarChart';
 import { CategoryReport } from '@/components/reports/CategoryReport';
 import { PayeeReport } from '@/components/reports/PayeeReport';
 import { RecurringSummary } from '@/components/reports/RecurringSummary';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency as fmt, getCurrencySymbol, convertCurrency } from '@/lib/currency';
 
 function getDateRange(preset: DatePreset, customFrom?: Date, customTo?: Date): { from: Date; to: Date } | null {
   const now = new Date();
@@ -29,27 +32,54 @@ function getDateRange(preset: DatePreset, customFrom?: Date, customTo?: Date): {
   }
 }
 
+type CurrencyFilter = 'primary' | 'secondary' | 'all';
+
 const ReportsPage = () => {
   const { flattenedPayments: payments, plans } = usePaymentPlans();
   const { payees } = usePayees([], () => {});
   const allCategoryLabels = useCategoryLabels();
+  const { primaryCurrency, secondaryCurrency, exchangeRate } = useCurrency();
 
   const [activePreset, setActivePreset] = useState<DatePreset>('month');
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
+  const [currencyFilter, setCurrencyFilter] = useState<CurrencyFilter>('all');
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
+  // Display currency for aggregated totals
+  const displayCurrency = currencyFilter === 'secondary' ? secondaryCurrency : primaryCurrency;
+
+  const formatCurrency = (amount: number) => fmt(amount, displayCurrency);
 
   const dateRange = useMemo(() => getDateRange(activePreset, customFrom, customTo), [activePreset, customFrom, customTo]);
 
-  const filteredPayments = useMemo(() => {
+  // Apply date filter
+  const dateFilteredPayments = useMemo(() => {
     if (!dateRange) return payments;
     return payments.filter(p => {
       const d = new Date(p.dueDate);
       return isWithinInterval(d, { start: dateRange.from, end: dateRange.to });
     });
   }, [payments, dateRange]);
+
+  // Apply currency filter + currency conversion. Returns payments with normalized amount in displayCurrency.
+  const filteredPayments = useMemo(() => {
+    return dateFilteredPayments
+      .map(p => {
+        const pCurrency = (p as any).currency || primaryCurrency;
+        if (currencyFilter === 'primary') {
+          if (pCurrency !== primaryCurrency) return null;
+          return p;
+        }
+        if (currencyFilter === 'secondary') {
+          if (pCurrency !== secondaryCurrency) return null;
+          return p;
+        }
+        // all → convert everything to primary
+        const converted = convertCurrency(p.amount, pCurrency, primaryCurrency, exchangeRate, primaryCurrency, secondaryCurrency);
+        return { ...p, amount: converted, currency: primaryCurrency } as typeof p;
+      })
+      .filter(Boolean) as typeof dateFilteredPayments;
+  }, [dateFilteredPayments, currencyFilter, primaryCurrency, secondaryCurrency, exchangeRate]);
 
   const stats = useMemo(() => {
     const paid = filteredPayments.filter(p => p.status === 'paid');
@@ -60,7 +90,6 @@ const ReportsPage = () => {
     const pendingTotal = pending.reduce((s, p) => s + p.amount, 0);
     const overdueTotal = overdue.reduce((s, p) => s + p.amount, 0);
 
-    // By category
     const byCategory: Record<string, number> = {};
     filteredPayments.forEach(p => {
       byCategory[p.category] = (byCategory[p.category] || 0) + p.amount;
@@ -68,7 +97,6 @@ const ReportsPage = () => {
     const categoryEntries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
     const categoryTotal = categoryEntries.reduce((s, [, v]) => s + v, 0);
 
-    // By payee
     const byPayee: Record<string, { id: string; name: string; paid: number; pending: number }> = {};
     filteredPayments.forEach(p => {
       const payeeId = p.payeeId || 'no-payee';
@@ -88,6 +116,14 @@ const ReportsPage = () => {
     };
   }, [filteredPayments, payees]);
 
+  // Total across all 3 cards (used to compute the equivalent helper text)
+  const grandTotal = stats.paidTotal + stats.pendingTotal + stats.overdueTotal;
+  const equivalentCurrency = currencyFilter === 'secondary' ? primaryCurrency : secondaryCurrency;
+  const equivalentAmount = useMemo(() => {
+    if (currencyFilter === 'all') return 0;
+    return convertCurrency(grandTotal, displayCurrency, equivalentCurrency, exchangeRate, primaryCurrency, secondaryCurrency);
+  }, [grandTotal, currencyFilter, displayCurrency, equivalentCurrency, exchangeRate, primaryCurrency, secondaryCurrency]);
+
   return (
     <AppLayout title="Reportes">
       <div className="container py-4 space-y-5">
@@ -101,6 +137,23 @@ const ReportsPage = () => {
           dateRange={dateRange}
         />
 
+        {/* Currency filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground shrink-0">Moneda:</span>
+          <Select value={currencyFilter} onValueChange={(v) => setCurrencyFilter(v as CurrencyFilter)}>
+            <SelectTrigger className="h-8 text-xs w-auto min-w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="primary">{primaryCurrency} solamente</SelectItem>
+              {secondaryCurrency !== primaryCurrency && (
+                <SelectItem value="secondary">{secondaryCurrency} solamente</SelectItem>
+              )}
+              <SelectItem value="all">Todas las monedas</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <SummaryReportCards
           paidTotal={stats.paidTotal}
           pendingTotal={stats.pendingTotal}
@@ -110,6 +163,18 @@ const ReportsPage = () => {
           overdueCount={stats.overdueCount}
           formatCurrency={formatCurrency}
         />
+
+        {/* Conversion / equivalent helper text */}
+        {currencyFilter === 'all' && secondaryCurrency !== primaryCurrency && (
+          <p className="text-[11px] text-muted-foreground -mt-2">
+            Incluye conversión aproximada de {secondaryCurrency} a {primaryCurrency} al tipo de cambio {fmt(exchangeRate, primaryCurrency)}
+          </p>
+        )}
+        {currencyFilter !== 'all' && grandTotal > 0 && exchangeRate > 0 && secondaryCurrency !== primaryCurrency && (
+          <p className="text-[11px] text-muted-foreground -mt-2">
+            ≈ {getCurrencySymbol(equivalentCurrency)} {equivalentAmount.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} al tipo de cambio actual
+          </p>
+        )}
 
         <MonthlyBarChart payments={filteredPayments} formatCurrency={formatCurrency} />
 
