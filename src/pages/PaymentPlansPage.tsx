@@ -29,7 +29,8 @@ import { format, differenceInCalendarDays, addWeeks, addMonths, addYears } from 
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency as fmtCurrency } from '@/lib/currency';
 export default function PaymentPlansPage() {
   const { settings: notifDefaults } = useNotificationSettings();
   const { plans, isLoading, addPlan, deletePlan, updatePlan, finalizePlan, markInstancePaid, markInstancePending, updateInstance } = usePaymentPlans();
@@ -190,8 +191,8 @@ export default function PaymentPlansPage() {
     }
   };
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n);
+  const { primaryCurrency } = useCurrency();
+  const formatCurrency = (n: number, currency?: string) => fmtCurrency(n, currency || primaryCurrency);
 
   const getPaidCount = (plan: PaymentPlan) => plan.instances.filter(i => i.status === 'paid').length;
   const getPaidAmount = (plan: PaymentPlan) => plan.instances.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
