@@ -156,8 +156,33 @@ export function OnboardingModal({ open, userName, onComplete, onSkip }: Onboardi
                 <Input value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Netflix, Alquiler..." />
               </div>
               <div>
-                <Label>Monto (S/)</Label>
-                <Input type="number" min={0} step={0.01} value={amount || ''} onChange={e => setAmount(Number(e.target.value))} placeholder="0.00" />
+                <Label>Monto</Label>
+                <div className="flex gap-2">
+                  <Select value={currency} onValueChange={setCurrency}>
+                    <SelectTrigger className="w-28 shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={primaryCurrency}>
+                        {getCurrencySymbol(primaryCurrency)} {primaryCurrency}
+                      </SelectItem>
+                      {secondaryCurrency !== primaryCurrency && (
+                        <SelectItem value={secondaryCurrency}>
+                          {getCurrencySymbol(secondaryCurrency)} {secondaryCurrency}
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={amount || ''}
+                    onChange={e => setAmount(Number(e.target.value))}
+                    placeholder="0.00"
+                    className="flex-1"
+                  />
+                </div>
               </div>
               <div>
                 <Label>Fecha de inicio</Label>
@@ -320,7 +345,7 @@ export function OnboardingModal({ open, userName, onComplete, onSkip }: Onboardi
             <h2 className="text-xl font-display font-bold">🎉 ¡Listo!</h2>
             <p className="text-sm text-foreground">
               <span className="font-semibold">{createdName}</span> fue registrado por{' '}
-              <span className="font-semibold">S/ {createdAmount.toFixed(2)}</span> — {createdFreq}.
+              <span className="font-semibold">{getCurrencySymbol(createdCurrency)} {createdAmount.toFixed(2)}</span> — {createdFreq}.
             </p>
             <p className="text-sm text-muted-foreground">Pliq te avisará antes de que venza.</p>
             <Button onClick={handleDone} className="w-full mt-2">

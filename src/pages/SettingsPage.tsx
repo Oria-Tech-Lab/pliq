@@ -277,6 +277,10 @@ export default function SettingsPage() {
                 value={exchangeRate || ''}
                 onChange={e => setExchangeRate(parseFloat(e.target.value) || 0)}
               />
+              <p className="text-xs text-muted-foreground pt-1">
+                Ej: {getCurrencySymbol(secondaryCurrency)} 100.00 ={' '}
+                {getCurrencySymbol(primaryCurrency)} {(exchangeRate * 100).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
             </div>
             <Button onClick={handleSaveCurrencies} disabled={savingCurrencies}>
               {savingCurrencies ? 'Guardando...' : 'Guardar'}

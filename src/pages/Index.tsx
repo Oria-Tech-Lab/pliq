@@ -78,7 +78,7 @@ const Index = () => {
   const showOnboarding = (!prefsLoading && !prefs.onboardingCompleted) || showOnboardingManual;
 
   const handleOnboardingComplete = useCallback(async (paymentData?: {
-    name: string; amount: number; startDate: string; frequency: any;
+    name: string; amount: number; currency: string; startDate: string; frequency: any;
     categoryId: string; methodId: string; payeeId?: string;
   }) => {
     if (paymentData) {
@@ -88,6 +88,7 @@ const Index = () => {
         type: 'recurring',
         category: paymentData.categoryId,
         amount: paymentData.amount,
+        currency: paymentData.currency,
         payTo: payee?.name || '',
         payeeId: paymentData.payeeId,
         paymentMethod: paymentData.methodId,
@@ -98,7 +99,7 @@ const Index = () => {
         notificationsEnabled: true,
         notificationDaysBefore: 1,
         notificationTime: '09:00',
-      });
+      } as any);
     }
   }, [addPlan, payees]);
 
