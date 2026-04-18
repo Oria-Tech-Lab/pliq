@@ -1,8 +1,9 @@
-import { useRef } from 'react';
 import { Payment, QuickFilter } from '@/types/payment';
 import { isToday, isThisWeek, isThisMonth } from 'date-fns';
 import { AlertTriangle, CalendarCheck, CalendarDays, Calendar, TrendingUp, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/lib/currency';
 
 interface SummaryCardsProps {
   payments: Payment[];
@@ -10,25 +11,49 @@ interface SummaryCardsProps {
   onCardClick?: (filter: QuickFilter) => void;
 }
 
+/** Group amounts by currency and produce a compact human-readable string. */
+function sumByCurrency(payments: Payment[], fallback: string): Record<string, number> {
+  return payments.reduce<Record<string, number>>((acc, p) => {
+    const c = p.currency || fallback;
+    acc[c] = (acc[c] || 0) + p.amount;
+    return acc;
+  }, {});
+}
+
+function renderTotals(map: Record<string, number>, fallback: string, emptyLabel = '—'): string {
+  const entries = Object.entries(map).filter(([, v]) => v > 0);
+  if (entries.length === 0) return formatCurrency(0, fallback);
+  if (entries.length === 1) {
+    const [code, value] = entries[0];
+    return formatCurrency(value, code);
+  }
+  // Multiple currencies — sort primary fallback first, then alphabetical
+  return entries
+    .sort((a, b) => (a[0] === fallback ? -1 : b[0] === fallback ? 1 : a[0].localeCompare(b[0])))
+    .map(([code, value]) => formatCurrency(value, code))
+    .join(' · ');
+}
+
 export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCardsProps) {
+  const { primaryCurrency } = useCurrency();
+
   const overduePayments = payments.filter(p => p.status === 'overdue');
   const todayPayments = payments.filter(p => p.status !== 'paid' && isToday(new Date(p.dueDate)));
   const weekPayments = payments.filter(p => p.status !== 'paid' && isThisWeek(new Date(p.dueDate), { weekStartsOn: 1 }));
   const monthPayments = payments.filter(p => p.status !== 'paid' && isThisMonth(new Date(p.dueDate)));
+  const paidThisMonthList = payments.filter(p => p.status === 'paid' && p.paidDate && isThisMonth(new Date(p.paidDate)));
 
-  const totalDueThisMonth = monthPayments.reduce((sum, p) => sum + p.amount, 0);
-  const paidThisMonth = payments
-    .filter(p => p.status === 'paid' && p.paidDate && isThisMonth(new Date(p.paidDate)))
-    .reduce((sum, p) => sum + p.amount, 0);
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
+  const totalDueByCurrency = sumByCurrency(monthPayments, primaryCurrency);
+  const paidByCurrency = sumByCurrency(paidThisMonthList, primaryCurrency);
+  const overdueByCurrency = sumByCurrency(overduePayments, primaryCurrency);
+  const todayByCurrency = sumByCurrency(todayPayments, primaryCurrency);
+  const weekByCurrency = sumByCurrency(weekPayments, primaryCurrency);
 
   const heroCards = [
     {
       filterKey: 'pending' as QuickFilter,
       title: 'Por pagar',
-      value: formatCurrency(totalDueThisMonth),
+      value: renderTotals(totalDueByCurrency, primaryCurrency),
       subtitle: `${monthPayments.length} pagos pendientes`,
       icon: TrendingUp,
       iconBg: 'bg-pending/10',
@@ -37,7 +62,7 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
     {
       filterKey: 'paid_month' as QuickFilter,
       title: 'Pagado este mes',
-      value: formatCurrency(paidThisMonth),
+      value: renderTotals(paidByCurrency, primaryCurrency),
       subtitle: 'Total pagado',
       icon: CheckCircle,
       iconBg: 'bg-paid/10',
@@ -51,7 +76,7 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
       title: 'Vencidos',
       value: overduePayments.length,
       subtitle: overduePayments.length > 0
-        ? formatCurrency(overduePayments.reduce((s, p) => s + p.amount, 0))
+        ? renderTotals(overdueByCurrency, primaryCurrency)
         : 'Todo al día',
       icon: AlertTriangle,
       iconColor: 'text-overdue',
@@ -62,7 +87,7 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
       title: 'Hoy',
       value: todayPayments.length,
       subtitle: todayPayments.length > 0
-        ? formatCurrency(todayPayments.reduce((s, p) => s + p.amount, 0))
+        ? renderTotals(todayByCurrency, primaryCurrency)
         : 'Sin pagos hoy',
       icon: CalendarCheck,
       iconColor: 'text-primary',
@@ -72,7 +97,7 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
       filterKey: 'week' as QuickFilter,
       title: 'Semana',
       value: weekPayments.length,
-      subtitle: formatCurrency(weekPayments.reduce((s, p) => s + p.amount, 0)),
+      subtitle: renderTotals(weekByCurrency, primaryCurrency),
       icon: CalendarDays,
       iconColor: 'text-pending',
       highlight: false,
@@ -81,7 +106,7 @@ export function SummaryCards({ payments, activeFilter, onCardClick }: SummaryCar
       filterKey: 'month' as QuickFilter,
       title: 'Mes',
       value: monthPayments.length,
-      subtitle: formatCurrency(totalDueThisMonth),
+      subtitle: renderTotals(totalDueByCurrency, primaryCurrency),
       icon: Calendar,
       iconColor: 'text-muted-foreground',
       highlight: false,

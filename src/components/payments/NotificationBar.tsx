@@ -4,8 +4,9 @@ import { differenceInDays, isToday, startOfDay } from 'date-fns';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AlertTriangle, Clock, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/lib/currency';
 
 interface Props {
   payments: Payment[];
@@ -13,6 +14,7 @@ interface Props {
 
 export function NotificationBar({ payments }: Props) {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const { primaryCurrency } = useCurrency();
 
   const alerts = useMemo(() => {
     const today = startOfDay(new Date());
@@ -29,11 +31,18 @@ export function NotificationBar({ payments }: Props) {
     return { dueToday, dueSoon, total: upcoming.length };
   }, [payments]);
 
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
+  const sumByCurrency = (list: Payment[]) =>
+    list.reduce<Record<string, number>>((acc, p) => {
+      const c = p.currency || primaryCurrency;
+      acc[c] = (acc[c] || 0) + p.amount;
+      return acc;
+    }, {});
 
-  const totalTodayAmount = alerts.dueToday.reduce((s, p) => s + p.amount, 0);
-  const totalSoonAmount = alerts.dueSoon.reduce((s, p) => s + p.amount, 0);
+  const renderTotals = (map: Record<string, number>) => {
+    const entries = Object.entries(map).filter(([, v]) => v > 0);
+    if (entries.length === 0) return formatCurrency(0, primaryCurrency);
+    return entries.map(([c, v]) => formatCurrency(v, c)).join(' · ');
+  };
 
   const showToday = alerts.dueToday.length > 0 && !dismissed.has('today');
   const showSoon = alerts.dueSoon.length > 0 && !dismissed.has('soon');
@@ -54,13 +63,13 @@ export function NotificationBar({ payments }: Props) {
                 : `${alerts.dueToday.length} pagos vencen hoy`}
             </p>
             <p className="text-[11px] text-overdue/80 mt-0.5">
-              Total: {formatCurrency(totalTodayAmount)}
+              Total: {renderTotals(sumByCurrency(alerts.dueToday))}
             </p>
             {alerts.dueToday.length <= 3 && alerts.dueToday.length > 1 && (
               <div className="mt-1.5 space-y-0.5">
                 {alerts.dueToday.map(p => (
                   <p key={p.id} className="text-[10px] text-overdue/70">
-                    • {p.name} — {formatCurrency(p.amount)}
+                    • {p.name} — {formatCurrency(p.amount, p.currency || primaryCurrency)}
                   </p>
                 ))}
               </div>
@@ -89,7 +98,7 @@ export function NotificationBar({ payments }: Props) {
                 : `${alerts.dueSoon.length} pagos vencen en los próximos 5 días`}
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Total: {formatCurrency(totalSoonAmount)}
+              Total: {renderTotals(sumByCurrency(alerts.dueSoon))}
             </p>
             {alerts.dueSoon.length <= 3 && (
               <div className="mt-1.5 space-y-0.5">
@@ -97,7 +106,7 @@ export function NotificationBar({ payments }: Props) {
                   const diff = differenceInDays(startOfDay(new Date(p.dueDate)), startOfDay(new Date()));
                   return (
                     <p key={p.id} className="text-[10px] text-muted-foreground">
-                      • {p.name} — {formatCurrency(p.amount)} · en {diff} día{diff > 1 ? 's' : ''}
+                      • {p.name} — {formatCurrency(p.amount, p.currency || primaryCurrency)} · en {diff} día{diff > 1 ? 's' : ''}
                     </p>
                   );
                 })}
