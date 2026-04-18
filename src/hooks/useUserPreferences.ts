@@ -49,9 +49,7 @@ export const LANGUAGES = [
   { code: 'en', label: 'English' },
 ] as const;
 
-export function getCurrencySymbol(code: string): string {
-  return CURRENCIES.find(c => c.code === code)?.symbol ?? code;
-}
+export { getCurrencySymbol } from '@/lib/currency';
 
 export function useUserPreferences() {
   const [prefs, setPrefs] = useState<UserPreferences>(DEFAULTS);
