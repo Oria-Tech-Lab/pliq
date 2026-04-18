@@ -15,6 +15,8 @@ import { useCustomCategories } from '@/hooks/useCustomCategories';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { usePayees } from '@/hooks/usePayees';
 import { PaymentFrequency } from '@/types/payment';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { getCurrencySymbol } from '@/lib/currency';
 
 type Screen = 'welcome' | 1 | 2 | 3 | 4 | 'done';
 
@@ -30,6 +32,7 @@ interface OnboardingModalProps {
   onComplete: (paymentData?: {
     name: string;
     amount: number;
+    currency: string;
     startDate: string;
     frequency: PaymentFrequency;
     categoryId: string;
