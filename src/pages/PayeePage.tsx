@@ -11,6 +11,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrency } from '@/lib/currency';
 
 const PayeePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,18 +29,33 @@ const PayeePage = () => {
   const recurringPlans = useMemo(() => payeePlans.filter(p => p.type === 'recurring'), [payeePlans]);
   const uniquePlans = useMemo(() => payeePlans.filter(p => p.type === 'unique'), [payeePlans]);
 
+  const { primaryCurrency } = useCurrency();
+
+  const renderTotals = (map: Record<string, number>) => {
+    const entries = Object.entries(map).filter(([, v]) => v > 0);
+    if (entries.length === 0) return formatCurrency(0, primaryCurrency);
+    return entries.map(([c, v]) => formatCurrency(v, c)).join(' · ');
+  };
+
   const stats = useMemo(() => {
-    const allInstances = payeePlans.flatMap(p => p.instances);
+    const allInstances = payeePlans.flatMap(p =>
+      p.instances.map(i => ({ ...i, currency: p.currency || primaryCurrency }))
+    );
+    const sumByCurrency = (list: typeof allInstances) =>
+      list.reduce<Record<string, number>>((acc, i) => {
+        acc[i.currency] = (acc[i.currency] || 0) + i.amount;
+        return acc;
+      }, {});
     const paid = allInstances.filter(i => i.status === 'paid');
     const pending = allInstances.filter(i => i.status === 'pending');
     const overdue = allInstances.filter(i => i.status === 'overdue');
-    const totalPaid = paid.reduce((s, i) => s + i.amount, 0);
-    const totalPending = [...pending, ...overdue].reduce((s, i) => s + i.amount, 0);
-    return { totalPaid, totalPending, paidCount: paid.length, pendingCount: pending.length, overdueCount: overdue.length };
-  }, [payeePlans]);
-
-  const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
+    const totalPaidByCurrency = sumByCurrency(paid);
+    const totalPendingByCurrency = sumByCurrency([...pending, ...overdue]);
+    return {
+      totalPaidByCurrency, totalPendingByCurrency,
+      paidCount: paid.length, pendingCount: pending.length, overdueCount: overdue.length,
+    };
+  }, [payeePlans, primaryCurrency]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
