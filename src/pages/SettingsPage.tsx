@@ -90,9 +90,21 @@ export default function SettingsPage() {
   };
 
   const handleChangePassword = async () => {
+    if (!currentPassword) { toast.error('Ingresa tu contraseña actual'); return; }
     if (newPassword.length < 8) { toast.error('La contraseña debe tener al menos 8 caracteres'); return; }
     if (newPassword !== confirmPassword) { toast.error('Las contraseñas no coinciden'); return; }
+    if (!user?.email) { toast.error('No se pudo verificar tu sesión'); return; }
     setSavingPassword(true);
+    // Re-authenticate by verifying current password before allowing change
+    const { error: reAuthError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (reAuthError) {
+      toast.error('Contraseña actual incorrecta');
+      setSavingPassword(false);
+      return;
+    }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (!error) {
       toast.success('Contraseña actualizada');
