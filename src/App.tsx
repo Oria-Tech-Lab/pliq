@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import ReportsPage from "./pages/ReportsPage";
 import BeneficiariesPage from "./pages/BeneficiariesPage";
@@ -23,35 +24,37 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <CurrencyProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <CurrencyProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* Protected routes */}
-            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-            <Route path="/reportes" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
-            <Route path="/beneficiarios" element={<ProtectedRoute><BeneficiariesPage /></ProtectedRoute>} />
-            <Route path="/categorias" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
-            <Route path="/metodos" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
-            <Route path="/calendario" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-            <Route path="/planes" element={<ProtectedRoute><PaymentPlansPage /></ProtectedRoute>} />
-            <Route path="/configuracion" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-            <Route path="/payee/:id" element={<ProtectedRoute><PayeePage /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </CurrencyProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+              {/* Protected routes */}
+              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/reportes" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
+              <Route path="/beneficiarios" element={<ProtectedRoute><BeneficiariesPage /></ProtectedRoute>} />
+              <Route path="/categorias" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
+              <Route path="/metodos" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
+              <Route path="/calendario" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+              <Route path="/planes" element={<ProtectedRoute><PaymentPlansPage /></ProtectedRoute>} />
+              <Route path="/configuracion" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+              <Route path="/payee/:id" element={<ProtectedRoute><PayeePage /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </CurrencyProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

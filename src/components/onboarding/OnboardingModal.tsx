@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -67,17 +67,12 @@ export function OnboardingModal({ open, userName, onComplete, onSkip }: Onboardi
   const { categories } = useCustomCategories();
   const { methods } = usePaymentMethods();
   const { payees } = usePayees([], () => {});
-
-  // Keep currency in sync with primary if user hasn't picked anything else
-  if (!currency && primaryCurrency) {
-    setCurrency(primaryCurrency);
-  }
-
-  // Pre-select default method
   const defaultMethod = methods.find(m => m.isDefault);
-  if (defaultMethod && !methodId && screen === 'welcome') {
-    // will be set when entering step 3
-  }
+
+  useEffect(() => {
+    setCurrency((current) => current || primaryCurrency);
+    setCreatedCurrency((current) => current || primaryCurrency);
+  }, [primaryCurrency]);
 
   const stepNumber = typeof screen === 'number' ? screen : 0;
   const progress = stepNumber > 0 ? (stepNumber / 4) * 100 : 0;
