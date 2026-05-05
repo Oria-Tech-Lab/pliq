@@ -7,6 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserPreferences, CURRENCIES, LANGUAGES, getCurrencySymbol } from '@/hooks/useUserPreferences';
+import { useNotificationSettings } from '@/hooks/useNotificationSettings';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { User, Mail, Lock, Bell, Settings2, ChevronDown, ChevronUp, Coins } from 'lucide-react';
@@ -18,6 +21,7 @@ const BICURRENCY_OPTIONS = CURRENCIES.filter(c =>
 export default function SettingsPage() {
   const { user, userName, profile } = useAuth();
   const { prefs, updatePrefs } = useUserPreferences();
+  const { settings: notifSettings, updateSettings: updateNotifSettings } = useNotificationSettings();
 
   // Profile
   const [name, setName] = useState('');
@@ -47,20 +51,25 @@ export default function SettingsPage() {
   const [savingCurrencies, setSavingCurrencies] = useState(false);
 
   // Reminders
-  const [reminderDays, setReminderDays] = useState(prefs.reminderDays);
-  const [reminderTime, setReminderTime] = useState(prefs.reminderTime);
+  const [emailEnabled, setEmailEnabled] = useState(true);
+  const [reminderDaysArr, setReminderDaysArr] = useState<number[]>([3, 1, 0]);
+  const [reminderTime, setReminderTime] = useState('09:00');
   const [savingReminders, setSavingReminders] = useState(false);
 
   useEffect(() => { setName(userName || ''); }, [userName]);
   useEffect(() => {
     setCurrency(prefs.currency);
     setLanguage(prefs.language);
-    setReminderDays(prefs.reminderDays);
-    setReminderTime(prefs.reminderTime);
     setPrimaryCurrency(prefs.primaryCurrency);
     setSecondaryCurrency(prefs.secondaryCurrency);
     setExchangeRate(prefs.exchangeRate);
   }, [prefs]);
+
+  useEffect(() => {
+    setEmailEnabled(notifSettings.emailEnabled);
+    setReminderDaysArr(notifSettings.reminderDays);
+    setReminderTime(notifSettings.defaultTime);
+  }, [notifSettings]);
 
   const handleSaveProfile = async () => {
     setSavingProfile(true);
@@ -133,7 +142,12 @@ export default function SettingsPage() {
 
   const handleSaveReminders = async () => {
     setSavingReminders(true);
-    await updatePrefs({ reminderDays, reminderTime });
+    await updateNotifSettings({
+      emailEnabled,
+      reminderDays: reminderDaysArr,
+      defaultTime: reminderTime,
+      defaultDaysBefore: reminderDaysArr[0] ?? 1,
+    });
     toast.success('Recordatorios actualizados');
     setSavingReminders(false);
   };
@@ -353,28 +367,47 @@ export default function SettingsPage() {
               <CardTitle className="text-lg">Recordatorios</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-sm">Días antes del vencimiento</Label>
-                <Select value={String(reminderDays)} onValueChange={v => setReminderDays(parseInt(v))}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">El mismo día</SelectItem>
-                    <SelectItem value="1">1 día antes</SelectItem>
-                    <SelectItem value="2">2 días antes</SelectItem>
-                    <SelectItem value="3">3 días antes</SelectItem>
-                    <SelectItem value="5">5 días antes</SelectItem>
-                    <SelectItem value="7">1 semana antes</SelectItem>
-                  </SelectContent>
-                </Select>
+          <CardContent className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-semibold">Activar notificaciones por email</Label>
+                <p className="text-xs text-muted-foreground">Recibe recordatorios de tus pagos próximos en tu correo</p>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-sm">Hora del recordatorio</Label>
-                <Input type="time" className="h-9" value={reminderTime} onChange={e => setReminderTime(e.target.value)} />
+              <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">¿Cuándo notificar?</Label>
+              <p className="text-xs text-muted-foreground">Puedes seleccionar varias opciones</p>
+              <div className="space-y-2 pt-1">
+                {[
+                  { value: 3, label: '3 días antes' },
+                  { value: 1, label: '1 día antes' },
+                  { value: 0, label: 'El día del vencimiento' },
+                ].map(opt => {
+                  const checked = reminderDaysArr.includes(opt.value);
+                  return (
+                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={checked}
+                        disabled={!emailEnabled}
+                        onCheckedChange={(v) => {
+                          setReminderDaysArr(prev => {
+                            const set = new Set(prev);
+                            if (v) set.add(opt.value); else set.delete(opt.value);
+                            return Array.from(set).sort((a, b) => b - a);
+                          });
+                        }}
+                      />
+                      <span className="text-sm">{opt.label}</span>
+                    </label>
+                  );
+                })}
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold">Hora del recordatorio</Label>
+              <p className="text-xs text-muted-foreground">Hora a la que se envía el email diariamente</p>
+              <Input type="time" className="h-9 max-w-[160px]" value={reminderTime} disabled={!emailEnabled} onChange={e => setReminderTime(e.target.value)} />
             </div>
             <Button onClick={handleSaveReminders} disabled={savingReminders}>
               {savingReminders ? 'Guardando...' : 'Guardar'}
