@@ -90,7 +90,9 @@ export type Database = {
           created_at: string
           default_days_before: number
           default_time: string
+          email_enabled: boolean
           id: string
+          reminder_days_array: number[]
           updated_at: string
           user_id: string | null
         }
@@ -98,7 +100,9 @@ export type Database = {
           created_at?: string
           default_days_before?: number
           default_time?: string
+          email_enabled?: boolean
           id?: string
+          reminder_days_array?: number[]
           updated_at?: string
           user_id?: string | null
         }
@@ -106,7 +110,9 @@ export type Database = {
           created_at?: string
           default_days_before?: number
           default_time?: string
+          email_enabled?: boolean
           id?: string
+          reminder_days_array?: number[]
           updated_at?: string
           user_id?: string | null
         }
